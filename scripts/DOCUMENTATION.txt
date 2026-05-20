@@ -1,0 +1,116 @@
+================================================================================
+                    ULTIMATE AREA FARM + C2 DASHBOARD
+                          DETAILED DOCUMENTATION
+================================================================================
+
+1. SYSTEM ARCHITECTURE OVERVIEW
+--------------------------------------------------------------------------------
+This system is composed of two main components that communicate in real-time over WebSockets:
+1. The Game Client Script (autofarm_with_c2.lua) - A headless, highly optimized Lua script running in Roblox via an executor (Wave, Macsploit, Krnl, etc.).
+2. The Command & Control (C2) Dashboard (c2_panel/) - A Node.js and Express backend that serves a beautiful real-time HTML/JS interface for monitoring and controlling the bots.
+
+Communication happens bi-directionally. The game client sends its live status (health, level, money, backpack, current action) every 1 second to the server. The server acts as a relay, immediately broadcasting this status to any open Dashboards. When you click a button on the Dashboard, it routes the command back through the server specifically to the target client UUID.
+
+
+2. DEPLOYMENT & HOSTING INSTRUCTIONS
+--------------------------------------------------------------------------------
+To use this system, you need to host the C2 panel on a machine (your local PC or a VPS).
+
+A. Starting the C2 Server locally:
+    1. Open a terminal in `c:\Users\Alex\Desktop\scripts\c2_panel\`
+    2. Run `npm install express ws` (if you haven't already).
+    3. Run `node server.js`
+    4. The Dashboard is now accessible at http://localhost:3000
+
+B. Exposing via Ngrok (For multi-PC or VPS use):
+    1. Run `ngrok http 3000`
+    2. Copy the secure HTTPS URL (e.g., https://abc-123.ngrok-free.dev).
+    3. Open `autofarm_with_c2.lua` and modify Line 32:
+       _G.C2_SERVER_URL = "wss://abc-123.ngrok-free.dev" (Note: Replace https:// with wss://)
+       
+C. Executing the Script on Roblox:
+    Use the following loadstring in your executor. This instructs the executor to fetch the live script directly from your C2 server, ensuring you never have to manually copy-paste code updates again:
+    
+    loadstring(game:HttpGet("https://abc-123.ngrok-free.dev/api/get_script"))()
+
+
+3. DASHBOARD FEATURES & CAPABILITIES
+--------------------------------------------------------------------------------
+The Web Dashboard (index.html) is the central hub for the system. Since the local Rayfield UI was removed for performance, ALL operations are handled here.
+
+[+] Live Telemetry & Bot Status:
+    Every 1 second, the dashboard updates with the exact state of the bot. 
+    - Current State ("Farming", "Sniping God Roll", "Evading Archer")
+    - Session Time Elapsed
+    - Levels Gained this session
+    - Cash Gained this session
+    
+[+] Remote Actions:
+    - Toggle Farm: Instantly starts/stops the physics loop and teleports the player to their selected Area Rotation.
+    - Toggle Sniper: Starts/stops the Mass Recovery loop, automatically dropping non-whitelisted swords to free up inventory space.
+    - Toggle 3D: Disables 3D rendering (significantly reduces GPU/CPU usage for background bots).
+    
+[+] Ascender Configuration:
+    - Views real-time stats of the equipped weapon.
+    - Allows you to set the Ascender Mode (Quality, Rarity, Mold, Class, Enchant, Level) remotely.
+
+[+] Snipe Config (Target Sets & Whitelist):
+    - Target Sets: Create combinations of 3 Enchants. If a sword drops with these exact 3 enchants, it bypasses the auto-drop filter and is kept.
+    - Protected UUIDs: A dropdown menu automatically populated with your LIVE backpack data. Select a sword and click "Add" to protect it forever. Whitelisted swords are NEVER dropped by the auto-sniper.
+
+[+] Advanced Settings Modal (⚙️ Options):
+    - Configure Discord Webhook alerts.
+    - Configure Physics (Hover Height, Wait Altitude).
+    - Configure Stuck Detection (TTK - Time to Kill limit).
+    - Map Rotation: Check multiple boxes to have the bot dynamically cycle between areas when they run out of mobs.
+
+
+4. LUA SCRIPT CORE SYSTEMS (autofarm_with_c2.lua)
+--------------------------------------------------------------------------------
+The Lua script is completely headless (no UI) to maximize performance.
+
+A. Memory Cleanup & Hot-Reloading:
+   To prevent memory leaks and "unreachable" websocket errors, the top of the script explicitly closes old `_G.C2_WS` connections and disconnects all `RunService` hooks before injecting the new ones.
+
+B. Physics & Combat Loop:
+   - Evaluates NPCs in the `Workspace.NPCs` folder.
+   - Calculates the closest NPC and moves the player's HumanoidRootPart directly above them (Offset Height).
+   - If an Archer is detected targeting the player, the script triggers an Evade sequence and waits for the projectile to pass.
+   - Triggers MouseButton 1 (Left Click) via VirtualInputManager for attacking.
+
+C. Sniper & Auto-Drop (Mass Recovery):
+   - Hooked to the player's `Swords` folder in `ReplicatedStorage.Stats`.
+   - Every time a new sword is added, it is evaluated against the `_G.ActiveTargetSets`.
+   - If it matches a wishlist set OR exists in `_G.WhitelistedSwords`, it is flagged as safe.
+   - If it is trash, it fires the `DropRemote` to discard the item immediately, keeping the inventory clean for AFK overnight farming.
+
+D. Map Hopping / Density Checking:
+   - Continually checks the number of valid NPCs in the current area.
+   - If the number drops below `MIN_NPCS_TO_STAY`, it checks `_G.FarmAreas`.
+   - It iterates to the next Map ID in the rotation, teleports the player, and resumes combat.
+
+
+5. WEBSOCKET PROTOCOL (PAYLOAD SCHEMAS)
+--------------------------------------------------------------------------------
+For developers modifying the code, here is how the WebSocket payload is structured:
+
+[+] Client to Server (update_status):
+{
+    "type": "update_status",
+    "status": {
+        "farming": true,
+        "snipeEnabled": false,
+        "liveStats": { "timeSpent": 120, "levelGained": 5, "moneyGained": 1000, "currentState": "Farming..." },
+        "backpackData": [ { "id": "uuid", "Level": 10, "Equipped": true, "Enchant1": "Ancient", ... } ],
+        "ascenderData": { "stats": {...}, "mode": "Quality" },
+        "fullConfig": { ... }
+    }
+}
+
+[+] Server to Client (command):
+{
+    "action": "toggleFarm" | "syncConfig" | "setAscenderMode",
+    "payload": { ... }
+}
+
+When `syncConfig` is sent, the Node server ALSO saves the payload to `saved_configs.json`. When a bot crashes and reconnects, the server automatically pushes the last known config back to the bot, ensuring state persistence across disconnects!

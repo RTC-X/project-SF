@@ -1,0 +1,301 @@
+{
+    "BrettAboso21": {
+        "SpecialOverrides": {
+            "Enchant": [],
+            "Mold": [],
+            "Rarity": [],
+            "Class": [],
+            "Quality": []
+        },
+        "WhitelistedSwords": [
+            "72c7044f-b81d-4f2c-a7f6-ec58f14869bb"
+        ],
+        "Settings": {
+            "AREA_ATTRIBUTE_NAME": "Area",
+            "OFFSET_HEIGHT": 6,
+            "MIN_NPCS_TO_STAY": 3,
+            "WAIT_ALTITUDE": 120,
+            "BLACKLIST_DURATION": 30,
+            "RETREAT_ALTITUDE": 120,
+            "SAFE_COOLDOWN": 0.5,
+            "HP_ATTRIBUTE_NAME": "HP",
+            "SPAWN_GRACE_PERIOD": 5,
+            "IDLE_BEFORE_HOP": 3,
+            "MAX_KILL_TIME": 1800,
+            "DANGER_RADIUS": 40
+        },
+        "TargetSets": [
+            [
+                "Ancient",
+                "Fortune",
+                "Insight"
+            ]
+        ],
+        "WebhookEnabled": false,
+        "FarmAreas": [
+            10
+        ],
+        "WebhookURL": ""
+    },
+    "AlphaBlockers": {
+        "SpecialOverrides": {
+            "Enchant": [],
+            "Mold": [],
+            "Rarity": [],
+            "Class": [],
+            "Quality": []
+        },
+        "WhitelistedSwords": [],
+        "Settings": {
+            "AREA_ATTRIBUTE_NAME": "Area",
+            "OFFSET_HEIGHT": 6,
+            "MIN_NPCS_TO_STAY": 0,
+            "WAIT_ALTITUDE": 120,
+            "BLACKLIST_DURATION": 30,
+            "RETREAT_ALTITUDE": 15,
+            "SAFE_COOLDOWN": 0.5,
+            "HP_ATTRIBUTE_NAME": "HP",
+            "SPAWN_GRACE_PERIOD": 5,
+            "IDLE_BEFORE_HOP": 3,
+            "MAX_KILL_TIME": 600,
+            "DANGER_RADIUS": 40
+        },
+        "TargetSets": [
+            [
+                "Ancient",
+                "Fortune",
+                "Insight"
+            ]
+        ],
+        "WebhookEnabled": false,
+        "FarmAreas": [
+            9
+        ],
+        "WebhookURL": ""
+    },
+    "WorlfTeam": {
+        "SpecialOverrides": {
+            "Enchant": [],
+            "Mold": [],
+            "Rarity": [],
+            "Class": [],
+            "Quality": []
+        },
+        "WhitelistedSwords": [],
+        "Settings": {
+            "AREA_ATTRIBUTE_NAME": "Area",
+            "OFFSET_HEIGHT": 6,
+            "MIN_NPCS_TO_STAY": 0,
+            "WAIT_ALTITUDE": 120,
+            "BLACKLIST_DURATION": 30,
+            "RETREAT_ALTITUDE": 15,
+            "SAFE_COOLDOWN": 0.5,
+            "HP_ATTRIBUTE_NAME": "HP",
+            "SPAWN_GRACE_PERIOD": 5,
+            "IDLE_BEFORE_HOP": 3,
+            "MAX_KILL_TIME": 900,
+            "DANGER_RADIUS": 40
+        },
+        "TargetSets": [
+            [
+                "Ancient",
+                "Fortune",
+                "Insight"
+            ]
+        ],
+        "WebhookEnabled": false,
+        "FarmAreas": [
+            9
+        ],
+        "WebhookURL": ""
+    },
+    "ConfusionBunny": {
+        "SpecialOverrides": {
+            "Enchant": [],
+            "Mold": [],
+            "Rarity": [],
+            "Class": [],
+            "Quality": []
+        },
+        "WhitelistedSwords": [
+            "cd7f011f-8dab-4fca-b719-3e13cc4ea634"
+        ],
+        "Settings": {
+            "AREA_ATTRIBUTE_NAME": "Area",
+            "OFFSET_HEIGHT": 6,
+            "MIN_NPCS_TO_STAY": 3,
+            "WAIT_ALTITUDE": 150,
+            "BLACKLIST_DURATION": 30,
+            "RETREAT_ALTITUDE": 15,
+            "SAFE_COOLDOWN": 0.5,
+            "HP_ATTRIBUTE_NAME": "HP",
+            "SPAWN_GRACE_PERIOD": 5,
+            "IDLE_BEFORE_HOP": 3,
+            "MAX_KILL_TIME": 900,
+            "DANGER_RADIUS": 40
+        },
+        "TargetSets": [
+            [
+                "Ancient",
+                "Fortune",
+                "Insight"
+            ]
+        ],
+        "WebhookEnabled": false,
+        "FarmAreas": [
+            9
+        ],
+        "WebhookURL": ""
+    },
+    "AltarzAlt": {
+        "SpecialOverrides": {
+            "Enchant": [],
+            "Mold": [],
+            "Rarity": [],
+            "Class": [],
+            "Quality": []
+        },
+        "WhitelistedSwords": [
+            "cd7f011f-8dab-4fca-b719-3e13cc4ea634"
+        ],
+        "Settings": {
+            "AREA_ATTRIBUTE_NAME": "Area",
+            "OFFSET_HEIGHT": 6,
+            "MIN_NPCS_TO_STAY": 0,
+            "WAIT_ALTITUDE": 150,
+            "BLACKLIST_DURATION": 30,
+            "RETREAT_ALTITUDE": 15,
+            "SAFE_COOLDOWN": 0.5,
+            "HP_ATTRIBUTE_NAME": "HP",
+            "SPAWN_GRACE_PERIOD": 5,
+            "IDLE_BEFORE_HOP": 3,
+            "MAX_KILL_TIME": 900,
+            "DANGER_RADIUS": 40
+        },
+        "TargetSets": [
+            [
+                "Ancient",
+                "Fortune",
+                "Insight"
+            ]
+        ],
+        "WebhookEnabled": false,
+        "FarmAreas": [
+            10
+        ],
+        "WebhookURL": ""
+    },
+    "AthenaYuaya12": {
+        "SpecialOverrides": {
+            "Enchant": [],
+            "Mold": [],
+            "Rarity": [],
+            "Class": [],
+            "Quality": []
+        },
+        "WhitelistedSwords": [
+            "cd7f011f-8dab-4fca-b719-3e13cc4ea634"
+        ],
+        "Settings": {
+            "AREA_ATTRIBUTE_NAME": "Area",
+            "OFFSET_HEIGHT": 6,
+            "MIN_NPCS_TO_STAY": 0,
+            "WAIT_ALTITUDE": 150,
+            "BLACKLIST_DURATION": 30,
+            "RETREAT_ALTITUDE": 15,
+            "SAFE_COOLDOWN": 0.5,
+            "HP_ATTRIBUTE_NAME": "HP",
+            "SPAWN_GRACE_PERIOD": 5,
+            "IDLE_BEFORE_HOP": 3,
+            "MAX_KILL_TIME": 1200,
+            "DANGER_RADIUS": 40
+        },
+        "TargetSets": [
+            [
+                "Ancient",
+                "Fortune",
+                "Insight"
+            ]
+        ],
+        "WebhookEnabled": false,
+        "FarmAreas": [
+            9
+        ],
+        "WebhookURL": ""
+    },
+    "JackTranspiracy": {
+        "SpecialOverrides": {
+            "Enchant": [],
+            "Mold": [],
+            "Rarity": [],
+            "Class": [],
+            "Quality": []
+        },
+        "WhitelistedSwords": [],
+        "Settings": {
+            "AREA_ATTRIBUTE_NAME": "Area",
+            "OFFSET_HEIGHT": 7,
+            "MIN_NPCS_TO_STAY": 0,
+            "WAIT_ALTITUDE": 15,
+            "BLACKLIST_DURATION": 30,
+            "RETREAT_ALTITUDE": 15,
+            "SAFE_COOLDOWN": 0.5,
+            "HP_ATTRIBUTE_NAME": "HP",
+            "SPAWN_GRACE_PERIOD": 5,
+            "IDLE_BEFORE_HOP": 3,
+            "MAX_KILL_TIME": 5,
+            "DANGER_RADIUS": 40
+        },
+        "TargetSets": [
+            [
+                "Ancient",
+                "Insight",
+                "Fortune"
+            ]
+        ],
+        "WebhookEnabled": false,
+        "FarmAreas": [],
+        "WebhookURL": ""
+    },
+    "ChongXiNa6": {
+        "SpecialOverrides": {
+            "Enchant": [],
+            "Mold": [],
+            "Rarity": [],
+            "Class": [],
+            "Quality": []
+        },
+        "WhitelistedSwords": [],
+        "Settings": {
+            "AREA_ATTRIBUTE_NAME": "Area",
+            "OFFSET_HEIGHT": 7,
+            "MIN_NPCS_TO_STAY": 0,
+            "WAIT_ALTITUDE": 15,
+            "BLACKLIST_DURATION": 30,
+            "RETREAT_ALTITUDE": 15,
+            "SAFE_COOLDOWN": 0.5,
+            "HP_ATTRIBUTE_NAME": "HP",
+            "SPAWN_GRACE_PERIOD": 5,
+            "IDLE_BEFORE_HOP": 3,
+            "MAX_KILL_TIME": 5,
+            "DANGER_RADIUS": 40
+        },
+        "TargetSets": [
+            [
+                "Ancient",
+                "Fortune",
+                "Insight"
+            ],
+            [
+                "Looting",
+                "Looting",
+                "Looting"
+            ]
+        ],
+        "WebhookEnabled": false,
+        "FarmAreas": [
+            9
+        ],
+        "WebhookURL": ""
+    }
+}

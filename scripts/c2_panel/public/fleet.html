@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fleet View - Antigravity C2</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+        
+        * { box-sizing: border-box; }
+
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --warning: #f59e0b;
+            --bg-image: none;
+        }
+        
+        body { transition: background-color 0.5s ease; }
+        
+        [data-theme="cyberpunk"] {
+            --bg-color: #090214;
+            --glass-bg: rgba(20, 5, 40, 0.7);
+            --primary: #f43f5e;
+            --primary-hover: #e11d48;
+            --success: #06b6d4;
+            --purple: #d946ef;
+            --bg-image: url('img/cyberpunk.png');
+        }
+
+        [data-theme="space"] {
+            --bg-color: #050508;
+            --glass-bg: rgba(15, 15, 25, 0.8);
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --success: #10b981;
+            --purple: #6366f1;
+            --bg-image: url('img/deepspace.png');
+        }
+
+        [data-theme="hacker"] {
+            --bg-color: #020502;
+            --glass-bg: rgba(5, 15, 5, 0.8);
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --success: #34d399;
+            --purple: #059669;
+            --bg-image: url('img/hacker.png');
+        }
+
+        body {
+            margin: 0; padding: 2rem; font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color); color: var(--text-main);
+            background-image: var(--bg-image);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .header h1 { margin: 0; font-size: 2rem; background: linear-gradient(to right, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .btn {
+            background: var(--primary); color: white; border: none;
+            padding: 0.5rem 1rem; border-radius: 0.5rem; font-family: inherit; font-weight: 600;
+            font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease;
+        }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn.outline { background: transparent; border: 1px solid var(--glass-border); }
+        .btn.danger { background: var(--danger); }
+        .btn.warning { background: var(--warning); }
+        
+        table { width: 100%; border-collapse: collapse; background: var(--glass-bg); border-radius: 1rem; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        th, td { padding: 1rem; border-bottom: 1px solid var(--glass-border); text-align: left; vertical-align: top; }
+        th { background: rgba(0,0,0,0.4); font-weight: 600; color: var(--text-muted); text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+        
+        .badge { padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; }
+        .badge.active { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge.inactive { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        
+        .item-list { max-height: 200px; overflow-y: auto; font-size: 0.85rem; padding-right: 0.5rem; }
+        .item-entry { background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid var(--glass-border); }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 3px; }
+        
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        table { width: 100%; border-collapse: collapse; background: var(--glass-bg); min-width: 800px; }
+
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            .header { flex-direction: column; align-items: stretch; gap: 1rem; text-align: center; }
+            .header > div:last-child { justify-content: center; }
+            table { min-width: unset; display: block; }
+            thead { display: none; }
+            tbody, tr, td { display: block; width: 100%; }
+            tr { margin-bottom: 1rem; background: rgba(255,255,255,0.02); border-radius: 0.5rem; padding: 1rem; }
+            td { border: none; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+            td:last-child { border-bottom: none; }
+        }
+    </style>
+</head>
+<body>
+    <div style="position: absolute; top: 1rem; right: 1rem; display: flex; gap: 0.5rem; z-index: 100;">
+        <button class="btn outline" onclick="setTheme('cyberpunk')" style="font-size: 0.75rem;">Cyberpunk</button>
+        <button class="btn outline" onclick="setTheme('space')" style="font-size: 0.75rem;">Deep Space</button>
+        <button class="btn outline" onclick="setTheme('hacker')" style="font-size: 0.75rem;">Hacker</button>
+    </div>
+
+    <div class="header">
+        <div>
+            <h1>📊 Fleet View</h1>
+            <p style="color:var(--text-muted); margin: 0.5rem 0 0 0;">Excel-style overview of all connected bots.</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <button class="btn outline" onclick="window.location.href='index.html'">🔙 Back to Cards</button>
+            <div id="status-text" style="color: var(--success); font-weight: bold; align-self: center;">Connected</div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 15%;">Bot ID & Status</th>
+                    <th style="width: 25%;">Ascender Status</th>
+                    <th style="width: 35%;">Backpack Contents</th>
+                    <th style="width: 25%;">Controls</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Waiting for data...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // --- Theme Logic ---
+        function setTheme(themeName) {
+            document.body.setAttribute('data-theme', themeName);
+            localStorage.setItem('c2-theme', themeName);
+        }
+        const savedTheme = localStorage.getItem('c2-theme') || 'cyberpunk';
+        setTheme(savedTheme);
+
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}`);
+        const tbody = document.getElementById('table-body');
+        
+        let clientDataStore = {};
+        let clientLogs = {}; // Track state history per client
+
+        ws.onopen = () => {
+            document.getElementById('status-text').innerText = 'Connected';
+            document.getElementById('status-text').style.color = 'var(--success)';
+            ws.send(JSON.stringify({ type: 'register', clientType: 'dashboard' }));
+        };
+
+        ws.onclose = () => {
+            document.getElementById('status-text').innerText = 'Disconnected';
+            document.getElementById('status-text').style.color = 'var(--danger)';
+            setTimeout(() => window.location.reload(), 3000);
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'client_list') {
+                    data.clients.forEach(c => clientDataStore[c.id] = c);
+                    const sortedClients = data.clients.sort((a, b) => {
+                        const aBp = (a.status.backpackData || []).length;
+                        const bBp = (b.status.backpackData || []).length;
+                        return bBp - aBp;
+                    });
+                    renderTable(sortedClients);
+                }
+            } catch(e) {}
+        };
+
+        function sendCommand(targetId, action, payload = null) {
+            ws.send(JSON.stringify({ type: 'command', targetId: targetId, action: action, payload: payload }));
+        }
+
+        const updateHTML = (id, html) => {
+            const el = document.getElementById(id);
+            if (el && el.innerHTML !== html) el.innerHTML = html;
+        };
+
+        function renderTable(clients) {
+            if (clients.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No clients connected.</td></tr>`;
+                return;
+            }
+
+            // Remove disconnected
+            Array.from(tbody.children).forEach(tr => {
+                if (!clients.find(c => c.id === tr.id.replace('row-', ''))) tr.remove();
+            });
+
+            clients.forEach(client => {
+                let tr = document.getElementById(`row-${client.id}`);
+                if (!tr) {
+                    tr = document.createElement('tr');
+                    tr.id = `row-${client.id}`;
+                    tr.innerHTML = `
+                        <td id="col1-${client.id}"></td>
+                        <td id="col2-${client.id}"></td>
+                        <td id="col3-${client.id}"></td>
+                        <td id="col4-${client.id}">
+                            <div style="display:flex; flex-direction:column; gap:0.5rem;">
+                                <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                                    <input type="checkbox" id="activate-${client.id}" onchange="sendCommand('${client.id}', 'activateAccount', this.checked)">
+                                    <span style="font-weight:600; color:var(--success);">Activate Account</span>
+                                </label>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+                                    <button class="btn outline" style="padding:0.4rem; font-size:0.75rem;" onclick="sendCommand('${client.id}', 'toggleFarm')">Toggle Farm</button>
+                                    <button class="btn outline" style="padding:0.4rem; font-size:0.75rem;" onclick="sendCommand('${client.id}', 'toggleSnipe')">Toggle Sniper</button>
+                                    <button class="btn outline" style="padding:0.4rem; font-size:0.75rem; grid-column: 1 / -1;" onclick="sendCommand('${client.id}', 'toggle3d')">Toggle 3D</button>
+                                </div>
+                                <div style="margin-top: 0.2rem; background:rgba(0,0,0,0.2); padding:0.4rem; border-radius:0.5rem; border:1px solid var(--glass-border);">
+                                    <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">FPS Limit: <span id="fps-val-${client.id}" style="color:var(--text-main);">3</span></div>
+                                    <input type="range" min="1" max="60" value="3" id="fps-slider-${client.id}" 
+                                           style="width:100%; margin-bottom:0.3rem;"
+                                           oninput="document.getElementById('fps-val-${client.id}').innerText = this.value"
+                                           onchange="sendCommand('${client.id}', 'setFPS', this.value)">
+                                    <div style="display:flex; gap:0.2rem;">
+                                        <button class="btn outline" style="padding:0.2rem; font-size:0.65rem; flex:1;" onclick="document.getElementById('fps-slider-${client.id}').value=1; document.getElementById('fps-val-${client.id}').innerText='1'; sendCommand('${client.id}', 'setFPS', 1)">1</button>
+                                        <button class="btn outline" style="padding:0.2rem; font-size:0.65rem; flex:1;" onclick="document.getElementById('fps-slider-${client.id}').value=3; document.getElementById('fps-val-${client.id}').innerText='3'; sendCommand('${client.id}', 'setFPS', 3)">3</button>
+                                        <button class="btn outline" style="padding:0.2rem; font-size:0.65rem; flex:1;" onclick="document.getElementById('fps-slider-${client.id}').value=60; document.getElementById('fps-val-${client.id}').innerText='Uncap'; sendCommand('${client.id}', 'setFPS', 360)">Uncap</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+
+                const farmingBadge = client.status.farming ? `<span class="badge active">Farming</span>` : `<span class="badge inactive">Idle</span>`;
+                const snipeBadge = client.status.snipeEnabled ? `<span class="badge active">Snipe On</span>` : `<span class="badge inactive">Snipe Off</span>`;
+                const lStats = client.status.liveStats || { timeSpent: 0, levelGained: 0, moneyGained: 0, currentState: "Idle" };
+                
+                if (!clientLogs[client.id]) clientLogs[client.id] = [];
+                if (clientLogs[client.id].length === 0 || clientLogs[client.id][0].state !== lStats.currentState) {
+                    const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+                    clientLogs[client.id].unshift({ time: timeStr, state: lStats.currentState });
+                    if (clientLogs[client.id].length > 5) clientLogs[client.id].pop(); // Keep last 5 states
+                }
+
+                let logsHtml = `<div style="margin-top:0.5rem; background:rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius:0.5rem; padding:0.4rem; font-size:0.7rem; color:var(--text-muted); max-height:75px; overflow-y:auto;">`;
+                clientLogs[client.id].forEach(log => {
+                    logsHtml += `<div style="margin-bottom:0.2rem;">[${log.time}] <span style="color:#e2e8f0;">${log.state}</span></div>`;
+                });
+                logsHtml += `</div>`;
+
+                const col1Html = `
+                    <div style="font-size:1.1rem; font-weight:600; margin-bottom:0.5rem;">🤖 ${client.id}</div>
+                    <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">${farmingBadge} ${snipeBadge}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted); line-height:1.5;">
+                        Gained: <span style="color:var(--success);">+$${lStats.moneyGained}</span> | 
+                        Levels: <span style="color:var(--warning);">+${lStats.levelGained}</span>
+                    </div>
+                    ${logsHtml}
+                `;
+                updateHTML(`col1-${client.id}`, col1Html);
+
+                // Ascender
+                const ascData = client.status.ascenderData;
+                let col2Html = `<div style="color:var(--text-muted); font-size:0.85rem;">Empty</div>`;
+                if (ascData && ascData.hasSword && ascData.stats) {
+                    col2Html = `
+                        <div style="font-size:0.85rem; background:rgba(0,0,0,0.2); padding:0.5rem; border-radius:0.5rem; border:1px solid var(--glass-border);">
+                            <div style="margin-bottom:0.3rem;"><strong>Mode:</strong> ${ascData.mode || 'None'}</div>
+                            <div style="font-weight:600; margin-bottom:0.3rem;">
+                                <span style="color:var(--text-main);">Lvl ${ascData.stats.Level}</span> <span style="color:var(--glass-border);">|</span> 
+                                <span style="color:#c084fc;">${ascData.stats.Rarity}</span> <span style="color:var(--glass-border);">|</span> 
+                                <span style="color:#60a5fa;">${ascData.stats.Quality}</span> <span style="color:var(--glass-border);">|</span> 
+                                <span style="color:#f472b6;">${ascData.stats.Mold}</span> <span style="color:var(--glass-border);">|</span> 
+                                <span style="color:#fcd34d;">${ascData.stats.Class}</span>
+                            </div>
+                            <div style="color:var(--text-muted); line-height:1.3;">
+                                1: ${ascData.stats.Enchant1}<br>
+                                2: ${ascData.stats.Enchant2}<br>
+                                3: ${ascData.stats.Enchant3}
+                            </div>
+                        </div>
+                    `;
+                }
+                updateHTML(`col2-${client.id}`, col2Html);
+
+                // Backpack
+                const bpData = client.status.backpackData || [];
+                let col3Html = `<div style="color:var(--text-muted); font-size:0.85rem;">0 Items</div>`;
+                if (bpData.length > 0) {
+                    col3Html = `<div class="item-list">`;
+                    bpData.forEach(item => {
+                        const isEq = item.Equipped ? '<span style="color:var(--success); font-weight:bold;">[EQ]</span> ' : '';
+                        col3Html += `
+                            <div class="item-entry">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:0.2rem;">
+                                    <span style="font-size: 0.85rem; font-weight: 600;">
+                                        ${isEq}
+                                        <span style="color:#c084fc;">${item.Rarity}</span> <span style="color:var(--glass-border);">|</span> 
+                                        <span style="color:#60a5fa;">${item.Quality}</span> <span style="color:var(--glass-border);">|</span> 
+                                        <span style="color:#f472b6;">${item.Mold}</span> <span style="color:var(--glass-border);">|</span> 
+                                        <span style="color:#fcd34d;">${item.Class}</span> 
+                                        <span style="color:var(--text-muted); font-weight:normal;">(Lvl ${item.Level})</span>
+                                    </span>
+                                    <button class="btn danger" style="padding:0.1rem 0.4rem; font-size:0.7rem;" onclick="sendCommand('${client.id}', 'dropSword', '${item.id}')">Drop</button>
+                                </div>
+                                <div style="color:var(--text-muted); font-size:0.75rem;">
+                                    ${item.Enchant1} | ${item.Enchant2} | ${item.Enchant3}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    col3Html += `</div>`;
+                }
+                updateHTML(`col3-${client.id}`, col3Html);
+
+                // Update checkbox without losing focus
+                const activateCheckbox = document.getElementById(`activate-${client.id}`);
+                if (activateCheckbox && document.activeElement !== activateCheckbox) {
+                    activateCheckbox.checked = client.status.activeAccount || false;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
