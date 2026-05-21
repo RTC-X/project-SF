@@ -80,6 +80,7 @@ if _G.CharRespawnConnection then _G.CharRespawnConnection:Disconnect() end
   if _G.SwordAddedConnection then _G.SwordAddedConnection:Disconnect() end
   if _G.InvAddedConnection then _G.InvAddedConnection:Disconnect() end
   if _G.SellingAddedConnection then _G.SellingAddedConnection:Disconnect() end
+if _G.GraphicsStripperConnection then _G.GraphicsStripperConnection:Disconnect() end
 _G.UltimateFarmConnection = nil
 isTeleporting = false
 _G.fetchingGodRoll = false
@@ -133,7 +134,7 @@ task.spawn(function()
         workspace.Terrain.WaterTransparency = 0
         
         -- Connect to any new items to strip graphics immediately
-        workspace.DescendantAdded:Connect(function(v)
+        _G.GraphicsStripperConnection = workspace.DescendantAdded:Connect(function(v)
             if v:IsA("Texture") or v:IsA("Decal") then
                 v:Destroy()
             elseif v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") then
@@ -956,40 +957,41 @@ task.spawn(function()
     end)
 
     local function maintainC2Connection()
-        local success, ws = pcall(function()
-            local wsFunc = (syn and syn.websocket and syn.websocket.connect) or WebSocket.connect
-            if wsFunc then
-                local url = _G.C2_SERVER_URL or "ws://localhost:3000"
-                return wsFunc(url)
-            end
-            return nil
-        end)
+        while true do
+            local success, ws = pcall(function()
+                local wsFunc = (syn and syn.websocket and syn.websocket.connect) or WebSocket.connect
+                if wsFunc then
+                    local url = _G.C2_SERVER_URL or "ws://localhost:3000"
+                    return wsFunc(url)
+                end
+                return nil
+            end)
 
-        if not success or not ws then
-            warn("⚠️ WebSocket C2 Server unreachable. Retrying in 10s...")
-            task.wait(10)
-            return maintainC2Connection()
-        end
-
-        print("🔌 Connected to Antigravity C2 Panel!")
-        _G.C2_WS = ws
-        
-        if _G.SetupC2Events then
-            task.spawn(function() _G.SetupC2Events(ws) end)
-        end
-        
-        pcall(function()
-            if ws.OnClose then
-                ws.OnClose:Connect(function()
-                    print("⚠️ C2 Connection Lost! Reconnecting in 5s...")
-                    _G.C2_WS = nil
-                    task.wait(5)
-                    maintainC2Connection()
+            if success and ws then
+                print("🔌 Connected to Antigravity C2 Panel!")
+                _G.C2_WS = ws
+                
+                if _G.SetupC2Events then
+                    task.spawn(function() _G.SetupC2Events(ws) end)
+                end
+                
+                pcall(function()
+                    if ws.OnClose then
+                        ws.OnClose:Connect(function()
+                            print("⚠️ C2 Connection Lost! Reconnecting in 5s...")
+                            _G.C2_WS = nil
+                            task.wait(5)
+                            maintainC2Connection()
+                        end)
+                    end
                 end)
+                
+                break
+            else
+                warn("⚠️ WebSocket C2 Server unreachable. Retrying in 10s...")
+                task.wait(10)
             end
-        end)
-        
-        return ws
+        end
     end
 
     local populateData = {}
@@ -1215,7 +1217,6 @@ task.spawn(function()
                             if parsedData.Settings then for k,v in pairs(parsedData.Settings) do SETTINGS[k] = v end end
                             print("C2 Command: Configuration Loaded locally from " .. SaveFileName)
                             pcall(function() ws:Send(HttpService:JSONEncode({ type = "update_status", status = { activeTargetSets = _G.ActiveTargetSets } })) end)
-                            pcall(function() UpdateSetsDisplay(); UpdateWhitelistDisplay() end)
                         end
                     else
                         warn("C2 Command: No config file found to load.")
@@ -1236,19 +1237,6 @@ task.spawn(function()
                         if parsedData.Settings then for k,v in pairs(parsedData.Settings) do SETTINGS[k] = v end end
                         print("C2 Command: Configuration Synced remotely from Website!")
                         
-                        -- Update UI Elements dynamically if possible
-                        pcall(function()
-                            if UpdateSetsDisplay then UpdateSetsDisplay() end
-                            if UpdateWhitelistDisplay then UpdateWhitelistDisplay() end
-                            if AreaRotationDrop then AreaRotationDrop:Set(_G.FarmAreas) end
-                            if WebhookInput then WebhookInput:Set(_G.WebhookURL) end
-                            if WebhookToggle then WebhookToggle:Set(_G.WebhookEnabled) end
-                            if OffsetSlider and SETTINGS.OFFSET_HEIGHT then OffsetSlider:Set(SETTINGS.OFFSET_HEIGHT) end
-                            if WaitSlider and SETTINGS.WAIT_ALTITUDE then WaitSlider:Set(SETTINGS.WAIT_ALTITUDE) end
-                            if TTKSlider and SETTINGS.MAX_KILL_TIME then TTKSlider:Set(SETTINGS.MAX_KILL_TIME) end
-                            if HopSlider and SETTINGS.IDLE_BEFORE_HOP then HopSlider:Set(SETTINGS.IDLE_BEFORE_HOP) end
-                            if DensitySlider and SETTINGS.MIN_NPCS_TO_STAY then DensitySlider:Set(SETTINGS.MIN_NPCS_TO_STAY) end
-                        end)
                         pcall(function() ws:Send(HttpService:JSONEncode({ type = "update_status", status = { activeTargetSets = _G.ActiveTargetSets } })) end)
                     end
                 end)
@@ -1258,7 +1246,6 @@ task.spawn(function()
                     _G.ActiveTargetSets = data.payload
                     print("C2 Command: Wishlist updated. Size: " .. tostring(#_G.ActiveTargetSets))
                     pcall(function() ws:Send(HttpService:JSONEncode({ type = "update_status", status = { activeTargetSets = _G.ActiveTargetSets } })) end)
-                    pcall(function() UpdateSetsDisplay() end)
                 end
 
             elseif data.action == "setAscenderMode" then
