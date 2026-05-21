@@ -165,6 +165,153 @@ wss.on('connection', (ws, req) => {
     });
 });
 
+// --- Live Mock Roblox Bot Accounts Telemetry Generator ---
+const mockClients = [
+    {
+        id: "RoboFarmer_Alpha",
+        status: {
+            farming: true,
+            snipeEnabled: true,
+            liveStats: {
+                timeSpent: 3600,
+                levelGained: 14,
+                moneyGained: 250000,
+                currentState: "Farming Area 12"
+            },
+            ascenderData: {
+                hasSword: true,
+                stats: {
+                    Level: 82,
+                    Quality: "94.6%",
+                    Rarity: "Mythic God Roll",
+                    Mold: "Duality Mold",
+                    Enchant1: "Sharpness V",
+                    Enchant2: "Looting III",
+                    Enchant3: "Haste II"
+                }
+            },
+            backpackData: [
+                { id: "sword_01", Level: 45, Rarity: "Legendary", Quality: "89.2%", Class: "Gladiator", Equipped: true },
+                { id: "sword_02", Level: 38, Rarity: "Rare", Quality: "74.1%", Class: "Vanguard", Equipped: false },
+                { id: "sword_03", Level: 12, Rarity: "Common", Quality: "50.0%", Class: "Recruit", Equipped: false }
+            ],
+            fullConfig: {
+                WebhookURL: "https://discord.com/api/webhooks/123456789/abcdefgh",
+                WebhookEnabled: true,
+                Settings: {
+                    OFFSET_HEIGHT: 7,
+                    WAIT_ALTITUDE: 15,
+                    MAX_KILL_TIME: 5,
+                    IDLE_BEFORE_HOP: 3,
+                    MIN_NPCS_TO_STAY: 0
+                },
+                TargetPriority: "Closest",
+                FarmAreas: [1, 2, 5, 12],
+                TargetSets: [["Sharpness V", "Looting III"], ["Haste II"]],
+                WhitelistedSwords: ["sword_01"]
+            },
+            metadata: {
+                Areas: ["[1] Area 1", "[2] Area 2", "[5] Area 5", "[12] Area 12"]
+            }
+        }
+    },
+    {
+        id: "GoldGoblin_X",
+        status: {
+            farming: true,
+            snipeEnabled: true,
+            liveStats: {
+                timeSpent: 1800,
+                levelGained: 6,
+                moneyGained: 124000,
+                currentState: "Sniping Active Area 5"
+            },
+            ascenderData: {
+                hasSword: true,
+                stats: {
+                    Level: 41,
+                    Quality: "88.1%",
+                    Rarity: "Epic",
+                    Mold: "Standard Mold",
+                    Enchant1: "Looting II",
+                    Enchant2: "Haste I",
+                    Enchant3: "EMPTY"
+                }
+            },
+            backpackData: [
+                { id: "sword_04", Level: 22, Rarity: "Epic", Quality: "81.4%", Class: "Crusader", Equipped: true }
+            ],
+            fullConfig: {
+                WebhookURL: "https://discord.com/api/webhooks/987654321/hgfedcba",
+                WebhookEnabled: false,
+                Settings: {
+                    OFFSET_HEIGHT: 6,
+                    WAIT_ALTITUDE: 12,
+                    MAX_KILL_TIME: 6,
+                    IDLE_BEFORE_HOP: 4,
+                    MIN_NPCS_TO_STAY: 1
+                },
+                TargetPriority: "Highest XP",
+                FarmAreas: [1, 5],
+                TargetSets: [["Looting II"], ["Haste I"]],
+                WhitelistedSwords: ["sword_04"]
+            },
+            metadata: {
+                Areas: ["[1] Area 1", "[2] Area 2", "[5] Area 5"]
+            }
+        }
+    },
+    {
+        id: "AscendedKnight",
+        status: {
+            farming: false,
+            snipeEnabled: false,
+            liveStats: {
+                timeSpent: 7200,
+                levelGained: 32,
+                moneyGained: 980000,
+                currentState: "Idle - Standby"
+            },
+            ascenderData: {
+                hasSword: false
+            },
+            backpackData: [],
+            fullConfig: {
+                WebhookURL: "",
+                WebhookEnabled: false,
+                Settings: {
+                    OFFSET_HEIGHT: 7,
+                    WAIT_ALTITUDE: 15,
+                    MAX_KILL_TIME: 5,
+                    IDLE_BEFORE_HOP: 3,
+                    MIN_NPCS_TO_STAY: 0
+                },
+                TargetPriority: "Closest",
+                FarmAreas: [],
+                TargetSets: [],
+                WhitelistedSwords: []
+            },
+            metadata: {
+                Areas: ["[1] Area 1", "[2] Area 2"]
+            }
+        }
+    }
+];
+
+// Tick up live mock accounts telemetry
+setInterval(() => {
+    mockClients.forEach(c => {
+        c.status.liveStats.timeSpent += 5;
+        if (c.status.farming) {
+            c.status.liveStats.moneyGained += Math.floor(Math.random() * 500) + 100;
+            if (Math.random() > 0.92) {
+                c.status.liveStats.levelGained += 1;
+            }
+        }
+    });
+    broadcastToDashboards();
+}, 5000);
+
 function getActiveGameClients() {
     const gameClients = [];
     for (const [clientWs, clientData] of clients.entries()) {
@@ -175,6 +322,8 @@ function getActiveGameClients() {
             });
         }
     }
+    // Concatenate our mock clients to preview visual fidelity
+    gameClients.push(...mockClients);
     return gameClients;
 }
 
