@@ -29,7 +29,13 @@ _G.WebhookURL = ""
 _G.WebhookEnabled = false
 
 -- C2 Server Configuration
-_G.C2_SERVER_URL = "wss://snowflake-enslave-rigging.ngrok-free.dev" -- Change this to your VPS/ngrok IP when sharing!
+_G.C2_Mode = "Local" -- Switch this to "VPS" when you are ready to use your Contabo server!
+
+if _G.C2_Mode == "Local" then
+    _G.C2_SERVER_URL = "wss://snowflake-enslave-rigging.ngrok-free.dev"
+elseif _G.C2_Mode == "VPS" then
+    _G.C2_SERVER_URL = "ws://YOUR_CONTABO_IP:3000" -- (We will change this to your Namecheap domain later)
+end
 
 -- Area Rotation States
 _G.FarmAreas = {} 
