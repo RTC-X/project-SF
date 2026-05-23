@@ -56,3 +56,45 @@ class TelemetryLog(models.Model):
 
     def __str__(self):
         return f"[{self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}] {self.bot.username}: {self.message}"
+
+# ==============================================================================
+# DISCORD OAUTH AUTO-JOIN GUILD SIGNAL RECEIVER
+# ==============================================================================
+import requests
+from django.dispatch import receiver
+from django.conf import settings
+from allauth.socialaccount.signals import pre_social_login
+
+@receiver(pre_social_login)
+def auto_join_discord_server(sender, request, sociallogin, **kwargs):
+    # Triggers right before a user completes authentication via Discord OAuth
+    if sociallogin.account.provider != 'discord':
+        return
+        
+    bot_token = getattr(settings, 'DISCORD_BOT_TOKEN', '')
+    guild_id = getattr(settings, 'DISCORD_GUILD_ID', '')
+    
+    if not bot_token or not guild_id:
+        return
+        
+    access_token = sociallogin.token.token
+    user_uid = sociallogin.account.uid
+    
+    # Request endpoint to programmatically join the user into the server
+    url = f"https://discord.com/api/v10/guilds/{guild_id}/members/{user_uid}"
+    headers = {
+        "Authorization": f"Bot {bot_token}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "access_token": access_token
+    }
+    
+    try:
+        response = requests.put(url, headers=headers, json=data, timeout=8)
+        if response.status_code in [201, 204]:
+            print(f"[Discord OAuth] User {user_uid} joined server {guild_id} successfully (Status: {response.status_code})")
+        else:
+            print(f"[Discord OAuth] Failed to join user {user_uid} to server {guild_id}: {response.status_code} - {response.text}")
+    except Exception as e:
+        print(f"[Discord OAuth] Error calling auto-join API: {str(e)}")

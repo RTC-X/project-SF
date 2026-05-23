@@ -148,11 +148,15 @@ SOCIALACCOUNT_PROVIDERS = {
             'secret': env('DISCORD_CLIENT_SECRET', default=''),
             'key': ''
         },
-        'SCOPE': ['identify'],
+        'SCOPE': ['identify', 'guilds.join'],
     }
 }
 
 # Simplify social login flow (skip intermediate signup form)
 SOCIALACCOUNT_AUTO_SIGNUP = True
 ACCOUNT_SIGNUP_REDIRECT_URL = 'dashboard'
+
+# Discord Bot Server Auto-Join Configs
+DISCORD_BOT_TOKEN = env('DISCORD_BOT_TOKEN', default='')
+DISCORD_GUILD_ID = env('DISCORD_GUILD_ID', default='')
 
