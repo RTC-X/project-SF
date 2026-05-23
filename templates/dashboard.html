@@ -107,16 +107,14 @@
             </div>
             <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Api key</p>
             <div class="flex items-center gap-2 mt-2 cursor-pointer group/key" 
-                @click="navigator.clipboard.writeText('{{ user_api_key }}'); copied = true; setTimeout(() => copied = false, 2000)"
+                @click="window.navigator.clipboard.writeText('{{ user_api_key }}'); copied = true; window.setTimeout(function() { copied = false; }, 2000)"
                 title="Click to copy API Key">
                 <p class="text-lg font-bold text-teal-400 font-mono tracking-wider transition-all duration-300 blur-[4px] hover:blur-none select-none">
                     {{ user_api_key }}
                 </p>
-                <span class="text-[9px] font-mono text-zinc-500 opacity-50 group-hover/key:opacity-100 transition-opacity" x-show="!copied">
-                    (Click to copy)
-                </span>
-                <span class="text-[9px] font-mono text-emerald-400 font-bold flex items-center gap-1 animate-bounce" x-show="copied" style="display: none;">
-                    <i data-lucide="check" class="w-3 h-3"></i> Copied!
+                <span class="text-[9px] font-mono transition-all duration-300"
+                      :class="copied ? 'text-emerald-400 font-bold animate-bounce' : 'text-zinc-500 opacity-50 group-hover/key:opacity-100'"
+                      x-text="copied ? '✓ Copied!' : '(Click to copy)'">
                 </span>
             </div>
         </div>
@@ -539,7 +537,7 @@
                         <i data-lucide="sliders" class="w-5 h-5 text-white"></i>
                     </div>
                     <div>
-                        <h4 class="text-lg font-bold text-white font-mono">Fleet Multi Configuration</h4>
+                        <h4 class="text-lg font-bold text-white font-mono">SF Multi Configuration</h4>
                         <p class="text-[10px] text-zinc-500 font-mono tracking-widest uppercase" x-text="'Step ' + multiConfigStep + ' of 2'">Step 1 of 2</p>
                     </div>
                 </div>
