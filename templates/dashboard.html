@@ -13,41 +13,6 @@
     
     init() {
         this.connectWS();
-        
-        // Populate mock telemetry data for preview if no live bots are connected yet
-        setTimeout(() => {
-            if (this.bots.length === 0) {
-                this.bots = [
-                    {
-                        id: 'alpha-1',
-                        username: 'RoboFarmer_Alpha',
-                        status: 'Farming',
-                        level: 82,
-                        money: 1250000.50,
-                        session_time: 3600,
-                        config: { farm_enabled: true, sniper_enabled: true, active_areas: [1, 5, 12] }
-                    },
-                    {
-                        id: 'goblin-2',
-                        username: 'GoldGoblin_X',
-                        status: 'Sniping',
-                        level: 41,
-                        money: 48900.00,
-                        session_time: 1800,
-                        config: { farm_enabled: false, sniper_enabled: true, active_areas: [5] }
-                    },
-                    {
-                        id: 'knight-3',
-                        username: 'AscendedKnight',
-                        status: 'Offline',
-                        level: 12,
-                        money: 0.00,
-                        session_time: 0,
-                        config: { farm_enabled: false, sniper_enabled: false, active_areas: [] }
-                    }
-                ];
-            }
-        }, 1000);
     },
     
     connectWS() {
