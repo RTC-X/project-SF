@@ -155,6 +155,8 @@ SOCIALACCOUNT_PROVIDERS = {
 # Simplify social login flow (skip intermediate signup form)
 SOCIALACCOUNT_AUTO_SIGNUP = True
 ACCOUNT_SIGNUP_REDIRECT_URL = 'dashboard'
+SOCIALACCOUNT_LOGIN_ON_GET = True
+ACCOUNT_LOGOUT_ON_GET = True
 
 # Discord Bot Server Auto-Join Configs
 DISCORD_BOT_TOKEN = env('DISCORD_BOT_TOKEN', default='')
