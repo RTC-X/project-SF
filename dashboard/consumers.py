@@ -130,7 +130,11 @@ class C2Consumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_active_bots(self):
         from .models import BotAccount, BotConfiguration
-        bots = BotAccount.objects.all()
+        user = self.scope.get('user')
+        if user and user.is_authenticated:
+            bots = BotAccount.objects.filter(owner=user)
+        else:
+            bots = BotAccount.objects.none()
         serialized = []
         for bot in bots:
             try:
@@ -172,6 +176,14 @@ class C2Consumer(AsyncWebsocketConsumer):
         from .models import BotAccount, BotConfiguration
         bot, created = BotAccount.objects.get_or_create(username=username)
         bot.status = status
+        
+        if extra_data and 'discord_id' in extra_data and extra_data['discord_id']:
+            from allauth.socialaccount.models import SocialAccount
+            try:
+                social_acc = SocialAccount.objects.get(uid=str(extra_data['discord_id']), provider='discord')
+                bot.owner = social_acc.user
+            except SocialAccount.DoesNotExist:
+                pass
         
         if extra_data:
             if 'level' in extra_data and extra_data['level'] is not None:

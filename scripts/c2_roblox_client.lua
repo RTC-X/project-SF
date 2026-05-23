@@ -17,6 +17,7 @@ local WS_URL = "wss://" .. SERVER_HOST .. "/ws/c2/"
 print("[C2 Client] Initializing Roblox Fleet Node...")
 
 -- Global State Control Variables (used by your external autofarm scripts)
+_G.C2_DiscordID = "" -- Set your Discord Account UID here (e.g. "104928374928374928") to register this bot on your dashboard
 _G.C2_FarmEnabled = true
 _G.C2_SnipeEnabled = true
 _G.C2_TargetEnchantSets = {}
@@ -98,10 +99,11 @@ print("[C2 Client] Connected successfully to " .. WS_URL)
 -- Auto-register Node
 local registerPayload = {
     action = "register",
-    username = LocalPlayer.Name
+    username = LocalPlayer.Name,
+    discord_id = _G.C2_DiscordID or ""
 }
 ws:Send(HttpService:JSONEncode(registerPayload))
-print("[C2 Client] Registered Node for user: " .. LocalPlayer.Name)
+print("[C2 Client] Registered Node for user: " .. LocalPlayer.Name .. " (Discord: " .. tostring(_G.C2_DiscordID) .. ")")
 
 -- Send continuous gameplay telemetry heartbeat logs
 task.spawn(function()

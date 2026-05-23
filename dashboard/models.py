@@ -1,6 +1,7 @@
 import uuid
 import secrets
 from django.db import models
+from django.contrib.auth.models import User
 
 class BotAccount(models.Model):
     STATUS_CHOICES = [
@@ -12,6 +13,7 @@ class BotAccount(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='bots', help_text="Discord user owner")
     username = models.CharField(max_length=100, unique=True, help_text="Roblox Username")
     roblox_id = models.BigIntegerField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Offline')
