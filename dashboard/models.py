@@ -39,7 +39,7 @@ class BotAccount(models.Model):
 class BotConfiguration(models.Model):
     bot = models.OneToOneField(BotAccount, on_delete=models.CASCADE, related_name='config')
     farm_enabled = models.BooleanField(default=False)
-    sniper_enabled = models.BooleanField(default=False)
+    snipe_enabled = models.BooleanField(default=False)
     
     # Custom configurations stored cleanly in JSON format
     active_areas = models.JSONField(default=list, blank=True, help_text="List of active area IDs")
