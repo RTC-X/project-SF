@@ -5,6 +5,7 @@ from channels.db import database_sync_to_async
 class C2Consumer(AsyncWebsocketConsumer):
     async def connect(self):
         self.room_group_name = 'c2_fleet'
+        self.bot_username = None
 
         # Join fleet channel group
         await self.channel_layer.group_add(
@@ -35,6 +36,11 @@ class C2Consumer(AsyncWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
+        
+        # Mark bot as offline if registered
+        if getattr(self, 'bot_username', None):
+            await self.set_bot_offline(self.bot_username)
+            await self.broadcast_fleet_update()
 
     # Receive message from WebSocket (from frontends or Roblox bots)
     async def receive(self, text_data):
@@ -45,6 +51,7 @@ class C2Consumer(AsyncWebsocketConsumer):
             if action == 'register':
                 # Registering active bots from Roblox client
                 bot_id = data.get('username')
+                self.bot_username = bot_id
                 await self.update_bot_status(bot_id, 'Idle', data)
                 await self.broadcast_fleet_update()
                 
@@ -71,6 +78,7 @@ class C2Consumer(AsyncWebsocketConsumer):
             elif action == 'log':
                 # Bot streaming live telemetries / logs
                 username = data.get('username')
+                self.bot_username = username
                 event_type = data.get('event_type', 'General')
                 message = data.get('message')
                 
@@ -226,6 +234,16 @@ class C2Consumer(AsyncWebsocketConsumer):
                 target_enchant_sets=["Ancient + Fortune + Insight"],
                 whitelisted_uuids=["sword_92k"]
             )
+
+    @database_sync_to_async
+    def set_bot_offline(self, username):
+        from .models import BotAccount
+        try:
+            bot = BotAccount.objects.get(username=username)
+            bot.status = 'Offline'
+            bot.save()
+        except BotAccount.DoesNotExist:
+            pass
 
     async def broadcast_log(self, event):
         await self.send(text_data=json.dumps({
