@@ -94,10 +94,29 @@ class C2Consumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_active_bots(self):
-        from .models import BotAccount
+        from .models import BotAccount, BotConfiguration
         bots = BotAccount.objects.exclude(status='Offline')
-        return [
-            {
+        serialized = []
+        for bot in bots:
+            try:
+                config = bot.config
+                config_data = {
+                    'farm_enabled': config.farm_enabled,
+                    'snipe_enabled': config.snipe_enabled,
+                    'active_areas': config.active_areas,
+                    'target_enchant_sets': config.target_enchant_sets,
+                    'whitelisted_uuids': config.whitelisted_uuids,
+                }
+            except BotConfiguration.DoesNotExist:
+                config_data = {
+                    'farm_enabled': False,
+                    'snipe_enabled': False,
+                    'active_areas': [],
+                    'target_enchant_sets': [],
+                    'whitelisted_uuids': [],
+                }
+            
+            serialized.append({
                 'id': str(bot.id),
                 'username': bot.username,
                 'status': bot.status,
@@ -109,16 +128,9 @@ class C2Consumer(AsyncWebsocketConsumer):
                 'rarity': bot.rarity,
                 'mold': bot.mold,
                 'backpack_items': bot.backpack_items,
-                'config': {
-                    'farm_enabled': bot.config.farm_enabled if hasattr(bot, 'config') else False,
-                    'snipe_enabled': bot.config.snipe_enabled if hasattr(bot, 'config') else False,
-                    'active_areas': bot.config.active_areas if hasattr(bot, 'config') else [],
-                    'target_enchant_sets': bot.config.target_enchant_sets if hasattr(bot, 'config') else [],
-                    'whitelisted_uuids': bot.config.whitelisted_uuids if hasattr(bot, 'config') else [],
-                }
-            }
-            for bot in bots
-        ]
+                'config': config_data
+            })
+        return serialized
 
     @database_sync_to_async
     def update_bot_status(self, username, status):
@@ -141,11 +153,11 @@ class C2Consumer(AsyncWebsocketConsumer):
         bot.save()
         
         # Ensure configuration model exists cleanly
-        if not hasattr(bot, 'config'):
+        if not BotConfiguration.objects.filter(bot=bot).exists():
             BotConfiguration.objects.create(
                 bot=bot,
                 farm_enabled=True,
-                sniper_enabled=True,
+                snipe_enabled=True,
                 active_areas=[1, 2, 5, 12],
                 target_enchant_sets=["Ancient + Fortune + Insight"],
                 whitelisted_uuids=["sword_92k"]
