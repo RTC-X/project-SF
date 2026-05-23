@@ -2,8 +2,26 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 
+import requests
+
 def index_view(request):
-    return render(request, 'index.html')
+    sf_icon_url = None
+    try:
+        response = requests.get(
+            'https://thumbnails.roblox.com/v1/places/gameicons?placeIds=82432929049078&returnPolicy=PlaceHolder&size=150x150&format=Png',
+            timeout=2.0
+        )
+        if response.status_code == 200:
+            data = response.json()
+            if data and 'data' in data and len(data['data']) > 0:
+                sf_icon_url = data['data'][0].get('imageUrl')
+    except Exception:
+        pass
+        
+    context = {
+        'sf_icon_url': sf_icon_url or ''
+    }
+    return render(request, 'index.html', context)
 
 def login_view(request):
     if request.user.is_authenticated:
