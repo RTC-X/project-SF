@@ -51,8 +51,22 @@ class C2Consumer(AsyncWebsocketConsumer):
             if action == 'register':
                 # Registering active bots from Roblox client
                 bot_id = data.get('username')
+                
+                # Check validation
+                is_valid = await self.update_bot_status(bot_id, 'Idle', data)
+                if not is_valid:
+                    # Send kick command first
+                    await self.send(text_data=json.dumps({
+                        'type': 'command',
+                        'command': 'kick',
+                        'payload': {
+                            'reason': 'Invalid or missing API Key. Connection rejected by C2 Server.'
+                        }
+                    }))
+                    await self.close()
+                    return
+                
                 self.bot_username = bot_id
-                await self.update_bot_status(bot_id, 'Idle', data)
                 await self.broadcast_fleet_update()
                 
             elif action == 'command':
@@ -185,20 +199,22 @@ class C2Consumer(AsyncWebsocketConsumer):
         bot, created = BotAccount.objects.get_or_create(username=username)
         bot.status = status
         
+        is_valid_key = False
         if extra_data and 'api_key' in extra_data and extra_data['api_key']:
             import hashlib
             from django.contrib.auth.models import User
             from django.conf import settings
             secret = getattr(settings, 'SECRET_KEY', 'default_secret')
             # Look for a user whose secret hash matches the provided api_key
-            resolved_owner = None
             for user in User.objects.all():
                 expected_key = f"c2_usr_{hashlib.sha256(f'{user.id}:{secret}'.encode()).hexdigest()[:16]}"
                 if expected_key == extra_data['api_key']:
-                    resolved_owner = user
+                    bot.owner = user
+                    is_valid_key = True
                     break
-            if resolved_owner:
-                bot.owner = resolved_owner
+        
+        if not is_valid_key:
+            return False
         
         if extra_data:
             if 'level' in extra_data and extra_data['level'] is not None:
@@ -241,6 +257,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 target_enchant_sets=["Ancient + Fortune + Insight"],
                 whitelisted_uuids=["sword_92k"]
             )
+        return True
 
     @database_sync_to_async
     def set_bot_offline(self, username):

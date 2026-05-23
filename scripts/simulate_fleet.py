@@ -147,6 +147,11 @@ async def bot_session(uri, bot, delay, api_key=""):
                                     bot.target_enchant_sets = payload.get("target_enchant_sets", bot.target_enchant_sets)
                                     bot.whitelisted_uuids = payload.get("whitelisted_uuids", bot.whitelisted_uuids)
                                     print(f"[{get_timestamp()}] {GREEN}Node config successfully hot-reloaded!{RESET}")
+                                    
+                                elif command == "kick":
+                                    print(f"[{get_timestamp()}] {RED}{BOLD}[ERROR] KICK DIRECTIVE RECEIVED FOR {bot.username}: {payload.get('reason')}{RESET}")
+                                    print(f"[{get_timestamp()}] {RED}Terminating simulated session for {bot.username}...{RESET}\n")
+                                    return
                         except json.JSONDecodeError:
                             pass
 

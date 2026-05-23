@@ -176,6 +176,14 @@ task.spawn(function()
                     game:GetService("RunService"):Set3dRenderingEnabled(_G.C2_3DRendering)
                 end)
                 print("[C2 Client] 3D rendering enabled: " .. tostring(_G.C2_3DRendering))
+                
+            elseif command == "kick" then
+                -- Server rejected client (invalid/missing API key) -> Kick player from game
+                local reason = payload.reason or "Disconnected by C2 Server."
+                print("[C2 Client] Kicking player: " .. reason)
+                pcall(function()
+                    LocalPlayer:Kick(reason)
+                end)
             end
         end
     end

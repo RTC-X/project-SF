@@ -90,6 +90,11 @@ async def receive_commands(websocket):
                 
                 # Simulate executing the command
                 print(f"[{get_timestamp()}] {TEAL}* Simulated execution of command '{command}' succeeded.*{RESET}\n")
+                
+                if command == "kick":
+                    print(f"[{get_timestamp()}] {RED}{BOLD}[ERROR] KICK DIRECTIVE RECEIVED: {payload.get('reason')}{RESET}")
+                    print(f"[{get_timestamp()}] {RED}Terminating simulated session immediately.{RESET}\n")
+                    sys.exit(1)
         except json.JSONDecodeError:
             print(f"[{get_timestamp()}] {RED}Received raw invalid message format: {message}{RESET}")
 
