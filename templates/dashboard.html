@@ -10,6 +10,10 @@
     bots: [],
     logs: [],
     ws: null,
+    enchant1: '',
+    enchant2: '',
+    enchant3: '',
+    newUuid: '',
     
     init() {
         this.connectWS();
@@ -169,11 +173,10 @@
                         <div class="mt-6 pt-4 border-t border-white/5 flex items-center justify-end gap-2 pl-2">
                             <template x-if="bot.status !== 'Offline'">
                                 <div class="flex items-center gap-2 w-full justify-between">
-                                    <button @click="sendCommand(bot.id, bot.status === 'Farming' ? 'stop' : 'start')" 
-                                        class="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-xl transition-all font-mono"
-                                        :class="bot.status === 'Farming' ? 'bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/20' : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'">
-                                        <i :data-lucide="bot.status === 'Farming' ? 'pause' : 'play'" class="w-3.5 h-3.5"></i>
-                                        <span x-text="bot.status === 'Farming' ? 'Halt Agent' : 'Deploy Agent'">Deploy Agent</span>
+                                    <button @click="selectedBot = bot; showConfigModal = true" 
+                                        class="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-xl transition-all font-mono bg-teal-500/10 border border-teal-500/20 text-teal-400 hover:bg-teal-500/20">
+                                        <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+                                        <span>Manage</span>
                                     </button>
                                 </div>
                             </template>
@@ -220,79 +223,279 @@
     </div>
 
     <!-- Bespoke Modals (Alpine Dynamic Forms) -->
-    <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+    <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
         x-show="showConfigModal" 
         x-transition
         style="display: none;">
         
-        <div class="glass-panel w-full max-w-lg p-8 rounded-3xl relative overflow-hidden" @click.away="showConfigModal = false">
-            <div class="flex items-center justify-between mb-6">
-                <h4 class="text-lg font-bold text-white" x-text="selectedBot ? 'Configure Node: ' + selectedBot.username : 'Provision New Bot Token'">Configure Node</h4>
+        <!-- Config Modal Container -->
+        <div class="glass-panel w-full max-w-6xl p-6 rounded-3xl relative overflow-hidden bg-zinc-950 border border-white/5 shadow-2xl" @click.away="showConfigModal = false">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
+                <h4 class="text-lg font-bold text-white font-mono" x-text="selectedBot ? 'Manage Fleet Bot: ' + selectedBot.username : 'Provision New Bot Token'">Manage Fleet Bot</h4>
                 <button @click="showConfigModal = false" class="text-zinc-500 hover:text-white transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <div class="space-y-6">
-                <!-- If provisioning new bot -->
-                <template x-if="!selectedBot">
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-mono text-zinc-400 uppercase tracking-wider mb-2">Roblox Bot Username</label>
-                            <input type="text" class="w-full bg-zinc-950/60 border border-white/5 rounded-2xl py-3 px-4 text-sm text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400" placeholder="e.g. RoboFarmer_Alpha">
-                        </div>
-                        <button class="w-full py-3 text-sm font-bold bg-teal-500/10 border border-teal-500/20 text-white rounded-2xl hover:bg-teal-500/20 transition-all font-mono">
-                            Generate C2 Credentials
-                        </button>
+            <!-- If provisioning new bot -->
+            <template x-if="!selectedBot">
+                <div class="space-y-4 max-w-md mx-auto py-8">
+                    <div>
+                        <label class="block text-xs font-mono text-zinc-400 uppercase tracking-wider mb-2">Roblox Bot Username</label>
+                        <input type="text" class="w-full bg-zinc-950/60 border border-white/5 rounded-2xl py-3 px-4 text-sm text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400" placeholder="e.g. RoboFarmer_Alpha">
                     </div>
-                </template>
+                    <button class="w-full py-3 text-sm font-bold bg-teal-500/10 border border-teal-500/20 text-white rounded-2xl hover:bg-teal-500/20 transition-all font-mono">
+                        Generate C2 Credentials
+                    </button>
+                </div>
+            </template>
 
-                <!-- If editing active config -->
-                <template x-if="selectedBot">
-                    <div class="space-y-6">
-                        <div class="grid grid-cols-2 gap-4">
-                            <!-- Farming Toggle Card -->
-                            <div @click="selectedBot.config.farm_enabled = !selectedBot.config.farm_enabled" 
-                                 class="flex items-center justify-between p-4 rounded-2xl bg-zinc-950/60 border border-white/5 cursor-pointer hover:border-teal-500/20 hover:bg-zinc-900/20 transition-all duration-300 select-none">
-                                <div>
-                                    <span class="block text-xs font-bold text-white">Enable Farming</span>
-                                    <span class="block text-[10px] text-zinc-500">Auto-kill node priority</span>
+            <!-- If managing live bot (matching game-monitoring console mockup exactly) -->
+            <template x-if="selectedBot">
+                <div class="space-y-6">
+                    
+                    <!-- Premium Header Sub-Bar -->
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-zinc-900/40 border border-white/5">
+                        <div class="flex items-center gap-3.5">
+                            <!-- Premium squircle avatar gradient icon -->
+                            <div class="h-12 w-12 rounded-2xl bg-gradient-to-tr from-orange-500 to-teal-400 flex items-center justify-center shadow-lg shadow-orange-500/10 shrink-0">
+                                <i data-lucide="bot" class="w-6 h-6 text-white animate-pulse"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xl font-bold tracking-tight text-white font-mono" x-text="selectedBot.username">ChongXiNa6</span>
+                                    <!-- Status Badge -->
+                                    <span class="text-[9px] font-mono font-semibold px-2.5 py-0.5 rounded-full border bg-amber-500/10 border-amber-500/20 text-amber-400"
+                                          :class="{'bg-emerald-500/10 border-emerald-500/20 text-emerald-400': selectedBot.status === 'Farming', 'bg-teal-500/10 border-teal-500/20 text-teal-400': selectedBot.status === 'Sniping'}"
+                                          x-text="selectedBot.status">Idle</span>
+                                    
+                                    <!-- Sniper Badge -->
+                                    <span class="text-[9px] font-mono font-semibold px-2.5 py-0.5 rounded-full border"
+                                          :class="selectedBot.config?.snipe_enabled ? 'bg-teal-500/10 border-teal-500/20 text-teal-400' : 'bg-zinc-800 border-zinc-700 text-zinc-500'"
+                                          x-text="selectedBot.config?.snipe_enabled ? 'Sniper Active' : 'Sniper Inactive'">Sniper Active</span>
                                 </div>
-                                <!-- Custom Toggle Switch -->
-                                <div class="w-11 h-6 rounded-full p-1 transition-all duration-300 relative border flex items-center shrink-0"
-                                     :class="selectedBot.config.farm_enabled ? 'bg-teal-500/20 border-teal-500/30' : 'bg-zinc-900 border-white/5'">
-                                    <div class="w-3.5 h-3.5 rounded-full transition-all duration-300 shadow-md"
-                                         :class="selectedBot.config.farm_enabled ? 'bg-teal-400 translate-x-5' : 'bg-zinc-600 translate-x-0'"></div>
+                                <div class="flex items-center gap-4 mt-1.5 text-xs text-zinc-500 font-mono">
+                                    <span class="text-teal-400">• <span class="text-zinc-400" x-text="selectedBot.status">Idle</span></span>
+                                    <span>⏱ <span class="text-zinc-300" x-text="formatTime(selectedBot.session_time)">04:07:24</span></span>
+                                    <span>⭐ <span class="text-zinc-300">+0 Lvls</span></span>
+                                    <span>💰 <span class="text-zinc-300">+0 Cash</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Control Action Buttons Row -->
+                        <div class="flex items-center flex-wrap gap-2.5">
+                            <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900 border border-white/5 hover:border-white/10 transition-all cursor-pointer select-none">
+                                <input type="checkbox" :checked="selectedBot.status !== 'Offline'" class="rounded border-zinc-700 bg-zinc-800 text-teal-500 focus:ring-teal-500/30">
+                                <span class="text-xs text-zinc-300 font-medium font-mono">Activate</span>
+                            </label>
+                            
+                            <button @click="selectedBot.config.farm_enabled = !selectedBot.config.farm_enabled; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
+                                    class="px-4 py-1.5 bg-zinc-900 border text-xs font-semibold rounded-xl transition-all font-mono"
+                                    :class="selectedBot.config.farm_enabled ? 'border-teal-500/30 text-teal-400 hover:bg-teal-500/10' : 'border-white/5 text-zinc-300 hover:bg-zinc-800'">
+                                Toggle Farm
+                            </button>
+                            
+                            <button @click="selectedBot.config.snipe_enabled = !selectedBot.config.snipe_enabled; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
+                                    class="px-4 py-1.5 bg-zinc-900 border text-xs font-semibold rounded-xl transition-all font-mono"
+                                    :class="selectedBot.config.snipe_enabled ? 'border-orange-500/30 text-orange-400 hover:bg-orange-500/10' : 'border-white/5 text-zinc-300 hover:bg-zinc-800'">
+                                Toggle Sniper
+                            </button>
+                            
+                            <button @click="sendCommand(selectedBot.id, 'teleportHome')" class="px-4 py-1.5 bg-zinc-900 border border-white/5 text-xs text-zinc-300 font-semibold rounded-xl hover:bg-zinc-800 transition-all font-mono flex items-center gap-1">
+                                🏡 Home
+                            </button>
+                            
+                            <button @click="sendCommand(selectedBot.id, 'toggle3D')" class="px-4 py-1.5 bg-zinc-900 border border-white/5 text-xs text-zinc-300 font-semibold rounded-xl hover:bg-zinc-800 transition-all font-mono">
+                                Toggle 3D
+                            </button>
+                            
+                            <button class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs rounded-xl transition-all font-mono flex items-center gap-1.5 shadow-lg shadow-amber-500/10">
+                                ⚙️ Options
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3-Column Layout Grid matching mockup exactly -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        
+                        <!-- COLUMN 1: 🌟 Ascender Stats -->
+                        <div class="glass-panel p-5 rounded-2xl border border-white/5 space-y-4">
+                            <div class="flex items-center gap-2 pb-2.5 border-b border-white/5">
+                                <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+                                <h5 class="text-sm font-bold text-white font-mono tracking-wide uppercase">Ascender</h5>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3">
+                                <!-- Level Card -->
+                                <div class="bg-zinc-950/60 border border-white/5 rounded-xl p-3">
+                                    <span class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest">LEVEL</span>
+                                    <span class="block text-lg font-bold text-white mt-1" x-text="selectedBot.level">490</span>
+                                </div>
+                                <!-- Class Card -->
+                                <div class="bg-zinc-950/60 border border-white/5 rounded-xl p-3">
+                                    <span class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest">CLASS</span>
+                                    <span class="block text-xs font-bold text-white mt-1.5 truncate" x-text="selectedBot.bot_class">Unbeatable</span>
+                                </div>
+                                <!-- Quality Card -->
+                                <div class="bg-zinc-950/60 border border-white/5 rounded-xl p-3 col-span-2">
+                                    <span class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest">QUALITY</span>
+                                    <span class="block text-sm font-bold text-white mt-1" x-text="selectedBot.quality">Spectacular</span>
+                                </div>
+                                <!-- Rarity Card -->
+                                <div class="bg-zinc-950/60 border border-white/5 rounded-xl p-3">
+                                    <span class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest">RARITY</span>
+                                    <span class="block text-xs font-bold text-white mt-1.5" x-text="selectedBot.rarity">Heavenly++</span>
+                                </div>
+                                <!-- Mold Card -->
+                                <div class="bg-zinc-950/60 border border-white/5 rounded-xl p-3">
+                                    <span class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest">MOLD</span>
+                                    <span class="block text-xs font-bold text-white mt-1.5" x-text="selectedBot.mold">Crystal</span>
                                 </div>
                             </div>
                             
-                            <!-- Sniping Toggle Card -->
-                            <div @click="selectedBot.config.snipe_enabled = !selectedBot.config.snipe_enabled" 
-                                 class="flex items-center justify-between p-4 rounded-2xl bg-zinc-950/60 border border-white/5 cursor-pointer hover:border-orange-500/20 hover:bg-zinc-900/20 transition-all duration-300 select-none">
-                                <div>
-                                    <span class="block text-xs font-bold text-white">Enable Sniping</span>
-                                    <span class="block text-[10px] text-zinc-500">Buy high value sets</span>
+                            <!-- Substats indicators list -->
+                            <div class="space-y-1.5 pt-2 border-t border-white/5 font-mono text-xs">
+                                <div class="text-zinc-400">1: Fortune (Lvl 25)</div>
+                                <div class="text-zinc-400">2: Fortune (Lvl 24)</div>
+                                <div class="text-zinc-400">3: Ancient (Lvl 19)</div>
+                                <div class="text-zinc-300 font-bold mt-2">Mode: <span class="text-amber-400">Rarity</span></div>
+                            </div>
+                            
+                            <!-- Target Filter Selector Buttons -->
+                            <div class="grid grid-cols-3 gap-1.5 pt-2">
+                                <button class="py-1 px-1.5 bg-zinc-900 border border-white/5 text-[9px] font-semibold font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all text-center">Quality</button>
+                                <button class="py-1 px-1.5 bg-zinc-900 border border-white/5 text-[9px] font-semibold font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all text-center">Rarity</button>
+                                <button class="py-1 px-1.5 bg-zinc-900 border border-white/5 text-[9px] font-semibold font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all text-center">Mold</button>
+                                <button class="py-1 px-1.5 bg-zinc-900 border border-white/5 text-[9px] font-semibold font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all text-center">Class</button>
+                                <button class="py-1 px-1.5 bg-zinc-900 border border-white/5 text-[9px] font-semibold font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all text-center">Enchant</button>
+                                <button class="py-1 px-1.5 bg-zinc-900 border border-white/5 text-[9px] font-semibold font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all text-center">Level</button>
+                            </div>
+                        </div>
+
+                        <!-- COLUMN 2: 📋 Snipe Config -->
+                        <div class="glass-panel p-5 rounded-2xl border border-white/5 space-y-5">
+                            <div class="flex items-center gap-2 pb-2.5 border-b border-white/5">
+                                <i data-lucide="scroll" class="w-4 h-4 text-teal-400"></i>
+                                <h5 class="text-sm font-bold text-white font-mono tracking-wide uppercase">Snipe Config</h5>
+                            </div>
+                            
+                            <!-- Wishlist Target Sets Section -->
+                            <div class="space-y-2.5">
+                                <span class="block text-[10px] font-bold text-teal-400 font-mono tracking-wider uppercase">Target Sets</span>
+                                
+                                <div class="space-y-1.5 max-h-[85px] overflow-y-auto">
+                                    <template x-if="!selectedBot.config?.target_enchant_sets || selectedBot.config.target_enchant_sets.length === 0">
+                                        <div class="text-[10px] text-zinc-500 font-mono italic">No enchant sets in sniper wishlist.</div>
+                                    </template>
+                                    <template x-for="(set, idx) in selectedBot.config?.target_enchant_sets || []" :key="idx">
+                                        <div class="flex items-center justify-between p-2 rounded-xl bg-zinc-950/60 border border-white/5">
+                                            <span class="text-[10px] text-zinc-300 font-mono font-semibold" x-text="set">Ancient + Fortune</span>
+                                            <button @click="selectedBot.config.target_enchant_sets.splice(idx, 1); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
+                                                    class="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded-md font-mono hover:bg-red-500/30 transition-all">Rem</button>
+                                        </div>
+                                    </template>
                                 </div>
-                                <!-- Custom Toggle Switch -->
-                                <div class="w-11 h-6 rounded-full p-1 transition-all duration-300 relative border flex items-center shrink-0"
-                                     :class="selectedBot.config.snipe_enabled ? 'bg-orange-500/20 border-orange-500/30' : 'bg-zinc-900 border-white/5'">
-                                    <div class="w-3.5 h-3.5 rounded-full transition-all duration-300 shadow-md"
-                                         :class="selectedBot.config.snipe_enabled ? 'bg-orange-400 translate-x-5' : 'bg-zinc-600 translate-x-0'"></div>
+                                
+                                <!-- Multi-Enchant Builder Box -->
+                                <div class="space-y-1.5 pt-1">
+                                    <div class="grid grid-cols-3 gap-1.5">
+                                        <input type="text" x-model="enchant1" placeholder="Enchant 1" class="bg-zinc-950/60 border border-white/5 text-[10px] rounded-lg px-2 py-1.5 text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                                        <input type="text" x-model="enchant2" placeholder="Enchant 2" class="bg-zinc-950/60 border border-white/5 text-[10px] rounded-lg px-2 py-1.5 text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                                        <input type="text" x-model="enchant3" placeholder="Enchant 3" class="bg-zinc-950/60 border border-white/5 text-[10px] rounded-lg px-2 py-1.5 text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                                    </div>
+                                    
+                                    <button @click="
+                                        let combined = [];
+                                        if (enchant1) combined.push(enchant1);
+                                        if (enchant2) combined.push(enchant2);
+                                        if (enchant3) combined.push(enchant3);
+                                        if (combined.length > 0) {
+                                            if (!selectedBot.config.target_enchant_sets) selectedBot.config.target_enchant_sets = [];
+                                            selectedBot.config.target_enchant_sets.push(combined.join(' + '));
+                                            enchant1 = ''; enchant2 = ''; enchant3 = '';
+                                            sendCommand(selectedBot.id, 'syncConfig', selectedBot.config);
+                                        }
+                                    " class="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-black text-[10px] font-bold rounded-xl transition-all font-mono uppercase tracking-wider">
+                                        Add Target Set
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Whitelisted/Protected UUIDs Section -->
+                            <div class="space-y-2 pt-2 border-t border-white/5">
+                                <span class="block text-[10px] font-bold text-teal-400 font-mono tracking-wider uppercase">Protected UUIDs</span>
+                                
+                                <div class="max-h-[60px] overflow-y-auto space-y-1.5">
+                                    <template x-if="!selectedBot.config?.whitelisted_uuids || selectedBot.config.whitelisted_uuids.length === 0">
+                                        <div class="text-[10px] text-zinc-500 font-mono italic">Whitelist is empty</div>
+                                    </template>
+                                    <template x-for="(uuid, idx) in selectedBot.config?.whitelisted_uuids || []" :key="idx">
+                                        <div class="flex items-center justify-between p-1.5 rounded-lg bg-zinc-950/60 border border-white/5">
+                                            <span class="text-[10px] text-zinc-400 font-mono truncate mr-2" x-text="uuid">Sword_1</span>
+                                            <button @click="selectedBot.config.whitelisted_uuids.splice(idx, 1); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
+                                                    class="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1 py-0.5 rounded font-mono hover:bg-red-500/30 transition-all">Rem</button>
+                                        </div>
+                                    </template>
+                                </div>
+                                
+                                <div class="flex items-center gap-1.5 pt-1">
+                                    <select x-model="newUuid" class="flex-1 bg-zinc-950/60 border border-white/5 text-[10px] rounded-lg px-2 py-1.5 text-zinc-400 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                                        <option value="">Backpack empty...</option>
+                                        <template x-for="item in selectedBot.backpack_items || []">
+                                            <option :value="item.uuid" x-text="item.name"></option>
+                                        </template>
+                                    </select>
+                                    <button @click="
+                                        if (newUuid) {
+                                            if (!selectedBot.config.whitelisted_uuids) selectedBot.config.whitelisted_uuids = [];
+                                            selectedBot.config.whitelisted_uuids.push(newUuid);
+                                            newUuid = '';
+                                            sendCommand(selectedBot.id, 'syncConfig', selectedBot.config);
+                                        }
+                                    " class="px-3 py-1.5 bg-zinc-900 border border-white/5 text-[10px] font-bold text-white rounded-lg hover:bg-zinc-800 transition-all font-mono">
+                                        Add
+                                    </button>
+                                </div>
+                                
+                                <span class="block text-[9px] text-amber-500/80 font-mono leading-tight mt-1">*Tip: Whitelisting protects items from being dropped/sold!</span>
+                            </div>
+                        </div>
+
+                        <!-- COLUMN 3: 🎒 Backpack Items -->
+                        <div class="glass-panel p-5 rounded-2xl border border-white/5 flex flex-col justify-between h-full">
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between pb-2.5 border-b border-white/5">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="shopping-bag" class="w-4 h-4 text-orange-400"></i>
+                                        <h5 class="text-sm font-bold text-white font-mono tracking-wide uppercase">Backpack</h5>
+                                    </div>
+                                    <span class="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-white/5" x-text="(selectedBot.backpack_items?.length || 0) + ' Items'">0 Items</span>
+                                </div>
+                                
+                                <!-- Backpack items scroller -->
+                                <div class="space-y-2 max-h-[300px] overflow-y-auto">
+                                    <template x-if="!selectedBot.backpack_items || selectedBot.backpack_items.length === 0">
+                                        <div class="text-zinc-500 font-mono text-xs text-center py-20 italic">Backpack empty</div>
+                                    </template>
+                                    
+                                    <template x-for="item in selectedBot.backpack_items || []" :key="item.uuid">
+                                        <div class="p-3 rounded-xl bg-zinc-950/60 border border-white/5 flex items-center justify-between gap-2 hover:border-orange-500/20 transition-all select-none">
+                                            <div class="space-y-0.5">
+                                                <span class="block text-xs font-bold text-white font-mono" x-text="item.name">Ancient Broadsword</span>
+                                                <span class="block text-[9px] font-mono text-zinc-500" x-text="item.traits.join(', ')">Ancient II, Level 10</span>
+                                            </div>
+                                            <!-- Action options if wanted -->
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div>
-                            <label class="block text-xs font-mono text-zinc-400 uppercase tracking-wider mb-2">Target Node Areas (Comma separated)</label>
-                            <input type="text" x-model="selectedBot.config.active_areas" class="w-full bg-zinc-950/60 border border-white/5 rounded-2xl py-3 px-4 text-sm text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
-                        </div>
-                        
-                        <button @click="sendCommand(selectedBot.id, 'syncConfig', selectedBot.config); showConfigModal = false" class="w-full py-3 text-sm font-bold bg-teal-500/10 border border-teal-500/20 text-white rounded-2xl hover:bg-teal-500/20 transition-all font-mono">
-                            Push Hot Configuration
-                        </button>
                     </div>
-                </template>
-            </div>
+                </div>
+            </template>
         </div>
     </div>
 </div>

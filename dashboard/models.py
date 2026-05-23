@@ -20,6 +20,13 @@ class BotAccount(models.Model):
     money = models.DecimalField(max_digits=18, decimal_places=2, default=0.0)
     session_time = models.IntegerField(default=0, help_text="Session time in seconds")
     c2_token = models.CharField(max_length=64, unique=True, blank=True, help_text="Authentication token for Roblox bot websocket connection")
+    
+    # Premium C2 Gaming Telemetries
+    bot_class = models.CharField(max_length=100, default='Unbeatable', help_text="Ascender Class")
+    quality = models.CharField(max_length=100, default='Spectacular', help_text="Ascender Quality")
+    rarity = models.CharField(max_length=100, default='Heavenly++', help_text="Ascender Rarity")
+    mold = models.CharField(max_length=100, default='Crystal', help_text="Ascender Mold")
+    backpack_items = models.JSONField(default=list, blank=True, help_text="Roblox in-game inventory backpack items")
 
     def save(self, *args, **kwargs):
         if not self.c2_token:
