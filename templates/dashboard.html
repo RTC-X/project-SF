@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | C2 Fleet Manager{% endblock %}
+
+{% block content %}
+<div class="space-y-8" x-data="{ 
+    selectedBot: null,
+    showConfigModal: false,
+    activeTab: 'telemetry',
+    bots: [],
+    logs: [],
+    ws: null,
+    
+    init() {
+        this.connectWS();
+        
+        // Populate mock telemetry data for preview if no live bots are connected yet
+        setTimeout(() => {
+            if (this.bots.length === 0) {
+                this.bots = [
+                    {
+                        id: 'alpha-1',
+                        username: 'RoboFarmer_Alpha',
+                        status: 'Farming',
+                        level: 82,
+                        money: 1250000.50,
+                        session_time: 3600,
+                        config: { farm_enabled: true, sniper_enabled: true, active_areas: [1, 5, 12] }
+                    },
+                    {
+                        id: 'goblin-2',
+                        username: 'GoldGoblin_X',
+                        status: 'Sniping',
+                        level: 41,
+                        money: 48900.00,
+                        session_time: 1800,
+                        config: { farm_enabled: false, sniper_enabled: true, active_areas: [5] }
+                    },
+                    {
+                        id: 'knight-3',
+                        username: 'AscendedKnight',
+                        status: 'Offline',
+                        level: 12,
+                        money: 0.00,
+                        session_time: 0,
+                        config: { farm_enabled: false, sniper_enabled: false, active_areas: [] }
+                    }
+                ];
+            }
+        }, 1000);
+    },
+    
+    connectWS() {
+        const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        this.ws = new WebSocket(`${wsScheme}://${window.location.host}/ws/c2/`);
+        
+        this.ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'fleet_update') {
+                this.bots = data.bots;
+            } else if (data.type === 'new_log') {
+                this.logs.unshift(data.log);
+                if (this.logs.length > 50) this.logs.pop();
+            }
+        };
+        
+        this.ws.onclose = () => {
+            console.log('WS connection lost, retrying in 3 seconds...');
+            setTimeout(() => this.connectWS(), 3000);
+        };
+    },
+    
+    sendCommand(botId, action, payload = {}) {
+        this.ws.send(JSON.stringify({
+            action: 'command',
+            target_id: botId,
+            command: action,
+            payload: payload
+        }));
+    },
+    
+    formatTime(seconds) {
+        if (!seconds) return '00:00:00';
+        const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+        const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${h}:${m}:${s}`;
+    }
+}">
+
+    <!-- Top Dashboard Statistics Bar -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
+            <div class="absolute right-4 top-4 text-teal-400/20">
+                <i data-lucide="cpu" class="w-8 h-8"></i>
+            </div>
+            <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Active Fleet Size</p>
+            <p class="text-3xl font-extrabold text-white mt-2 font-mono" x-text="bots.filter(b => b.status !== 'Offline').length + '/' + bots.length">0/0</p>
+        </div>
+        <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
+            <div class="absolute right-4 top-4 text-orange-400/20">
+                <i data-lucide="swords" class="w-8 h-8"></i>
+            </div>
+            <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Farming Target Nodes</p>
+            <p class="text-3xl font-extrabold text-white mt-2 font-mono" x-text="bots.filter(b => b.status === 'Farming').length">0</p>
+        </div>
+        <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
+            <div class="absolute right-4 top-4 text-teal-400/20">
+                <i data-lucide="dollar-sign" class="w-8 h-8"></i>
+            </div>
+            <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Total Accumulated Wealth</p>
+            <p class="text-3xl font-extrabold text-emerald-400 mt-2 font-mono">$<span x-text="bots.reduce((acc, b) => acc + parseFloat(b.money), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})">0.00</span></p>
+        </div>
+        <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
+            <div class="absolute right-4 top-4 text-orange-400/20">
+                <i data-lucide="shield-check" class="w-8 h-8"></i>
+            </div>
+            <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Secured Tokens</p>
+            <p class="text-3xl font-extrabold text-teal-400 mt-2 font-mono">ACTIVE</p>
+        </div>
+    </div>
+
+    <!-- Layout Columns: Telemetry Grid & Activity Feed -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Live Telemetry Area -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="h-8 w-8 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center">
+                        <i data-lucide="network" class="w-4 h-4 text-teal-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold tracking-tight text-white">Live Node Telemetry</h3>
+                </div>
+                
+                <!-- Quick Token Provision Button -->
+                <button @click="selectedBot = null; showConfigModal = true" class="flex items-center gap-1.5 text-xs font-semibold font-mono text-teal-400 hover:text-white py-2 px-4 rounded-2xl bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 hover:border-teal-500/30 transition-all">
+                    <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                    Provision Bot
+                </button>
+            </div>
+            
+            <!-- Dynamic Fleet Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <template x-for="bot in bots" :key="bot.id">
+                    <div class="glass-panel p-6 rounded-3xl flex flex-col justify-between border border-white/5 hover:border-white/10 transition-all duration-300 relative group overflow-hidden">
+                        
+                        <!-- Status indicator strip -->
+                        <div class="absolute left-0 top-0 bottom-0 w-1.5"
+                            :class="{
+                                'bg-emerald-400': bot.status === 'Farming',
+                                'bg-teal-400': bot.status === 'Sniping',
+                                'bg-amber-400': bot.status === 'Idle',
+                                'bg-red-400': bot.status === 'Dead',
+                                'bg-zinc-700': bot.status === 'Offline'
+                            }">
+                        </div>
+
+                        <!-- Top Info -->
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between pl-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-md font-bold text-white font-mono" x-text="bot.username">Node</span>
+                                    <span class="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full border"
+                                        :class="{
+                                            'bg-emerald-500/10 border-emerald-500/20 text-emerald-400': bot.status === 'Farming',
+                                            'bg-teal-500/10 border-teal-500/20 text-teal-400': bot.status === 'Sniping',
+                                            'bg-amber-500/10 border-amber-500/20 text-amber-400': bot.status === 'Idle',
+                                            'bg-red-500/10 border-red-500/20 text-red-400': bot.status === 'Dead',
+                                            'bg-zinc-500/10 border-zinc-500/20 text-zinc-400': bot.status === 'Offline'
+                                        }"
+                                        x-text="bot.status">OFFLINE</span>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <!-- Dynamic Action Button if Online -->
+                                    <button x-show="bot.status !== 'Offline'" @click="selectedBot = bot; showConfigModal = true" class="h-8 w-8 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-all">
+                                        <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Telemetry Data points -->
+                            <div class="grid grid-cols-2 gap-4 pl-2 font-mono text-xs">
+                                <div>
+                                    <span class="text-zinc-500 block text-[10px] uppercase">Node Level</span>
+                                    <span class="text-zinc-300 font-semibold" x-text="'Lvl ' + bot.level">Lvl 0</span>
+                                </div>
+                                <div>
+                                    <span class="text-zinc-500 block text-[10px] uppercase">Accumulated</span>
+                                    <span class="text-emerald-400 font-semibold" x-text="'$' + parseFloat(bot.money).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})">$0.00</span>
+                                </div>
+                                <div>
+                                    <span class="text-zinc-500 block text-[10px] uppercase">Uptime</span>
+                                    <span class="text-zinc-300 font-semibold" x-text="formatTime(bot.session_time)">00:00:00</span>
+                                </div>
+                                <div>
+                                    <span class="text-zinc-500 block text-[10px] uppercase">Active Areas</span>
+                                    <span class="text-teal-400 font-semibold" x-text="bot.config?.active_areas.join(', ') || 'None'">None</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer Commands -->
+                        <div class="mt-6 pt-4 border-t border-white/5 flex items-center justify-end gap-2 pl-2">
+                            <template x-if="bot.status !== 'Offline'">
+                                <div class="flex items-center gap-2 w-full justify-between">
+                                    <button @click="sendCommand(bot.id, bot.status === 'Farming' ? 'stop' : 'start')" 
+                                        class="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-xl transition-all font-mono"
+                                        :class="bot.status === 'Farming' ? 'bg-orange-500/10 border border-orange-500/20 text-orange-400 hover:bg-orange-500/20' : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'">
+                                        <i :data-lucide="bot.status === 'Farming' ? 'pause' : 'play'" class="w-3.5 h-3.5"></i>
+                                        <span x-text="bot.status === 'Farming' ? 'Halt Agent' : 'Deploy Agent'">Deploy Agent</span>
+                                    </button>
+                                </div>
+                            </template>
+                            <template x-if="bot.status === 'Offline'">
+                                <div class="w-full text-center text-[10px] text-zinc-600 font-mono py-1 uppercase tracking-wider">
+                                    Await Node Connection
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Right Side Real-time logs panel -->
+        <div class="space-y-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="h-8 w-8 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                        <i data-lucide="activity" class="w-4 h-4 text-orange-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold tracking-tight text-white">System Feed</h3>
+                </div>
+            </div>
+            
+            <div class="glass-panel p-6 rounded-3xl h-[480px] overflow-y-auto space-y-4 font-mono text-xs">
+                <template x-if="logs.length === 0">
+                    <div class="h-full flex flex-col items-center justify-center text-zinc-600 uppercase tracking-widest text-[10px] py-32">
+                        <i data-lucide="terminal" class="w-8 h-8 text-zinc-700 mb-2"></i>
+                        Feed Quiet
+                    </div>
+                </template>
+                <template x-for="log in logs" :key="log.id">
+                    <div class="border-b border-white/5 pb-2.5 space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-teal-400 font-semibold" x-text="log.username">RoboFarmer</span>
+                            <span class="text-[10px] text-zinc-500" x-text="log.time">10:52:12</span>
+                        </div>
+                        <p class="text-zinc-400" x-text="log.message">Dispatched node to Area 12 successfully.</p>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bespoke Modals (Alpine Dynamic Forms) -->
+    <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        x-show="showConfigModal" 
+        x-transition
+        style="display: none;">
+        
+        <div class="glass-panel w-full max-w-lg p-8 rounded-3xl relative overflow-hidden" @click.away="showConfigModal = false">
+            <div class="flex items-center justify-between mb-6">
+                <h4 class="text-lg font-bold text-white" x-text="selectedBot ? 'Configure Node: ' + selectedBot.username : 'Provision New Bot Token'">Configure Node</h4>
+                <button @click="showConfigModal = false" class="text-zinc-500 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <!-- If provisioning new bot -->
+                <template x-if="!selectedBot">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-mono text-zinc-400 uppercase tracking-wider mb-2">Roblox Bot Username</label>
+                            <input type="text" class="w-full bg-zinc-950/60 border border-white/5 rounded-2xl py-3 px-4 text-sm text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400" placeholder="e.g. RoboFarmer_Alpha">
+                        </div>
+                        <button class="w-full py-3 text-sm font-bold bg-teal-500/10 border border-teal-500/20 text-white rounded-2xl hover:bg-teal-500/20 transition-all font-mono">
+                            Generate C2 Credentials
+                        </button>
+                    </div>
+                </template>
+
+                <!-- If editing active config -->
+                <template x-if="selectedBot">
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="flex items-center gap-3 p-4 rounded-2xl bg-zinc-950/60 border border-white/5 cursor-pointer">
+                                <input type="checkbox" x-model="selectedBot.config.farm_enabled" class="rounded border-zinc-700 bg-zinc-800 text-teal-500 focus:ring-teal-500/30">
+                                <div>
+                                    <span class="block text-xs font-bold text-white">Enable Farming</span>
+                                    <span class="block text-[10px] text-zinc-500">Auto-kill node priority</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 p-4 rounded-2xl bg-zinc-950/60 border border-white/5 cursor-pointer">
+                                <input type="checkbox" x-model="selectedBot.config.snipe_enabled" class="rounded border-zinc-700 bg-zinc-800 text-teal-500 focus:ring-teal-500/30">
+                                <div>
+                                    <span class="block text-xs font-bold text-white">Enable Sniping</span>
+                                    <span class="block text-[10px] text-zinc-500">Buy high value sets</span>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-xs font-mono text-zinc-400 uppercase tracking-wider mb-2">Target Node Areas (Comma separated)</label>
+                            <input type="text" x-model="selectedBot.config.active_areas" class="w-full bg-zinc-950/60 border border-white/5 rounded-2xl py-3 px-4 text-sm text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                        </div>
+                        
+                        <button @click="sendCommand(selectedBot.id, 'syncConfig', selectedBot.config); showConfigModal = false" class="w-full py-3 text-sm font-bold bg-teal-500/10 border border-teal-500/20 text-white rounded-2xl hover:bg-teal-500/20 transition-all font-mono">
+                            Push Hot Configuration
+                        </button>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

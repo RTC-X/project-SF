@@ -1,0 +1,15 @@
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Django local database
+db.sqlite3
+
+# Local secrets env file
+.env
+
+# Agent configurations
+.agent/
+
+# Exclude plans per user request
+docs/

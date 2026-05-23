@@ -297,5 +297,31 @@
             9
         ],
         "WebhookURL": ""
+    },
+    "RoboFarmer_Alpha": {
+        "WebhookURL": "https://discord.com/api/webhooks/123456789/abcdefgh",
+        "WebhookEnabled": true,
+        "Settings": {
+            "OFFSET_HEIGHT": 7,
+            "WAIT_ALTITUDE": 15,
+            "MAX_KILL_TIME": 5,
+            "IDLE_BEFORE_HOP": 3,
+            "MIN_NPCS_TO_STAY": 0
+        },
+        "TargetPriority": "Closest",
+        "FarmAreas": [
+            1,
+            2,
+            5,
+            12
+        ],
+        "TargetSets": [
+            [
+                "Haste II"
+            ]
+        ],
+        "WhitelistedSwords": [
+            "sword_01"
+        ]
     }
 }

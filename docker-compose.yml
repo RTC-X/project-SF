@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: c2_web
+    restart: always
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=django-insecure-coolify-c2-dashboard-super-secret-key-123
+      - DB_NAME=c2_db
+      - DB_USER=c2_admin
+      - DB_PASSWORD=c2_secure_pass_998
+      - DB_HOST=db
+      - DB_PORT=5432
+      - ALLOWED_HOSTS=*
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID:-}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET:-}
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    container_name: c2_db
+    restart: always
+    environment:
+      - POSTGRES_DB=c2_db
+      - POSTGRES_USER=c2_admin
+      - POSTGRES_PASSWORD=c2_secure_pass_998
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:

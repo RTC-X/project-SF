@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}C2 Controller{% endblock %}</title>
+    <!-- Outfit & Fira Code Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Alpine.js & Tailwind CSS Play CDN -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background-color: #06060a;
+            background-image: 
+                radial-gradient(circle at 80% 10%, rgba(20, 184, 166, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 10% 90%, rgba(249, 115, 22, 0.05) 0%, transparent 45%);
+            background-attachment: fixed;
+        }
+        .glass-panel {
+            background: rgba(9, 9, 11, 0.45);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body class="h-full font-sans text-zinc-100 flex flex-col antialiased">
+
+    <!-- Top Glow Header Navbar -->
+    <header class="w-full py-4 px-6 glass-panel border-b border-white/5 sticky top-0 z-40 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-2xl bg-gradient-to-tr from-orange-500 to-teal-400 flex items-center justify-center shadow-lg shadow-orange-500/10">
+                <i data-lucide="terminal" class="w-5 h-5 text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold tracking-wide uppercase bg-gradient-to-r from-teal-400 to-orange-400 bg-clip-text text-transparent">
+                    SFS C2 Controller
+                </h1>
+                <p class="text-[10px] text-zinc-500 font-mono tracking-widest uppercase">Roblox Fleet Node v1.0</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            {% if user.is_authenticated %}
+                <div class="flex items-center gap-3 px-3 py-1.5 rounded-2xl bg-white/5 border border-white/5">
+                    <div class="h-7 w-7 rounded-xl bg-teal-500/20 border border-teal-500/30 flex items-center justify-center">
+                        <i data-lucide="user" class="w-3.5 h-3.5 text-teal-400"></i>
+                    </div>
+                    <span class="text-sm font-medium text-zinc-300 font-mono">{{ user.username }}</span>
+                </div>
+                
+                <a href="{% url 'logout' %}" class="flex items-center gap-2 text-sm text-zinc-400 hover:text-orange-400 transition-all font-medium py-2 px-4 rounded-2xl hover:bg-orange-500/10 border border-transparent hover:border-orange-500/20">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    <span>Log Out</span>
+                </a>
+            {% else %}
+                <div class="text-xs text-zinc-500 font-mono flex items-center gap-1.5">
+                    <span class="h-2 w-2 rounded-full bg-orange-500/50 animate-pulse"></span>
+                    SECURE DOCK PANEL
+                </div>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 flex flex-col justify-start">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="w-full py-4 text-center border-t border-white/5 mt-auto">
+        <span class="text-xs font-mono text-zinc-600">SFS System Automation Framework &copy; 2026. Made with Precision.</span>
+    </footer>
+
+    <!-- Initialize Lucide icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

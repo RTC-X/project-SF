@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Authentication Required | C2 Controller{% endblock %}
+
+{% block content %}
+<div class="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 glass-panel p-10 rounded-3xl relative overflow-hidden shadow-2xl">
+        
+        <!-- Ambient Decorative Glows inside Login Box -->
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-teal-500/10 rounded-full blur-2xl"></div>
+        <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-orange-500/10 rounded-full blur-2xl"></div>
+        
+        <div class="text-center relative z-10">
+            <div class="mx-auto h-12 w-12 rounded-2xl bg-gradient-to-tr from-orange-500 to-teal-400 flex items-center justify-center shadow-lg shadow-orange-500/10 mb-4">
+                <i data-lucide="lock" class="w-6 h-6 text-white"></i>
+            </div>
+            <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+                System Gateway
+            </h2>
+            <p class="mt-2 text-sm text-zinc-400 font-mono">
+                Unauthorized connection attempts are logged
+            </p>
+        </div>
+
+        {% if error %}
+            <div class="bg-orange-500/10 border border-orange-500/20 text-orange-400 px-4 py-3 rounded-2xl text-sm font-mono flex items-center gap-2 relative z-10 animate-shake">
+                <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+                <span>{{ error }}</span>
+            </div>
+        {% endif %}
+
+        <div class="mt-8 relative z-10">
+            {% load socialaccount %}
+            <a href="{% provider_login_url 'discord' %}" 
+               class="group relative w-full flex justify-center py-3.5 px-4 border border-indigo-500/30 text-sm font-bold rounded-2xl text-white bg-indigo-600/25 hover:bg-indigo-600/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/20 hover:-translate-y-0.5 items-center gap-2.5">
+                <span class="absolute left-0 inset-y-0 flex items-center pl-4">
+                    <!-- Securely loaded Lucide Discord icon instead of generic SVGs -->
+                    <i data-lucide="message-square" class="w-4 h-4 text-indigo-400 group-hover:text-white transition-colors"></i>
+                </span>
+                Connect via Discord
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
