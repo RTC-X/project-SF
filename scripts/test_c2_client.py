@@ -93,7 +93,7 @@ async def receive_commands(websocket):
 
 
 
-async def start_client(host, username, delay, discord_id=""):
+async def start_client(host, username, delay, api_key=""):
     # Auto-resolve ws:// vs wss://
     is_secure = not (host.startswith("localhost") or host.startswith("127.0.0.1") or ":" in host and not host.endswith("443"))
     protocol = "wss" if is_secure else "ws"
@@ -107,7 +107,7 @@ async def start_client(host, username, delay, discord_id=""):
     print("--------------------------------------------------")
     print(f"Target Server : {BOLD}{uri}{RESET}")
     print(f"Bot Username  : {BOLD}{username}{RESET}")
-    print(f"Discord Owner : {BOLD}{discord_id if discord_id else 'None (Global)'}{RESET}")
+    print(f"API Key       : {BOLD}{api_key if api_key else 'None'}{RESET}")
     print(f"Telemetry Delay: {delay}s")
     print("--------------------------------------------------")
     print(f"[{get_timestamp()}] Connecting to C2 Server...")
@@ -121,10 +121,10 @@ async def start_client(host, username, delay, discord_id=""):
                 register_payload = {
                     "action": "register",
                     "username": username,
-                    "discord_id": discord_id
+                    "api_key": api_key
                 }
                 await websocket.send(json.dumps(register_payload))
-                print(f"[{get_timestamp()}] {GREEN}Bot account registered on dashboard! (Discord Owner: {discord_id if discord_id else 'Global'}){RESET}")
+                print(f"[{get_timestamp()}] {GREEN}Bot account registered on dashboard! (API Key: {api_key if api_key else 'None'}){RESET}")
                 
                 # Step 2: Run log streamer and command receiver concurrently
                 await asyncio.gather(
@@ -141,12 +141,12 @@ def main():
     parser.add_argument("--host", default="c2scripts.xyz", help="C2 Server domain/host (e.g. c2scripts.xyz or localhost:8000)")
     parser.add_argument("--username", default="GoldGoblin_X", help="Roblox Bot username to register and simulate")
     parser.add_argument("--delay", type=int, default=6, help="Delay in seconds between heartbeat logs (default: 6)")
-    parser.add_argument("--discord-id", default="", help="Discord Account UID to bind bot to")
+    parser.add_argument("--api-key", default="", help="User API Key to bind bot to")
     
     args = parser.parse_args()
     
     try:
-        asyncio.run(start_client(args.host, args.username, args.delay, args.discord_id))
+        asyncio.run(start_client(args.host, args.username, args.delay, args.api_key))
     except KeyboardInterrupt:
         print(f"\n[{get_timestamp()}] {RED}Simulator shut down by user.{RESET}\n")
 

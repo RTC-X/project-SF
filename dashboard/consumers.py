@@ -185,13 +185,20 @@ class C2Consumer(AsyncWebsocketConsumer):
         bot, created = BotAccount.objects.get_or_create(username=username)
         bot.status = status
         
-        if extra_data and 'discord_id' in extra_data and extra_data['discord_id']:
-            from allauth.socialaccount.models import SocialAccount
-            try:
-                social_acc = SocialAccount.objects.get(uid=str(extra_data['discord_id']), provider='discord')
-                bot.owner = social_acc.user
-            except SocialAccount.DoesNotExist:
-                pass
+        if extra_data and 'api_key' in extra_data and extra_data['api_key']:
+            import hashlib
+            from django.contrib.auth.models import User
+            from django.conf import settings
+            secret = getattr(settings, 'SECRET_KEY', 'default_secret')
+            # Look for a user whose secret hash matches the provided api_key
+            resolved_owner = None
+            for user in User.objects.all():
+                expected_key = f"c2_usr_{hashlib.sha256(f'{user.id}:{secret}'.encode()).hexdigest()[:16]}"
+                if expected_key == extra_data['api_key']:
+                    resolved_owner = user
+                    break
+            if resolved_owner:
+                bot.owner = resolved_owner
         
         if extra_data:
             if 'level' in extra_data and extra_data['level'] is not None:

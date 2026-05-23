@@ -85,7 +85,7 @@ class SimulatedBot:
             "message": f"[{self.username}] {message} (Level: {self.level}, Money: ${self.money:.2f})"
         }
 
-async def bot_session(uri, bot, delay, discord_id=""):
+async def bot_session(uri, bot, delay, api_key=""):
     while True:
         try:
             print(f"[{get_timestamp()}] {TEAL}[{bot.username}]{RESET} Connecting to C2 Server...")
@@ -103,10 +103,10 @@ async def bot_session(uri, bot, delay, discord_id=""):
                     "rarity": bot.rarity,
                     "mold": bot.mold,
                     "backpack_items": bot.backpack_items,
-                    "discord_id": discord_id
+                    "api_key": api_key
                 }
                 await websocket.send(json.dumps(register_payload))
-                print(f"[{get_timestamp()}] {GREEN}[{bot.username}]{RESET} Registered node statistics on dashboard! (Discord Owner: {discord_id if discord_id else 'Global'})")
+                print(f"[{get_timestamp()}] {GREEN}[{bot.username}]{RESET} Registered node statistics on dashboard! (API Key: {api_key if api_key else 'None'})")
 
                 # Step 2: Concurrently stream logs and listen for Multi-Config events
                 async def stream_logs():
@@ -154,7 +154,7 @@ async def bot_session(uri, bot, delay, discord_id=""):
             print(f"[{get_timestamp()}] {ORANGE}[{bot.username}] Connection lost. Reconnecting in 5s... ({e}){RESET}")
             await asyncio.sleep(5)
 
-async def start_fleet(host, bot_count, delay, discord_id=""):
+async def start_fleet(host, bot_count, delay, api_key=""):
     is_secure = not (host.startswith("localhost") or host.startswith("127.0.0.1") or ":" in host and not host.endswith("443"))
     protocol = "wss" if is_secure else "ws"
     clean_host = host.replace("http://", "").replace("https://", "").replace("ws://", "").replace("wss://", "")
@@ -171,11 +171,11 @@ async def start_fleet(host, bot_count, delay, discord_id=""):
     print("--------------------------------------------------")
     print(f"Target Server : {BOLD}{uri}{RESET}")
     print(f"Fleet Count   : {BOLD}{bot_count} Active Bots{RESET}")
-    print(f"Discord Owner : {BOLD}{discord_id if discord_id else 'None (Global)'}{RESET}")
+    print(f"API Key       : {BOLD}{api_key if api_key else 'None'}{RESET}")
     print(f"Heartbeats    : Random every ~{delay}s")
     print("--------------------------------------------------\n")
 
-    sessions = [bot_session(uri, SimulatedBot(name), delay, discord_id) for name in bot_names]
+    sessions = [bot_session(uri, SimulatedBot(name), delay, api_key) for name in bot_names]
     await asyncio.gather(*sessions)
 
 def main():
@@ -183,11 +183,11 @@ def main():
     parser.add_argument("--host", default="c2scripts.xyz", help="C2 WebSocket Host (e.g. c2scripts.xyz or localhost:8000)")
     parser.add_argument("--bots", type=int, default=3, help="Number of simulated bot nodes to run concurrently")
     parser.add_argument("--delay", type=int, default=8, help="Average delay between telemetry logs")
-    parser.add_argument("--discord-id", default="", help="Discord Account UID to bind bots to")
+    parser.add_argument("--api-key", default="", help="User API Key to bind bots to")
     
     args = parser.parse_args()
     try:
-        asyncio.run(start_fleet(args.host, args.bots, args.delay, args.discord_id))
+        asyncio.run(start_fleet(args.host, args.bots, args.delay, args.api_key))
     except KeyboardInterrupt:
         print(f"\n[{datetime.now().strftime('%H:%M:%S')}] {RED}Simulation terminated by keyboard input.{RESET}\n")
 

@@ -102,11 +102,18 @@
             <p class="text-3xl font-extrabold text-emerald-400 mt-2 font-mono">$<span x-text="bots.reduce((acc, b) => acc + parseFloat(b.money), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})">0.00</span></p>
         </div>
         <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
-            <div class="absolute right-4 top-4 text-orange-400/20">
-                <i data-lucide="shield-check" class="w-8 h-8"></i>
+            <div class="absolute right-4 top-4 text-teal-400/20">
+                <i data-lucide="key" class="w-8 h-8"></i>
             </div>
-            <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Secured Tokens</p>
-            <p class="text-3xl font-extrabold text-teal-400 mt-2 font-mono">ACTIVE</p>
+            <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Api key</p>
+            <div class="flex items-center gap-2 mt-2 select-all cursor-pointer group/key" title="Click to reveal key">
+                <p class="text-lg font-bold text-teal-400 font-mono tracking-wider transition-all duration-300 blur-[4px] hover:blur-none select-none">
+                    {{ user_api_key }}
+                </p>
+                <span class="text-[9px] font-mono text-zinc-500 opacity-50 group-hover/key:opacity-100 transition-opacity">
+                    (Hover to reveal)
+                </span>
+            </div>
         </div>
     </div>
 

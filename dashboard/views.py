@@ -3,6 +3,8 @@ from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 
 import requests
+import hashlib
+from django.conf import settings
 
 def index_view(request):
     sf_icon_url = None
@@ -30,7 +32,10 @@ def login_view(request):
 
 @login_required
 def dashboard_view(request):
-    return render(request, 'dashboard.html')
+    user_id = request.user.id
+    secret = getattr(settings, 'SECRET_KEY', 'default_secret')
+    user_api_key = f"c2_usr_{hashlib.sha256(f'{user_id}:{secret}'.encode()).hexdigest()[:16]}"
+    return render(request, 'dashboard.html', {'user_api_key': user_api_key})
 
 def logout_view(request):
     auth_logout(request)

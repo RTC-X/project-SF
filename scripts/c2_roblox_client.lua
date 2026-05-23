@@ -100,10 +100,10 @@ print("[C2 Client] Connected successfully to " .. WS_URL)
 local registerPayload = {
     action = "register",
     username = LocalPlayer.Name,
-    discord_id = _G.C2_DiscordID or ""
+    api_key = _G.C2_ApiKey or ""
 }
 ws:Send(HttpService:JSONEncode(registerPayload))
-print("[C2 Client] Registered Node for user: " .. LocalPlayer.Name .. " (Discord: " .. tostring(_G.C2_DiscordID) .. ")")
+print("[C2 Client] Registered Node for user: " .. LocalPlayer.Name .. " (API Key: " .. tostring(_G.C2_ApiKey) .. ")")
 
 -- Send continuous gameplay telemetry heartbeat logs
 task.spawn(function()
