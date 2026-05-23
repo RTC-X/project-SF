@@ -60,6 +60,11 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
+# Tell Django it is behind a secure proxy (Traefik / Cloudflare / Tunnels)
+# This forces Django to construct absolute URLs (like OAuth redirect_uris) using https://
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_PORT = True
+
 ROOT_URLCONF = 'c2_dashboard.urls'
 
 TEMPLATES = [
