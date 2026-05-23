@@ -11,17 +11,17 @@ services:
       - "${PORT:-8000}:8000"
     environment:
       DEBUG: "False"
-      SECRET_KEY:
+      SECRET_KEY: ${SECRET_KEY}
       DB_NAME: "c2_db"
       DB_USER: "c2_admin"
       DB_PASSWORD: "c2_secure_pass_998"
       DB_HOST: "db"
       DB_PORT: "5432"
       ALLOWED_HOSTS: "*"
-      DISCORD_CLIENT_ID:
-      DISCORD_CLIENT_SECRET:
-      DISCORD_BOT_TOKEN:
-      DISCORD_GUILD_ID:
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID}
     depends_on:
       - db
 
