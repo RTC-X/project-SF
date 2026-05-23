@@ -34,7 +34,23 @@
         <div class="max-w-md mx-auto">
             
             <!-- Card 1: Sword Factory C2 (ACTIVE & PRECISE) -->
-            <div class="group relative glass-panel rounded-3xl p-6 overflow-hidden flex flex-col justify-between transition-all duration-500 hover:border-teal-500/30 hover:shadow-[0_0_30px_rgba(45,212,191,0.08)] hover:-translate-y-1">
+            <div x-data="{ 
+                iconUrl: '', 
+                loaded: false,
+                init() {
+                    fetch('https://thumbnails.roblox.com/v1/places/gameicons?placeIds=82432929049078&returnPolicy=PlaceHolder&size=150x150&format=Png')
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data && data.data && data.data[0] && data.data[0].imageUrl) {
+                                this.iconUrl = data.data[0].imageUrl;
+                                this.loaded = true;
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Roblox thumbnail fetch failed, using fallback icon', err);
+                        });
+                }
+            }" class="group relative glass-panel rounded-3xl p-6 overflow-hidden flex flex-col justify-between transition-all duration-500 hover:border-teal-500/30 hover:shadow-[0_0_30px_rgba(45,212,191,0.08)] hover:-translate-y-1">
                 
                 <!-- Background ambient decorative glows -->
                 <div class="absolute -top-10 -right-10 w-32 h-32 bg-teal-500/10 rounded-full blur-2xl group-hover:bg-teal-500/20 transition-all duration-500"></div>
@@ -42,9 +58,14 @@
                 
                 <div class="space-y-4 relative z-10">
                     <div class="flex items-center justify-between">
-                        <!-- Dynamic Roblox Place ID Icon Thumbnail -->
+                        <!-- Dynamic Roblox Place ID Icon Thumbnail with Alpine.js Fallback -->
                         <div class="h-14 w-14 rounded-2xl overflow-hidden border border-teal-500/20 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:border-teal-500/40 transition-all duration-500 bg-zinc-900">
-                            <img src="https://www.roblox.com/asset-thumbnail/image?assetId=82432929049078&width=150&height=150&format=png" alt="Sword Factory Icon" class="w-full h-full object-cover">
+                            <template x-if="loaded">
+                                <img :src="iconUrl" alt="Sword Factory Icon" class="w-full h-full object-cover">
+                            </template>
+                            <template x-if="!loaded">
+                                <i data-lucide="sword" class="w-6 h-6 text-teal-400 animate-pulse"></i>
+                            </template>
                         </div>
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-[10px] font-bold text-teal-400 font-mono uppercase">
                             <span class="h-1.5 w-1.5 rounded-full bg-teal-400"></span>
@@ -69,7 +90,6 @@
                     <div class="flex flex-wrap gap-2 pt-2">
                         <span class="text-[10px] font-mono bg-white/5 border border-white/5 rounded-lg px-2 py-0.5 text-zinc-300">God-Roll Sniper</span>
                         <span class="text-[10px] font-mono bg-white/5 border border-white/5 rounded-lg px-2 py-0.5 text-zinc-300">Multi-Config Wizard</span>
-                        <span class="text-[10px] font-mono bg-white/5 border border-white/5 rounded-lg px-2 py-0.5 text-teal-400">WebSocket Live</span>
                     </div>
                 </div>
 
