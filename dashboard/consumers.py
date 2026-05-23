@@ -4,43 +4,52 @@ from channels.db import database_sync_to_async
 
 class C2Consumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.room_group_name = 'c2_fleet'
+        user = self.scope.get('user')
         self.bot_username = None
 
-        # Join fleet channel group
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
-        )
+        if user and user.is_authenticated:
+            self.room_group_name = f'c2_fleet_user_{user.id}'
+            # Join user's private fleet channel group
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            )
+            await self.accept()
 
-        await self.accept()
-
-        # IMMEDIATELY stream active bots to frontend on connect
-        bots = await self.get_active_bots()
-        await self.send(text_data=json.dumps({
-            'type': 'fleet_update',
-            'bots': bots
-        }))
-
-        # IMMEDIATELY stream last 30 telemetry logs to frontend on connect
-        logs = await self.get_recent_logs()
-        for log in reversed(logs):
+            # IMMEDIATELY stream active bots for this user to frontend on connect
+            bots = await self.get_bots_for_user(user)
             await self.send(text_data=json.dumps({
-                'type': 'new_log',
-                'log': log
+                'type': 'fleet_update',
+                'bots': bots
             }))
 
+            # IMMEDIATELY stream last 30 telemetry logs for this user to frontend on connect
+            logs = await self.get_recent_logs_for_user(user)
+            for log in reversed(logs):
+                await self.send(text_data=json.dumps({
+                    'type': 'new_log',
+                    'log': log
+                }))
+        else:
+            self.room_group_name = None
+            # Allow bot connection to accept; they will dynamically join their group during register/log
+            await self.accept()
+
     async def disconnect(self, close_code):
-        # Leave fleet channel group
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
+        # Leave current room group if set
+        if self.room_group_name:
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
         
         # Mark bot as offline if registered
         if getattr(self, 'bot_username', None):
             await self.set_bot_offline(self.bot_username)
-            await self.broadcast_fleet_update()
+            # Find and update only the owner's dashboard
+            owner_user = await self.get_bot_owner(self.bot_username)
+            if owner_user:
+                await self.broadcast_fleet_update_for_user(owner_user)
 
     # Receive message from WebSocket (from frontends or Roblox bots)
     async def receive(self, text_data):
@@ -67,7 +76,18 @@ class C2Consumer(AsyncWebsocketConsumer):
                     return
                 
                 self.bot_username = bot_id
-                await self.broadcast_fleet_update()
+                
+                # Join direct bot command group for routing direct manage clicks
+                self.room_group_name = f"c2_bot_{bot_id}"
+                await self.channel_layer.group_add(
+                    self.room_group_name,
+                    self.channel_name
+                )
+                
+                # Broadcast updated fleet status to the bot's owner
+                owner_user = await self.get_bot_owner(bot_id)
+                if owner_user:
+                    await self.broadcast_fleet_update_for_user(owner_user)
                 
             elif action == 'command':
                 # Relaying UI commands from control panels out to individual Roblox bots
@@ -79,33 +99,52 @@ class C2Consumer(AsyncWebsocketConsumer):
                 if command == 'syncConfig':
                     await self.save_bot_configuration(target_id, payload)
                 
-                await self.channel_layer.group_send(
-                    self.room_group_name,
-                    {
-                        'type': 'relay_command',
-                        'target_id': target_id,
-                        'command': command,
-                        'payload': payload
-                    }
-                )
-                await self.broadcast_fleet_update()
+                user = self.scope.get('user')
+                if user and user.is_authenticated:
+                    # Verify user owns target bot
+                    owns_bot = await self.verify_bot_ownership(user, target_id)
+                    if owns_bot:
+                        await self.channel_layer.group_send(
+                            f"c2_bot_{target_id}",
+                            {
+                                'type': 'relay_command',
+                                'target_id': target_id,
+                                'command': command,
+                                'payload': payload
+                            }
+                        )
+                        await self.broadcast_fleet_update_for_user(user)
+
             elif action == 'log':
                 # Bot streaming live telemetries / logs
                 username = data.get('username')
                 self.bot_username = username
+                
+                # Dynamic group joining if bot was not yet in its command group
+                if not self.room_group_name:
+                    self.room_group_name = f"c2_bot_{username}"
+                    await self.channel_layer.group_add(
+                        self.room_group_name,
+                        self.channel_name
+                    )
+                
                 event_type = data.get('event_type', 'General')
                 message = data.get('message')
                 
                 log_data = await self.create_telemetry_log(username, event_type, message)
                 if log_data:
-                    await self.channel_layer.group_send(
-                        self.room_group_name,
-                        {
-                            'type': 'broadcast_log',
-                            'log': log_data
-                        }
-                    )
-                    await self.broadcast_fleet_update()
+                    owner_user = await self.get_bot_owner(username)
+                    if owner_user:
+                        # Broadcast telemetry log to the owner's private feed
+                        await self.channel_layer.group_send(
+                            f"c2_fleet_user_{owner_user.id}",
+                            {
+                                'type': 'broadcast_log',
+                                'log': log_data
+                            }
+                        )
+                        # Broadcast fleet size / status updates to owner
+                        await self.broadcast_fleet_update_for_user(owner_user)
         except Exception as e:
             print("WebSocket error in C2Consumer:", e)
 
@@ -125,10 +164,18 @@ class C2Consumer(AsyncWebsocketConsumer):
             'bots': event['bots']
         }))
 
-    async def broadcast_fleet_update(self):
-        bots = await self.get_active_bots()
+    async def broadcast_log(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'new_log',
+            'log': event['log']
+        }))
+
+    async def broadcast_fleet_update_for_user(self, user):
+        if not user:
+            return
+        bots = await self.get_bots_for_user(user)
         await self.channel_layer.group_send(
-            self.room_group_name,
+            f'c2_fleet_user_{user.id}',
             {
                 'type': 'fleet_update',
                 'bots': bots
@@ -136,9 +183,37 @@ class C2Consumer(AsyncWebsocketConsumer):
         )
 
     @database_sync_to_async
-    def get_recent_logs(self):
+    def get_bot_owner(self, username):
+        from .models import BotAccount
+        try:
+            bot = BotAccount.objects.get(username=username)
+            return bot.owner
+        except BotAccount.DoesNotExist:
+            return None
+
+    @database_sync_to_async
+    def verify_bot_ownership(self, user, bot_id_or_username):
+        from .models import BotAccount
+        try:
+            from django.core.exceptions import ValidationError
+            import uuid
+            try:
+                # Check if UUID
+                val = uuid.UUID(str(bot_id_or_username))
+                bot = BotAccount.objects.get(id=val, owner=user)
+            except (ValueError, ValidationError):
+                # Otherwise treat as username
+                bot = BotAccount.objects.get(username=bot_id_or_username, owner=user)
+            return True
+        except BotAccount.DoesNotExist:
+            return False
+
+    @database_sync_to_async
+    def get_recent_logs_for_user(self, user):
         from .models import TelemetryLog
-        logs = TelemetryLog.objects.select_related('bot').order_by('-timestamp')[:30]
+        if not user or not user.is_authenticated:
+            return []
+        logs = TelemetryLog.objects.filter(bot__owner=user).select_related('bot').order_by('-timestamp')[:30]
         return [
             {
                 'id': log.id,
@@ -150,13 +225,11 @@ class C2Consumer(AsyncWebsocketConsumer):
         ]
 
     @database_sync_to_async
-    def get_active_bots(self):
+    def get_bots_for_user(self, user):
         from .models import BotAccount, BotConfiguration
-        user = self.scope.get('user')
-        if user and user.is_authenticated:
-            bots = BotAccount.objects.filter(owner=user)
-        else:
-            bots = BotAccount.objects.none()
+        if not user or not user.is_authenticated:
+            return []
+        bots = BotAccount.objects.filter(owner=user)
         serialized = []
         for bot in bots:
             try:
@@ -205,7 +278,6 @@ class C2Consumer(AsyncWebsocketConsumer):
             from django.contrib.auth.models import User
             from django.conf import settings
             secret = getattr(settings, 'SECRET_KEY', 'default_secret')
-            # Look for a user whose secret hash matches the provided api_key
             for user in User.objects.all():
                 expected_key = f"c2_usr_{hashlib.sha256(f'{user.id}:{secret}'.encode()).hexdigest()[:16]}"
                 if expected_key == extra_data['api_key']:
@@ -232,7 +304,6 @@ class C2Consumer(AsyncWebsocketConsumer):
             if 'backpack_items' in extra_data and extra_data['backpack_items']:
                 bot.backpack_items = extra_data['backpack_items']
         
-        # If new bot connecting and no backpack exists, populate premium gameplay placeholders
         if created or not bot.backpack_items:
             if not bot.backpack_items:
                 bot.level = bot.level or 490
@@ -247,7 +318,6 @@ class C2Consumer(AsyncWebsocketConsumer):
                 ]
         bot.save()
         
-        # Ensure configuration model exists cleanly
         if not BotConfiguration.objects.filter(bot=bot).exists():
             BotConfiguration.objects.create(
                 bot=bot,
@@ -269,12 +339,6 @@ class C2Consumer(AsyncWebsocketConsumer):
         except BotAccount.DoesNotExist:
             pass
 
-    async def broadcast_log(self, event):
-        await self.send(text_data=json.dumps({
-            'type': 'new_log',
-            'log': event['log']
-        }))
-
     @database_sync_to_async
     def create_telemetry_log(self, username, event_type, message):
         from .models import BotAccount, TelemetryLog
@@ -295,19 +359,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 'message': log.message
             }
         except BotAccount.DoesNotExist:
-            # If the bot is not registered yet, we create it dynamically first
-            bot = BotAccount.objects.create(username=username, status='Idle')
-            if event_type in ['Farming', 'Sniping', 'Idle']:
-                bot.status = event_type
-                bot.save()
-                
-            log = TelemetryLog.objects.create(bot=bot, event_type=event_type, message=message)
-            return {
-                'id': log.id,
-                'username': bot.username,
-                'time': log.timestamp.strftime('%H:%M:%S'),
-                'message': log.message
-            }
+            return None
 
     @database_sync_to_async
     def save_bot_configuration(self, bot_id, payload):
@@ -327,7 +379,6 @@ class C2Consumer(AsyncWebsocketConsumer):
                 config.whitelisted_uuids = payload['whitelisted_uuids']
             config.save()
             
-            # Also update bot's direct game telemetry fields if they were modified/passed in bulk/direct edit
             if 'bot_class' in payload and payload['bot_class']:
                 bot.bot_class = payload['bot_class']
             if 'quality' in payload and payload['quality']:
