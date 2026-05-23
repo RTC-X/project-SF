@@ -25,13 +25,13 @@
             <div class="flex items-center gap-2">
                 <i data-lucide="layout-grid" class="w-5 h-5 text-teal-400"></i>
                 <h3 class="text-lg font-bold text-white font-mono uppercase tracking-wider">
-                    Select Operations Module
+                    Select Game
                 </h3>
             </div>
-            <span class="text-xs text-zinc-500 font-mono">3 Modules Loaded</span>
+            <span class="text-xs text-zinc-500 font-mono">Supported Game</span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="max-w-md mx-auto">
             
             <!-- Card 1: Sword Factory C2 (ACTIVE & PRECISE) -->
             <div class="group relative glass-panel rounded-3xl p-6 overflow-hidden flex flex-col justify-between transition-all duration-500 hover:border-teal-500/30 hover:shadow-[0_0_30px_rgba(45,212,191,0.08)] hover:-translate-y-1">
@@ -42,8 +42,9 @@
                 
                 <div class="space-y-4 relative z-10">
                     <div class="flex items-center justify-between">
-                        <div class="h-12 w-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
-                            <i data-lucide="sword" class="w-6 h-6 text-teal-400 animate-pulse"></i>
+                        <!-- Dynamic Roblox Place ID Icon Thumbnail -->
+                        <div class="h-14 w-14 rounded-2xl overflow-hidden border border-teal-500/20 flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:border-teal-500/40 transition-all duration-500 bg-zinc-900">
+                            <img src="https://www.roblox.com/asset-thumbnail/image?assetId=82432929049078&width=150&height=150&format=png" alt="Sword Factory Icon" class="w-full h-full object-cover">
                         </div>
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-[10px] font-bold text-teal-400 font-mono uppercase">
                             <span class="h-1.5 w-1.5 rounded-full bg-teal-400"></span>
@@ -74,82 +75,10 @@
 
                 <div class="pt-6 relative z-10">
                     <a href="{% url 'dashboard' %}" 
-                       class="w-full flex justify-center py-3.5 px-4 border border-teal-500/30 text-sm font-bold rounded-2xl text-white bg-teal-500/10 hover:bg-teal-500/20 transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/10 hover:-translate-y-0.5 items-center gap-2">
-                        <span>Launch Console</span>
+                       class="w-full flex justify-center py-3.5 px-4 border border-teal-500/30 text-sm font-bold rounded-2xl text-white bg-teal-500/10 hover:bg-teal-500/20 transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/10 hover:-translate-y-0.5 items-center gap-2 font-mono uppercase tracking-wider">
+                        <span>Select Game</span>
                         <i data-lucide="arrow-right" class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"></i>
                     </a>
-                </div>
-            </div>
-
-            <!-- Card 2: Sword Warrior (COMING SOON) -->
-            <div class="group relative bg-zinc-950/40 border border-zinc-900 rounded-3xl p-6 overflow-hidden flex flex-col justify-between opacity-75">
-                
-                <div class="space-y-4 relative z-10">
-                    <div class="flex items-center justify-between">
-                        <div class="h-12 w-12 rounded-2xl bg-zinc-900 flex items-center justify-center">
-                            <i data-lucide="shield" class="w-6 h-6 text-zinc-500"></i>
-                        </div>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[10px] font-bold text-zinc-500 font-mono uppercase">
-                            Development
-                        </span>
-                    </div>
-
-                    <div class="space-y-1">
-                        <h4 class="text-xl font-bold text-zinc-400">
-                            Sword Warrior
-                        </h4>
-                        <p class="text-zinc-600 font-mono text-[10px] uppercase tracking-widest">
-                            auto-farm profile
-                        </p>
-                    </div>
-
-                    <p class="text-zinc-500 text-sm font-sans leading-relaxed">
-                        Sleek level grinding, mob target routing, automatic quest progression, and skill utilization loops for standard Sword Warrior execution.
-                    </p>
-                </div>
-
-                <div class="pt-6 relative z-10">
-                    <button disabled 
-                            class="w-full py-3.5 px-4 border border-zinc-800 text-sm font-bold rounded-2xl text-zinc-600 bg-zinc-900/50 cursor-not-allowed flex justify-center items-center gap-2">
-                        <span>Module Locked</span>
-                        <i data-lucide="lock" class="w-4 h-4"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Card 3: Limitsell Merchant (COMING SOON) -->
-            <div class="group relative bg-zinc-950/40 border border-zinc-900 rounded-3xl p-6 overflow-hidden flex flex-col justify-between opacity-75">
-                
-                <div class="space-y-4 relative z-10">
-                    <div class="flex items-center justify-between">
-                        <div class="h-12 w-12 rounded-2xl bg-zinc-900 flex items-center justify-center">
-                            <i data-lucide="trending-up" class="w-6 h-6 text-zinc-500"></i>
-                        </div>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[10px] font-bold text-zinc-500 font-mono uppercase">
-                            Development
-                        </span>
-                    </div>
-
-                    <div class="space-y-1">
-                        <h4 class="text-xl font-bold text-zinc-400">
-                            Limitsell Merchant
-                        </h4>
-                        <p class="text-zinc-600 font-mono text-[10px] uppercase tracking-widest">
-                            passive market trader
-                        </p>
-                    </div>
-
-                    <p class="text-zinc-500 text-sm font-sans leading-relaxed">
-                        Intelligent stock page cycling, purchase logs, automated limit-selling matrices, and Discord integration audits.
-                    </p>
-                </div>
-
-                <div class="pt-6 relative z-10">
-                    <button disabled 
-                            class="w-full py-3.5 px-4 border border-zinc-800 text-sm font-bold rounded-2xl text-zinc-600 bg-zinc-900/50 cursor-not-allowed flex justify-center items-center gap-2">
-                        <span>Module Locked</span>
-                        <i data-lucide="lock" class="w-4 h-4"></i>
-                    </button>
                 </div>
             </div>
             
