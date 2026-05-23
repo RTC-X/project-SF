@@ -48,6 +48,21 @@ class C2Consumer(AsyncWebsocketConsumer):
                         'payload': payload
                     }
                 )
+            elif action == 'log':
+                # Bot streaming live telemetries / logs
+                username = data.get('username')
+                event_type = data.get('event_type', 'General')
+                message = data.get('message')
+                
+                log_data = await self.create_telemetry_log(username, event_type, message)
+                if log_data:
+                    await self.channel_layer.group_send(
+                        self.room_group_name,
+                        {
+                            'type': 'broadcast_log',
+                            'log': log_data
+                        }
+                    )
         except Exception as e:
             print("WebSocket error in C2Consumer:", e)
 
@@ -99,3 +114,32 @@ class C2Consumer(AsyncWebsocketConsumer):
         bot, created = BotAccount.objects.get_or_create(username=username)
         bot.status = status
         bot.save()
+
+    async def broadcast_log(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'new_log',
+            'log': event['log']
+        }))
+
+    @database_sync_to_async
+    def create_telemetry_log(self, username, event_type, message):
+        from .models import BotAccount, TelemetryLog
+        try:
+            bot = BotAccount.objects.get(username=username)
+            log = TelemetryLog.objects.create(bot=bot, event_type=event_type, message=message)
+            return {
+                'id': log.id,
+                'username': bot.username,
+                'time': log.timestamp.strftime('%H:%M:%S'),
+                'message': log.message
+            }
+        except BotAccount.DoesNotExist:
+            # If the bot is not registered yet, we create it dynamically first
+            bot = BotAccount.objects.create(username=username, status='Idle')
+            log = TelemetryLog.objects.create(bot=bot, event_type=event_type, message=message)
+            return {
+                'id': log.id,
+                'username': bot.username,
+                'time': log.timestamp.strftime('%H:%M:%S'),
+                'message': log.message
+            }
