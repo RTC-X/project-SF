@@ -14,6 +14,21 @@ class C2Consumer(AsyncWebsocketConsumer):
 
         await self.accept()
 
+        # IMMEDIATELY stream active bots to frontend on connect
+        bots = await self.get_active_bots()
+        await self.send(text_data=json.dumps({
+            'type': 'fleet_update',
+            'bots': bots
+        }))
+
+        # IMMEDIATELY stream last 30 telemetry logs to frontend on connect
+        logs = await self.get_recent_logs()
+        for log in reversed(logs):
+            await self.send(text_data=json.dumps({
+                'type': 'new_log',
+                'log': log
+            }))
+
     async def disconnect(self, close_code):
         # Leave fleet channel group
         await self.channel_layer.group_discard(
@@ -63,6 +78,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                             'log': log_data
                         }
                     )
+                    await self.broadcast_fleet_update()
         except Exception as e:
             print("WebSocket error in C2Consumer:", e)
 
@@ -93,9 +109,23 @@ class C2Consumer(AsyncWebsocketConsumer):
         )
 
     @database_sync_to_async
+    def get_recent_logs(self):
+        from .models import TelemetryLog
+        logs = TelemetryLog.objects.select_related('bot').order_by('-timestamp')[:30]
+        return [
+            {
+                'id': log.id,
+                'username': log.bot.username,
+                'time': log.timestamp.strftime('%H:%M:%S'),
+                'message': log.message
+            }
+            for log in logs
+        ]
+
+    @database_sync_to_async
     def get_active_bots(self):
         from .models import BotAccount, BotConfiguration
-        bots = BotAccount.objects.exclude(status='Offline')
+        bots = BotAccount.objects.all()
         serialized = []
         for bot in bots:
             try:
@@ -174,6 +204,13 @@ class C2Consumer(AsyncWebsocketConsumer):
         from .models import BotAccount, TelemetryLog
         try:
             bot = BotAccount.objects.get(username=username)
+            if event_type in ['Farming', 'Sniping', 'Idle']:
+                bot.status = event_type
+                if event_type == 'Farming':
+                    bot.money = float(bot.money) + 12.50
+                bot.session_time = (bot.session_time or 0) + 6
+                bot.save()
+                
             log = TelemetryLog.objects.create(bot=bot, event_type=event_type, message=message)
             return {
                 'id': log.id,
@@ -184,6 +221,10 @@ class C2Consumer(AsyncWebsocketConsumer):
         except BotAccount.DoesNotExist:
             # If the bot is not registered yet, we create it dynamically first
             bot = BotAccount.objects.create(username=username, status='Idle')
+            if event_type in ['Farming', 'Sniping', 'Idle']:
+                bot.status = event_type
+                bot.save()
+                
             log = TelemetryLog.objects.create(bot=bot, event_type=event_type, message=message)
             return {
                 'id': log.id,
