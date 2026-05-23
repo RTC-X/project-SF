@@ -12,9 +12,9 @@ services:
     environment:
       DEBUG: "False"
       SECRET_KEY: ${SECRET_KEY}
-      DB_NAME: "c2_db"
-      DB_USER: "c2_admin"
-      DB_PASSWORD: "c2_secure_pass_998"
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
       DB_HOST: "db"
       DB_PORT: "5432"
       ALLOWED_HOSTS: "*"
@@ -30,13 +30,11 @@ services:
     container_name: c2_db
     restart: always
     environment:
-      POSTGRES_DB: "c2_db"
-      POSTGRES_USER: "c2_admin"
-      POSTGRES_PASSWORD: "c2_secure_pass_998"
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
 volumes:
   postgres_data:
