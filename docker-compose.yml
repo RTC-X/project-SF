@@ -10,16 +10,16 @@ services:
     ports:
       - "${PORT:-8000}:8000"
     environment:
-      - DEBUG=True
-      - SECRET_KEY=django-insecure-coolify-c2-dashboard-super-secret-key-123
+      - DEBUG=False
+      - SECRET_KEY
       - DB_NAME=c2_db
       - DB_USER=c2_admin
       - DB_PASSWORD=c2_secure_pass_998
       - DB_HOST=db
       - DB_PORT=5432
       - ALLOWED_HOSTS=*
-      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID:-}
-      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET:-}
+      - DISCORD_CLIENT_ID
+      - DISCORD_CLIENT_SECRET
     depends_on:
       - db
 
