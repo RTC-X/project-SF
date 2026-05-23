@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block title %}C2 | Automation Gateway{% endblock %}
+
+{% block content %}
+<div class="space-y-12 py-6 animate-fade-in" aria-label="Snowflake C2 Gateway Landing Portal">
+    
+    <!-- Hero Header / Brand Intro -->
+    <div class="text-center max-w-3xl mx-auto space-y-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-xs font-semibold text-teal-400 font-mono tracking-wide uppercase">
+            <span class="h-1.5 w-1.5 rounded-full bg-teal-400 animate-ping"></span>
+            Telemetry Network Active
+        </div>
+        <h2 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
+            Next-Gen Game <span class="bg-gradient-to-r from-teal-400 to-orange-400 bg-clip-text text-transparent">Automation Gateway</span>
+        </h2>
+        <p class="text-zinc-400 font-sans text-base max-w-xl mx-auto leading-relaxed">
+            Deploy, coordinate, and monitor secure automation protocols across multiple game environments with absolute real-time visual telemetry controls.
+        </p>
+    </div>
+
+    <!-- Supported Games & Script Modules Catalog -->
+    <div class="space-y-6">
+        <div class="flex items-center justify-between border-b border-white/5 pb-4">
+            <div class="flex items-center gap-2">
+                <i data-lucide="layout-grid" class="w-5 h-5 text-teal-400"></i>
+                <h3 class="text-lg font-bold text-white font-mono uppercase tracking-wider">
+                    Select Operations Module
+                </h3>
+            </div>
+            <span class="text-xs text-zinc-500 font-mono">3 Modules Loaded</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Card 1: Sword Factory C2 (ACTIVE & PRECISE) -->
+            <div class="group relative glass-panel rounded-3xl p-6 overflow-hidden flex flex-col justify-between transition-all duration-500 hover:border-teal-500/30 hover:shadow-[0_0_30px_rgba(45,212,191,0.08)] hover:-translate-y-1">
+                
+                <!-- Background ambient decorative glows -->
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-teal-500/10 rounded-full blur-2xl group-hover:bg-teal-500/20 transition-all duration-500"></div>
+                <div class="absolute -bottom-10 -left-10 w-24 h-24 bg-orange-500/5 rounded-full blur-xl"></div>
+                
+                <div class="space-y-4 relative z-10">
+                    <div class="flex items-center justify-between">
+                        <div class="h-12 w-12 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
+                            <i data-lucide="sword" class="w-6 h-6 text-teal-400 animate-pulse"></i>
+                        </div>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-[10px] font-bold text-teal-400 font-mono uppercase">
+                            <span class="h-1.5 w-1.5 rounded-full bg-teal-400"></span>
+                            Verified & Online
+                        </span>
+                    </div>
+
+                    <div class="space-y-1">
+                        <h4 class="text-xl font-bold text-white group-hover:text-teal-300 transition-colors duration-300">
+                            Sword Factory
+                        </h4>
+                        <p class="text-zinc-500 font-mono text-[10px] uppercase tracking-widest">
+                            telemetry & control
+                        </p>
+                    </div>
+
+                    <p class="text-zinc-400 text-sm font-sans leading-relaxed">
+                        Complete command interface for sword farming, inventory snipe configs, automated multi-config execution, and real-time logs streams.
+                    </p>
+
+                    <!-- Feature Tags -->
+                    <div class="flex flex-wrap gap-2 pt-2">
+                        <span class="text-[10px] font-mono bg-white/5 border border-white/5 rounded-lg px-2 py-0.5 text-zinc-300">God-Roll Sniper</span>
+                        <span class="text-[10px] font-mono bg-white/5 border border-white/5 rounded-lg px-2 py-0.5 text-zinc-300">Multi-Config Wizard</span>
+                        <span class="text-[10px] font-mono bg-white/5 border border-white/5 rounded-lg px-2 py-0.5 text-teal-400">WebSocket Live</span>
+                    </div>
+                </div>
+
+                <div class="pt-6 relative z-10">
+                    <a href="{% url 'dashboard' %}" 
+                       class="w-full flex justify-center py-3.5 px-4 border border-teal-500/30 text-sm font-bold rounded-2xl text-white bg-teal-500/10 hover:bg-teal-500/20 transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/10 hover:-translate-y-0.5 items-center gap-2">
+                        <span>Launch Console</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Card 2: Sword Warrior (COMING SOON) -->
+            <div class="group relative bg-zinc-950/40 border border-zinc-900 rounded-3xl p-6 overflow-hidden flex flex-col justify-between opacity-75">
+                
+                <div class="space-y-4 relative z-10">
+                    <div class="flex items-center justify-between">
+                        <div class="h-12 w-12 rounded-2xl bg-zinc-900 flex items-center justify-center">
+                            <i data-lucide="shield" class="w-6 h-6 text-zinc-500"></i>
+                        </div>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[10px] font-bold text-zinc-500 font-mono uppercase">
+                            Development
+                        </span>
+                    </div>
+
+                    <div class="space-y-1">
+                        <h4 class="text-xl font-bold text-zinc-400">
+                            Sword Warrior
+                        </h4>
+                        <p class="text-zinc-600 font-mono text-[10px] uppercase tracking-widest">
+                            auto-farm profile
+                        </p>
+                    </div>
+
+                    <p class="text-zinc-500 text-sm font-sans leading-relaxed">
+                        Sleek level grinding, mob target routing, automatic quest progression, and skill utilization loops for standard Sword Warrior execution.
+                    </p>
+                </div>
+
+                <div class="pt-6 relative z-10">
+                    <button disabled 
+                            class="w-full py-3.5 px-4 border border-zinc-800 text-sm font-bold rounded-2xl text-zinc-600 bg-zinc-900/50 cursor-not-allowed flex justify-center items-center gap-2">
+                        <span>Module Locked</span>
+                        <i data-lucide="lock" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card 3: Limitsell Merchant (COMING SOON) -->
+            <div class="group relative bg-zinc-950/40 border border-zinc-900 rounded-3xl p-6 overflow-hidden flex flex-col justify-between opacity-75">
+                
+                <div class="space-y-4 relative z-10">
+                    <div class="flex items-center justify-between">
+                        <div class="h-12 w-12 rounded-2xl bg-zinc-900 flex items-center justify-center">
+                            <i data-lucide="trending-up" class="w-6 h-6 text-zinc-500"></i>
+                        </div>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[10px] font-bold text-zinc-500 font-mono uppercase">
+                            Development
+                        </span>
+                    </div>
+
+                    <div class="space-y-1">
+                        <h4 class="text-xl font-bold text-zinc-400">
+                            Limitsell Merchant
+                        </h4>
+                        <p class="text-zinc-600 font-mono text-[10px] uppercase tracking-widest">
+                            passive market trader
+                        </p>
+                    </div>
+
+                    <p class="text-zinc-500 text-sm font-sans leading-relaxed">
+                        Intelligent stock page cycling, purchase logs, automated limit-selling matrices, and Discord integration audits.
+                    </p>
+                </div>
+
+                <div class="pt-6 relative z-10">
+                    <button disabled 
+                            class="w-full py-3.5 px-4 border border-zinc-800 text-sm font-bold rounded-2xl text-zinc-600 bg-zinc-900/50 cursor-not-allowed flex justify-center items-center gap-2">
+                        <span>Module Locked</span>
+                        <i data-lucide="lock" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

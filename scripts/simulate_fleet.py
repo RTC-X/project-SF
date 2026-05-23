@@ -129,6 +129,7 @@ async def bot_session(uri, bot, delay, discord_id=""):
                                 # Process incoming dynamic action dispatches
                                 print("\n" + "="*60)
                                 print(f"{YELLOW}{BOLD}[⚡ INCOMING MULTI-CONFIG DIRECTIVE FOR {bot.username}]{RESET}")
+                                print(f"  Target ID: {target_id}")
                                 print(f"  Command:   {BOLD}{command}{RESET}")
                                 print(f"  Payload:   {json.dumps(payload, indent=2)}")
                                 print("="*60 + "\n")
@@ -167,12 +168,12 @@ async def start_fleet(host, bot_count, delay, discord_id=""):
         bot_names[2] = "SniperLegend_99"
 
     print(f"\n{BOLD}{TEAL}C2 Fleet Telemetry Simulator v1.0{RESET}")
-    print(f"--------------------------------------------------")
+    print("--------------------------------------------------")
     print(f"Target Server : {BOLD}{uri}{RESET}")
     print(f"Fleet Count   : {BOLD}{bot_count} Active Bots{RESET}")
     print(f"Discord Owner : {BOLD}{discord_id if discord_id else 'None (Global)'}{RESET}")
     print(f"Heartbeats    : Random every ~{delay}s")
-    print(f"--------------------------------------------------\n")
+    print("--------------------------------------------------\n")
 
     sessions = [bot_session(uri, SimulatedBot(name), delay, discord_id) for name in bot_names]
     await asyncio.gather(*sessions)

@@ -17,7 +17,7 @@ local WS_URL = "wss://" .. SERVER_HOST .. "/ws/c2/"
 print("[C2 Client] Initializing Roblox Fleet Node...")
 
 -- Global State Control Variables (used by your external autofarm scripts)
-_G.C2_DiscordID = "" -- Set your Discord Account UID here (e.g. "104928374928374928") to register this bot on your dashboard
+_G.C2_DiscordID = "203084700372172801" -- Set your Discord Account UID here (e.g. "104928374928374928") to register this bot on your dashboard
 _G.C2_FarmEnabled = true
 _G.C2_SnipeEnabled = true
 _G.C2_TargetEnchantSets = {}

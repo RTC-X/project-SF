@@ -167,3 +167,9 @@ ACCOUNT_LOGOUT_ON_GET = True
 DISCORD_BOT_TOKEN = env('DISCORD_BOT_TOKEN', default='')
 DISCORD_GUILD_ID = env('DISCORD_GUILD_ID', default='')
 
+# Security Headers & Content Policy configurations (OWASP A02 Defense-in-Depth)
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_REFERRER_POLICY = 'same-origin'
+

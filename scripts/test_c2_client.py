@@ -104,12 +104,12 @@ async def start_client(host, username, delay, discord_id=""):
     uri = f"{protocol}://{clean_host}/ws/c2/"
     
     print(f"\n{BOLD}{TEAL}C2 Fleet Bot Node Simulator v1.0{RESET}")
-    print(f"--------------------------------------------------")
+    print("--------------------------------------------------")
     print(f"Target Server : {BOLD}{uri}{RESET}")
     print(f"Bot Username  : {BOLD}{username}{RESET}")
     print(f"Discord Owner : {BOLD}{discord_id if discord_id else 'None (Global)'}{RESET}")
     print(f"Telemetry Delay: {delay}s")
-    print(f"--------------------------------------------------")
+    print("--------------------------------------------------")
     print(f"[{get_timestamp()}] Connecting to C2 Server...")
 
     while True:

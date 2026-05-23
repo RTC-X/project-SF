@@ -1,7 +1,11 @@
 import uuid
 import secrets
+import requests
 from django.db import models
 from django.contrib.auth.models import User
+from django.dispatch import receiver
+from django.conf import settings
+from allauth.socialaccount.signals import pre_social_login
 
 class BotAccount(models.Model):
     STATUS_CHOICES = [
@@ -69,10 +73,6 @@ class TelemetryLog(models.Model):
 # ==============================================================================
 # DISCORD OAUTH AUTO-JOIN GUILD SIGNAL RECEIVER
 # ==============================================================================
-import requests
-from django.dispatch import receiver
-from django.conf import settings
-from allauth.socialaccount.signals import pre_social_login
 
 @receiver(pre_social_login)
 def auto_join_discord_server(sender, request, sociallogin, **kwargs):
