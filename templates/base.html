@@ -47,18 +47,21 @@
         
         /* Custom scrollbar styling for premium dark theme */
         ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
+            width: 6px;
+            height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: transparent;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 999px;
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(20, 184, 166, 0.18); /* Premium translucent teal */
+            border: 1px solid rgba(20, 184, 166, 0.08);
             border-radius: 999px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(20, 184, 166, 0.3); /* Teal accent glow */
+            background: rgba(20, 184, 166, 0.45); /* High-fidelity glowing teal hover */
+            border-color: rgba(20, 184, 166, 0.25);
         }
     </style>
     {% block head %}{% endblock %}

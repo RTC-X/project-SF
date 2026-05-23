@@ -45,7 +45,7 @@ class C2Consumer(AsyncWebsocketConsumer):
             if action == 'register':
                 # Registering active bots from Roblox client
                 bot_id = data.get('username')
-                await self.update_bot_status(bot_id, 'Idle')
+                await self.update_bot_status(bot_id, 'Idle', data)
                 await self.broadcast_fleet_update()
                 
             elif action == 'command':
@@ -53,6 +53,10 @@ class C2Consumer(AsyncWebsocketConsumer):
                 target_id = data.get('target_id')
                 command = data.get('command')
                 payload = data.get('payload', {})
+                
+                # Persist settings in the DB for persistence across page loads
+                if command == 'syncConfig':
+                    await self.save_bot_configuration(target_id, payload)
                 
                 await self.channel_layer.group_send(
                     self.room_group_name,
@@ -63,6 +67,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                         'payload': payload
                     }
                 )
+                await self.broadcast_fleet_update()
             elif action == 'log':
                 # Bot streaming live telemetries / logs
                 username = data.get('username')
@@ -163,23 +168,40 @@ class C2Consumer(AsyncWebsocketConsumer):
         return serialized
 
     @database_sync_to_async
-    def update_bot_status(self, username, status):
+    def update_bot_status(self, username, status, extra_data=None):
         from .models import BotAccount, BotConfiguration
         bot, created = BotAccount.objects.get_or_create(username=username)
         bot.status = status
         
-        # If new bot connecting, populate premium gameplay stats & backpack for immediate beautiful display
+        if extra_data:
+            if 'level' in extra_data and extra_data['level'] is not None:
+                bot.level = int(extra_data['level'])
+            if 'money' in extra_data and extra_data['money'] is not None:
+                bot.money = float(extra_data['money'])
+            if 'bot_class' in extra_data and extra_data['bot_class']:
+                bot.bot_class = extra_data['bot_class']
+            if 'quality' in extra_data and extra_data['quality']:
+                bot.quality = extra_data['quality']
+            if 'rarity' in extra_data and extra_data['rarity']:
+                bot.rarity = extra_data['rarity']
+            if 'mold' in extra_data and extra_data['mold']:
+                bot.mold = extra_data['mold']
+            if 'backpack_items' in extra_data and extra_data['backpack_items']:
+                bot.backpack_items = extra_data['backpack_items']
+        
+        # If new bot connecting and no backpack exists, populate premium gameplay placeholders
         if created or not bot.backpack_items:
-            bot.level = 490
-            bot.bot_class = "Unbeatable"
-            bot.quality = "Spectacular"
-            bot.rarity = "Heavenly++"
-            bot.mold = "Crystal"
-            bot.backpack_items = [
-                {"uuid": "sword_92k", "name": "Ancient Broadsword", "traits": ["Ancient II", "Level 10"]},
-                {"uuid": "sword_41m", "name": "Fortune Katana", "traits": ["Fortune IV", "Level 25"]},
-                {"uuid": "sword_15x", "name": "Lightning Dagger", "traits": ["Swift I", "Level 14"]},
-            ]
+            if not bot.backpack_items:
+                bot.level = bot.level or 490
+                bot.bot_class = bot.bot_class or "Unbeatable"
+                bot.quality = bot.quality or "Spectacular"
+                bot.rarity = bot.rarity or "Heavenly++"
+                bot.mold = bot.mold or "Crystal"
+                bot.backpack_items = [
+                    {"uuid": "sword_92k", "name": "Ancient Broadsword", "traits": ["Ancient II", "Level 10"]},
+                    {"uuid": "sword_41m", "name": "Fortune Katana", "traits": ["Fortune IV", "Level 25"]},
+                    {"uuid": "sword_15x", "name": "Lightning Dagger", "traits": ["Swift I", "Level 14"]},
+                ]
         bot.save()
         
         # Ensure configuration model exists cleanly
@@ -232,3 +254,36 @@ class C2Consumer(AsyncWebsocketConsumer):
                 'time': log.timestamp.strftime('%H:%M:%S'),
                 'message': log.message
             }
+
+    @database_sync_to_async
+    def save_bot_configuration(self, bot_id, payload):
+        from .models import BotAccount, BotConfiguration
+        try:
+            bot = BotAccount.objects.get(id=bot_id)
+            config, _ = BotConfiguration.objects.get_or_create(bot=bot)
+            if 'farm_enabled' in payload:
+                config.farm_enabled = payload['farm_enabled']
+            if 'snipe_enabled' in payload:
+                config.snipe_enabled = payload['snipe_enabled']
+            if 'active_areas' in payload:
+                config.active_areas = payload['active_areas']
+            if 'target_enchant_sets' in payload:
+                config.target_enchant_sets = payload['target_enchant_sets']
+            if 'whitelisted_uuids' in payload:
+                config.whitelisted_uuids = payload['whitelisted_uuids']
+            config.save()
+            
+            # Also update bot's direct game telemetry fields if they were modified/passed in bulk/direct edit
+            if 'bot_class' in payload and payload['bot_class']:
+                bot.bot_class = payload['bot_class']
+            if 'quality' in payload and payload['quality']:
+                bot.quality = payload['quality']
+            if 'rarity' in payload and payload['rarity']:
+                bot.rarity = payload['rarity']
+            if 'mold' in payload and payload['mold']:
+                bot.mold = payload['mold']
+            if 'level' in payload and payload['level']:
+                bot.level = int(payload['level'])
+            bot.save()
+        except Exception as e:
+            print("Error persisting bot configuration:", e)

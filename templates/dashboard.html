@@ -6,6 +6,27 @@
 <div class="space-y-8" x-data="{ 
     selectedBot: null,
     showConfigModal: false,
+    showMultiConfigModal: false,
+    multiConfigStep: 1,
+    multiConfigSearch: '',
+    multiConfigData: {
+        farm_enabled: false,
+        snipe_enabled: false,
+        bot_class: '',
+        quality: '',
+        rarity: '',
+        mold: '',
+        level: '',
+        target_enchant_sets: [],
+        whitelisted_uuids: [],
+        teleport_home: false,
+        toggle_3d: false
+    },
+    multiConfigSelectedIds: [],
+    multiEnchant1: '',
+    multiEnchant2: '',
+    multiEnchant3: '',
+    multiUuid: '',
     activeTab: 'telemetry',
     bots: [],
     logs: [],
@@ -102,10 +123,10 @@
                     <h3 class="text-xl font-bold tracking-tight text-white">Live Node Telemetry</h3>
                 </div>
                 
-                <!-- Quick Token Provision Button -->
-                <button @click="selectedBot = null; showConfigModal = true" class="flex items-center gap-1.5 text-xs font-semibold font-mono text-teal-400 hover:text-white py-2 px-4 rounded-2xl bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 hover:border-teal-500/30 transition-all">
-                    <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
-                    Provision Bot
+                <!-- Multi Config Button -->
+                <button @click="showMultiConfigModal = true; multiConfigStep = 1; multiConfigSelectedIds = [];" class="flex items-center gap-1.5 text-xs font-semibold font-mono text-teal-400 hover:text-white py-2 px-4 rounded-2xl bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 hover:border-teal-500/30 transition-all">
+                    <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+                    Multi Config
                 </button>
             </div>
             
@@ -122,7 +143,7 @@
                                 'bg-amber-400': bot.status === 'Idle',
                                 'bg-red-400': bot.status === 'Dead',
                                 'bg-zinc-700': bot.status === 'Offline'
-                            }">
+                             }">
                         </div>
 
                         <!-- Top Info -->
@@ -139,12 +160,6 @@
                                             'bg-zinc-500/10 border-zinc-500/20 text-zinc-400': bot.status === 'Offline'
                                         }"
                                         x-text="bot.status">OFFLINE</span>
-                                </div>
-                                <div class="flex items-center gap-1.5">
-                                    <!-- Dynamic Action Button if Online -->
-                                    <button x-show="bot.status !== 'Offline'" @click="selectedBot = bot; showConfigModal = true" class="h-8 w-8 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-all">
-                                        <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
-                                    </button>
                                 </div>
                             </div>
                             
@@ -496,6 +511,319 @@
                     </div>
                 </div>
             </template>
+    <!-- Multi Config Wizard Modal -->
+    <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+        x-show="showMultiConfigModal" 
+        x-transition
+        style="display: none;">
+        
+        <div class="glass-panel w-full max-w-4xl p-8 rounded-3xl relative overflow-hidden bg-zinc-950 border border-white/5 shadow-2xl" @click.away="showMultiConfigModal = false">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between mb-8 pb-4 border-b border-white/5">
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 rounded-2xl bg-gradient-to-tr from-teal-500 to-orange-400 flex items-center justify-center shadow-lg shadow-teal-500/10">
+                        <i data-lucide="sliders" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-bold text-white font-mono">Fleet Multi Configuration</h4>
+                        <p class="text-[10px] text-zinc-500 font-mono tracking-widest uppercase" x-text="'Step ' + multiConfigStep + ' of 2'">Step 1 of 2</p>
+                    </div>
+                </div>
+                <button @click="showMultiConfigModal = false" type="button" class="text-zinc-500 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- STEP 1: Put settings -->
+            <div x-show="multiConfigStep === 1" class="space-y-6">
+                <!-- Grid of general farm settings -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Toggle Sniper -->
+                    <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/60 border border-white/5">
+                        <div>
+                            <span class="block text-xs font-bold text-white font-mono">Sniper Mode</span>
+                            <span class="block text-[10px] text-zinc-500 font-mono">Automated god-roll sniping</span>
+                        </div>
+                        <button @click="multiConfigData.snipe_enabled = !multiConfigData.snipe_enabled" 
+                                type="button"
+                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                                :class="multiConfigData.snipe_enabled ? 'bg-teal-400' : 'bg-zinc-800'">
+                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-zinc-950 shadow ring-0 transition duration-200 ease-in-out"
+                                  :class="multiConfigData.snipe_enabled ? 'translate-x-5' : 'translate-x-0'"></span>
+                        </button>
+                    </div>
+
+                    <!-- Toggle Farm -->
+                    <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/60 border border-white/5">
+                        <div>
+                            <span class="block text-xs font-bold text-white font-mono">Farming Mode</span>
+                            <span class="block text-[10px] text-zinc-500 font-mono">Automated target level farming</span>
+                        </div>
+                        <button @click="multiConfigData.farm_enabled = !multiConfigData.farm_enabled" 
+                                type="button"
+                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                                :class="multiConfigData.farm_enabled ? 'bg-teal-400' : 'bg-zinc-800'">
+                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-zinc-950 shadow ring-0 transition duration-200 ease-in-out"
+                                  :class="multiConfigData.farm_enabled ? 'translate-x-5' : 'translate-x-0'"></span>
+                        </button>
+                    </div>
+
+                    <!-- Toggle Home -->
+                    <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/60 border border-white/5">
+                        <div>
+                            <span class="block text-xs font-bold text-white font-mono">Teleport Home</span>
+                            <span class="block text-[10px] text-zinc-500 font-mono">Relay teleport-to-home command</span>
+                        </div>
+                        <button @click="multiConfigData.teleport_home = !multiConfigData.teleport_home" 
+                                type="button"
+                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                                :class="multiConfigData.teleport_home ? 'bg-teal-400' : 'bg-zinc-800'">
+                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-zinc-950 shadow ring-0 transition duration-200 ease-in-out"
+                                  :class="multiConfigData.teleport_home ? 'translate-x-5' : 'translate-x-0'"></span>
+                        </button>
+                    </div>
+
+                    <!-- Toggle 3D Rendering -->
+                    <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/60 border border-white/5">
+                        <div>
+                            <span class="block text-xs font-bold text-white font-mono">Toggle 3D Rendering</span>
+                            <span class="block text-[10px] text-zinc-500 font-mono">Disable 3D rendering to save CPU</span>
+                        </div>
+                        <button @click="multiConfigData.toggle_3d = !multiConfigData.toggle_3d" 
+                                type="button"
+                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                                :class="multiConfigData.toggle_3d ? 'bg-teal-400' : 'bg-zinc-800'">
+                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-zinc-950 shadow ring-0 transition duration-200 ease-in-out"
+                                  :class="multiConfigData.toggle_3d ? 'translate-x-5' : 'translate-x-0'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Ascender configurations (blank by default) -->
+                <div class="glass-panel p-5 rounded-2xl border border-white/5 space-y-4">
+                    <div class="flex items-center gap-2 pb-2 border-b border-white/5">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+                        <span class="text-xs font-bold text-white font-mono uppercase tracking-wider">Ascender Settings</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div>
+                            <label class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-1.5">Level</label>
+                            <input type="number" x-model="multiConfigData.level" class="w-full bg-zinc-900 border border-white/10 text-xs font-mono text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400" placeholder="e.g. 490">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-1.5">Class</label>
+                            <input type="text" x-model="multiConfigData.bot_class" class="w-full bg-zinc-900 border border-white/10 text-xs font-mono text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400" placeholder="e.g. Unbeatable">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-1.5">Quality</label>
+                            <input type="text" x-model="multiConfigData.quality" class="w-full bg-zinc-900 border border-white/10 text-xs font-mono text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400" placeholder="e.g. Spectacular">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-1.5">Rarity</label>
+                            <input type="text" x-model="multiConfigData.rarity" class="w-full bg-zinc-900 border border-white/10 text-xs font-mono text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400" placeholder="e.g. Heavenly++">
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-1.5">Mold</label>
+                            <input type="text" x-model="multiConfigData.mold" class="w-full bg-zinc-900 border border-white/10 text-xs font-mono text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400" placeholder="e.g. Crystal">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Snipe configs -->
+                <div class="glass-panel p-5 rounded-2xl border border-white/5 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Wishlist Sets -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="block text-xs font-bold text-teal-400 font-mono tracking-wider uppercase">Sniper Wishlist Sets</span>
+                            <span class="text-[9px] font-mono text-zinc-500" x-text="multiConfigData.target_enchant_sets.length + ' Sets'">0 Sets</span>
+                        </div>
+                        
+                        <div class="space-y-1.5 max-h-[100px] overflow-y-auto">
+                            <template x-if="multiConfigData.target_enchant_sets.length === 0">
+                                <div class="text-[10px] text-zinc-600 font-mono italic py-4">No custom enchant targets added yet...</div>
+                            </template>
+                            <template x-for="(set, idx) in multiConfigData.target_enchant_sets" :key="idx">
+                                <div class="flex items-center justify-between p-2 rounded-xl bg-zinc-900 border border-white/5">
+                                    <span class="text-[10px] text-zinc-300 font-mono font-semibold" x-text="set"></span>
+                                    <button @click="multiConfigData.target_enchant_sets.splice(idx, 1)" type="button" class="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded-md font-mono hover:bg-red-500/30">Rem</button>
+                                </div>
+                            </template>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <div class="grid grid-cols-3 gap-1.5">
+                                <input type="text" x-model="multiEnchant1" placeholder="Enchant 1" class="bg-zinc-900 border border-white/10 text-[10px] rounded-lg px-2 py-1.5 text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                                <input type="text" x-model="multiEnchant2" placeholder="Enchant 2" class="bg-zinc-900 border border-white/10 text-[10px] rounded-lg px-2 py-1.5 text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                                <input type="text" x-model="multiEnchant3" placeholder="Enchant 3" class="bg-zinc-900 border border-white/10 text-[10px] rounded-lg px-2 py-1.5 text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                            </div>
+                            <button @click="
+                                let combined = [];
+                                if (multiEnchant1) combined.push(multiEnchant1);
+                                if (multiEnchant2) combined.push(multiEnchant2);
+                                if (multiEnchant3) combined.push(multiEnchant3);
+                                if (combined.length > 0) {
+                                    multiConfigData.target_enchant_sets.push(combined.join(' + '));
+                                    multiEnchant1 = ''; multiEnchant2 = ''; multiEnchant3 = '';
+                                }
+                            " type="button" class="w-full py-1.5 bg-zinc-900 hover:bg-zinc-800 text-[10px] text-white border border-white/10 font-bold rounded-xl transition-all font-mono uppercase tracking-wider">
+                                Add Target Set
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Whitelist Protected UUIDs -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="block text-xs font-bold text-teal-400 font-mono tracking-wider uppercase">Protected UUID List</span>
+                            <span class="text-[9px] font-mono text-zinc-500" x-text="multiConfigData.whitelisted_uuids.length + ' UUIDs'">0 UUIDs</span>
+                        </div>
+
+                        <div class="space-y-1.5 max-h-[100px] overflow-y-auto">
+                            <template x-if="multiConfigData.whitelisted_uuids.length === 0">
+                                <div class="text-[10px] text-zinc-600 font-mono italic py-4">No whitelisted UUIDs added...</div>
+                            </template>
+                            <template x-for="(uuid, idx) in multiConfigData.whitelisted_uuids" :key="idx">
+                                <div class="flex items-center justify-between p-2 rounded-xl bg-zinc-900 border border-white/5">
+                                    <span class="text-[10px] text-zinc-300 font-mono" x-text="uuid"></span>
+                                    <button @click="multiConfigData.whitelisted_uuids.splice(idx, 1)" type="button" class="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded font-mono hover:bg-red-500/30">Rem</button>
+                                </div>
+                            </template>
+                        </div>
+
+                        <div class="flex items-center gap-1.5">
+                            <input type="text" x-model="multiUuid" placeholder="e.g. sword_92k" class="flex-1 bg-zinc-900 border border-white/10 text-[10px] rounded-lg px-2 py-1.5 text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                            <button @click="
+                                if (multiUuid) {
+                                    multiConfigData.whitelisted_uuids.push(multiUuid);
+                                    multiUuid = '';
+                                }
+                            " type="button" class="px-3 py-1.5 bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-[10px] font-bold text-white rounded-lg transition-all font-mono">
+                                Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Navigation -->
+                <div class="flex justify-end pt-4 border-t border-white/5">
+                    <button @click="multiConfigStep = 2" type="button" class="px-6 py-2.5 bg-gradient-to-r from-teal-400 to-emerald-400 text-zinc-950 font-bold text-xs rounded-xl hover:opacity-90 transition-all font-mono uppercase tracking-wider flex items-center gap-1.5">
+                        <span>Choose Bots</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Choose targeted accounts -->
+            <div x-show="multiConfigStep === 2" class="space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex-1 relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-zinc-500">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" x-model="multiConfigSearch" class="w-full bg-zinc-900 border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs font-mono text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-teal-400" placeholder="Filter fleet by username...">
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        <!-- Toggle All button -->
+                        <button @click="
+                            let visibleBots = bots.filter(b => b.username.toLowerCase().includes(multiConfigSearch.toLowerCase()));
+                            let allSelected = visibleBots.every(b => multiConfigSelectedIds.includes(b.id));
+                            if (allSelected) {
+                                multiConfigSelectedIds = multiConfigSelectedIds.filter(id => !visibleBots.map(b => b.id).includes(id));
+                            } else {
+                                visibleBots.forEach(b => {
+                                    if (!multiConfigSelectedIds.includes(b.id)) multiConfigSelectedIds.push(b.id);
+                                });
+                            }
+                        " type="button" class="px-4 py-2 bg-zinc-900 border border-white/10 hover:border-white/20 text-xs font-semibold rounded-xl text-zinc-300 font-mono transition-all">
+                            Toggle All
+                        </button>
+                        
+                        <span class="text-[10px] text-zinc-500 font-mono" x-text="multiConfigSelectedIds.length + ' Selected'">0 Selected</span>
+                    </div>
+                </div>
+
+                <!-- Targeted accounts list grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[300px] overflow-y-auto pr-1">
+                    <template x-for="bot in bots.filter(b => b.username.toLowerCase().includes(multiConfigSearch.toLowerCase()))" :key="bot.id">
+                        <label class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-900/60 border border-white/5 hover:border-white/10 transition-all cursor-pointer select-none">
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" :value="bot.id" x-model="multiConfigSelectedIds" class="rounded border-zinc-700 bg-zinc-800 text-teal-500 focus:ring-teal-500/30">
+                                <div>
+                                    <span class="block text-xs font-bold text-white font-mono" x-text="bot.username">Node</span>
+                                    <span class="block text-[9px] font-mono text-zinc-500" x-text="'Lvl ' + bot.level + ' • ' + bot.status">Lvl 0 • Offline</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Small colored indicator -->
+                            <span class="h-2 w-2 rounded-full"
+                                  :class="{
+                                      'bg-emerald-400': bot.status === 'Farming',
+                                      'bg-teal-400': bot.status === 'Sniping',
+                                      'bg-amber-400': bot.status === 'Idle',
+                                      'bg-red-400': bot.status === 'Dead',
+                                      'bg-zinc-700': bot.status === 'Offline'
+                                  }"></span>
+                        </label>
+                    </template>
+                </div>
+
+                <!-- Footer Navigation -->
+                <div class="flex items-center justify-between pt-4 border-t border-white/5">
+                    <button @click="multiConfigStep = 1" type="button" class="px-4 py-2 bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-xs font-semibold rounded-xl text-zinc-300 font-mono transition-all flex items-center gap-1.5">
+                        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                        <span>Settings</span>
+                    </button>
+                    
+                    <button @click="
+                        if (multiConfigSelectedIds.length === 0) {
+                            alert('Please select at least one active account to push configuration.');
+                            return;
+                        }
+                        multiConfigSelectedIds.forEach(id => {
+                            // 1. Sync config settings
+                            sendCommand(id, 'syncConfig', {
+                                farm_enabled: multiConfigData.farm_enabled,
+                                snipe_enabled: multiConfigData.snipe_enabled,
+                                bot_class: multiConfigData.bot_class || 'Unbeatable',
+                                quality: multiConfigData.quality || 'Spectacular',
+                                rarity: multiConfigData.rarity || 'Heavenly++',
+                                mold: multiConfigData.mold || 'Crystal',
+                                level: parseInt(multiConfigData.level) || 490,
+                                target_enchant_sets: multiConfigData.target_enchant_sets,
+                                whitelisted_uuids: multiConfigData.whitelisted_uuids
+                            });
+                            // 2. Dispatch teleport Home or Toggle 3D rendering if enabled
+                            if (multiConfigData.teleport_home) {
+                                sendCommand(id, 'teleportHome');
+                            }
+                            if (multiConfigData.toggle_3d) {
+                                sendCommand(id, 'toggle3D');
+                            }
+                        });
+                        showMultiConfigModal = false;
+                        multiConfigStep = 1;
+                        multiConfigSelectedIds = [];
+                        multiConfigData = {
+                            farm_enabled: false,
+                            snipe_enabled: false,
+                            bot_class: '',
+                            quality: '',
+                            rarity: '',
+                            mold: '',
+                            level: '',
+                            target_enchant_sets: [],
+                            whitelisted_uuids: [],
+                            teleport_home: false,
+                            toggle_3d: false
+                        };
+                    " type="button" class="px-6 py-2.5 bg-gradient-to-r from-teal-400 to-emerald-400 text-zinc-950 font-bold text-xs rounded-xl hover:opacity-90 transition-all font-mono uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-teal-500/10">
+                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                        <span>Push Fleet Configuration</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
