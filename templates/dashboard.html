@@ -106,13 +106,13 @@
                 <i data-lucide="key" class="w-8 h-8"></i>
             </div>
             <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Api key</p>
-            <div class="flex items-center gap-2 mt-2 cursor-pointer group/key" 
+            <div class="flex flex-col gap-1 mt-2 cursor-pointer group/key" 
                 @click="window.navigator.clipboard.writeText('{{ user_api_key }}'); copied = true; window.setTimeout(function() { copied = false; }, 2000)"
                 title="Click to copy API Key">
                 <p class="text-lg font-bold text-teal-400 font-mono tracking-wider transition-all duration-300 blur-[4px] hover:blur-none select-none">
                     {{ user_api_key }}
                 </p>
-                <span class="text-[9px] font-mono transition-all duration-300"
+                <span class="text-[9px] font-mono transition-all duration-300 self-start"
                       :class="copied ? 'text-emerald-400 font-bold animate-bounce' : 'text-zinc-500 opacity-50 group-hover/key:opacity-100'"
                       x-text="copied ? '✓ Copied!' : '(Click to copy)'">
                 </span>
