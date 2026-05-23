@@ -24,6 +24,8 @@ except ImportError:
     print("    Please install it using: pip install websockets\n")
     sys.exit(1)
 
+DEFAULT_API_KEY = "your_api_key_here"  # Get this from your c2scripts.xyz dashboard (Hover to reveal)
+
 # Color terminal helpers
 GREEN = "\033[92m"
 TEAL = "\033[96m"
@@ -141,7 +143,7 @@ def main():
     parser.add_argument("--host", default="c2scripts.xyz", help="C2 Server domain/host (e.g. c2scripts.xyz or localhost:8000)")
     parser.add_argument("--username", default="GoldGoblin_X", help="Roblox Bot username to register and simulate")
     parser.add_argument("--delay", type=int, default=6, help="Delay in seconds between heartbeat logs (default: 6)")
-    parser.add_argument("--api-key", default="", help="User API Key to bind bot to")
+    parser.add_argument("--api-key", default=DEFAULT_API_KEY, help="User API Key to bind bot to")
     
     args = parser.parse_args()
     

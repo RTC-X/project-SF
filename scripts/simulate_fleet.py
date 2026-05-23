@@ -24,6 +24,8 @@ except ImportError:
     print("    Please install it using: pip install websockets\n")
     sys.exit(1)
 
+DEFAULT_API_KEY = "your_api_key_here"  # Get this from your c2scripts.xyz dashboard (Hover to reveal)
+
 # Color terminal helpers
 GREEN = "\033[92m"
 TEAL = "\033[96m"
@@ -183,7 +185,7 @@ def main():
     parser.add_argument("--host", default="c2scripts.xyz", help="C2 WebSocket Host (e.g. c2scripts.xyz or localhost:8000)")
     parser.add_argument("--bots", type=int, default=3, help="Number of simulated bot nodes to run concurrently")
     parser.add_argument("--delay", type=int, default=8, help="Average delay between telemetry logs")
-    parser.add_argument("--api-key", default="", help="User API Key to bind bots to")
+    parser.add_argument("--api-key", default=DEFAULT_API_KEY, help="User API Key to bind bots to")
     
     args = parser.parse_args()
     try:
