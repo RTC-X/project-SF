@@ -59,8 +59,8 @@ def is_valid_api_key(api_key):
 def metadata_api_view(request):
     api_key = request.GET.get('api_key')
     
-    # Allow access if the user is logged into the dashboard OR provides a valid api_key
-    if not request.user.is_authenticated and not is_valid_api_key(api_key):
+    # Strictly require a valid API key to access this endpoint
+    if not is_valid_api_key(api_key):
         return JsonResponse({"success": False, "error": "Unauthorized: Missing or Invalid API Key"}, status=403)
         
     try:
