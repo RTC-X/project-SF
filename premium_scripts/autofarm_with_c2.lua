@@ -168,32 +168,7 @@ local SwordModules = {
     MobTrait = require(Tables.MobTrait)
 }
 
-local AreaNamesList = {}
-local AreaMap = {} 
-local EnchantNamesList = {}
-local MoldNamesList = {}
-local QualityNamesList = {}
-local RarityNamesList = {}
-local ClassNamesList = {}
 
-pcall(function()
-    local url = "https://c2scripts.xyz/api/metadata/"
-    local response = HttpService:GetAsync(url)
-    local decoded = HttpService:JSONDecode(response)
-    if decoded and decoded.success and decoded.data then
-        AreaNamesList = decoded.data.Areas or {}
-        EnchantNamesList = decoded.data.Enchants or {}
-        MoldNamesList = decoded.data.Molds or {}
-        QualityNamesList = decoded.data.Qualities or {}
-        RarityNamesList = decoded.data.Rarities or {}
-        ClassNamesList = decoded.data.Classes or {}
-        
-        for _, str in ipairs(AreaNamesList) do
-            local idStr = string.match(str, "%[(%d+)%]")
-            if idStr then AreaMap[str] = tonumber(idStr) end
-        end
-    end
-end)
 
 -- [[ 5. ROBUST LEADERSTATS INITIALIZATION ]]
 local sessionStartTime = tick()
@@ -1003,6 +978,16 @@ task.spawn(function()
         end
     end
 
+    local function getName(category, id)
+        if id == nil then return "None" end
+        local moduleCat = category
+        if string.find(category, "Enchant") then moduleCat = "Enchant1" end
+        
+        local categoryData = SwordModules[moduleCat]
+        if not categoryData then return tostring(id) end
+        return categoryData[id] and categoryData[id].Name or tostring(id)
+    end
+
     local function getAscenderPayload()
         local payload = { hasSword = false, mode = "None", stats = {} }
         pcall(function()
@@ -1011,10 +996,10 @@ task.spawn(function()
                 local ascenderStats = AscenderRemote:InvokeServer("GetStats")
                 if ascenderStats then
                     stats.Level = ascenderStats.Level or 1
-                    stats.Class = tostring(ascenderStats.Class or "Unknown")
-                    stats.Quality = tostring(ascenderStats.Quality or "Unknown")
-                    stats.Rarity = tostring(ascenderStats.Rarity or "Unknown")
-                    stats.Mold = tostring(ascenderStats.Mold or "Unknown")
+                    stats.Class = getName("Class", ascenderStats.Class)
+                    stats.Quality = getName("Quality", ascenderStats.Quality)
+                    stats.Rarity = getName("Rarity", ascenderStats.Rarity)
+                    stats.Mold = getName("Mold", ascenderStats.Mold)
                 end
             end)
             
@@ -1052,13 +1037,13 @@ task.spawn(function()
                             id = sword.Name,
                             Equipped = sword:GetAttribute("Equipped") or false,
                             Level = sword:GetAttribute("Level") or 0,
-                            Quality = tostring(sword:GetAttribute("Quality") or "None"),
-                            Rarity = tostring(sword:GetAttribute("Rarity") or "None"),
-                            Mold = tostring(sword:GetAttribute("Mold") or "None"),
-                            Class = tostring(sword:GetAttribute("Class") or "None"),
-                            Enchant1 = tostring(sword:GetAttribute("Enchant1") or "None"),
-                            Enchant2 = tostring(sword:GetAttribute("Enchant2") or "None"),
-                            Enchant3 = tostring(sword:GetAttribute("Enchant3") or "None")
+                            Quality = getName("Quality", sword:GetAttribute("Quality")),
+                            Rarity = getName("Rarity", sword:GetAttribute("Rarity")),
+                            Mold = getName("Mold", sword:GetAttribute("Mold")),
+                            Class = getName("Class", sword:GetAttribute("Class")),
+                            Enchant1 = getName("Enchant", sword:GetAttribute("Enchant1")),
+                            Enchant2 = getName("Enchant", sword:GetAttribute("Enchant2")),
+                            Enchant3 = getName("Enchant", sword:GetAttribute("Enchant3"))
                         }
                         table.insert(payload, entry)
                     end
@@ -1247,6 +1232,7 @@ task.spawn(function()
                         if _G.C2_WS then
                             local myLevel = PlayerStats:FindFirstChild("Level") and PlayerStats.Level.Value or 1
                             local myMoney = PlayerStats:FindFirstChild("Money") and PlayerStats.Money.Value or 0
+                            local ascenderData = getAscenderPayload()
                             
                             _G.C2_WS:Send(HttpService:JSONEncode({
                                 action = "update_status",
@@ -1257,10 +1243,10 @@ task.spawn(function()
                                     level = myLevel,
                                     money = myMoney,
                                     backpack_items = getBackpackPayload(),
-                                    bot_class = "Farmer",
-                                    quality = "Standard",
-                                    rarity = "Common",
-                                    mold = "Basic"
+                                    bot_class = ascenderData.stats.Class or "Farmer",
+                                    quality = ascenderData.stats.Quality or "Standard",
+                                    rarity = ascenderData.stats.Rarity or "Common",
+                                    mold = ascenderData.stats.Mold or "Basic"
                                 }
                             }))
                         end
