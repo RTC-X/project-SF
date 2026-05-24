@@ -339,7 +339,7 @@ class C2Consumer(AsyncWebsocketConsumer):
         from .models import BotAccount, BotConfiguration
         if not user or not user.is_authenticated:
             return []
-        bots = BotAccount.objects.filter(owner=user)
+        bots = BotAccount.objects.filter(owner=user).order_by('username')
         serialized = []
         for bot in bots:
             try:
@@ -595,3 +595,4 @@ class C2Consumer(AsyncWebsocketConsumer):
             bot.save()
         except Exception as e:
             print("Error persisting bot configuration:", e)
+
