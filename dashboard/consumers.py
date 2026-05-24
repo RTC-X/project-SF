@@ -347,6 +347,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 config_data = {
                     'farm_enabled': config.farm_enabled,
                     'snipe_enabled': config.snipe_enabled,
+                    'activate_panel': config.activate_panel,
                     'active_areas': config.active_areas,
                     'target_enchant_sets': config.target_enchant_sets,
                     'whitelisted_uuids': config.whitelisted_uuids,
@@ -356,6 +357,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 config_data = {
                     'farm_enabled': False,
                     'snipe_enabled': False,
+                    'activate_panel': False,
                     'active_areas': [],
                     'target_enchant_sets': [],
                     'whitelisted_uuids': [],
@@ -460,6 +462,7 @@ class C2Consumer(AsyncWebsocketConsumer):
             defaults={
                 'farm_enabled': True,
                 'snipe_enabled': True,
+                'activate_panel': False,
                 'active_areas': [1, 2, 5, 12],
                 'target_enchant_sets': ["Ancient + Fortune + Insight"],
                 'whitelisted_uuids': ["sword_92k"]
@@ -468,14 +471,16 @@ class C2Consumer(AsyncWebsocketConsumer):
         
         # Sync live state from Roblox telemetry
         if extra_data:
-            if 'farm_enabled' in extra_data:
-                config.farm_enabled = bool(extra_data['farm_enabled'])
-            if 'snipe_enabled' in extra_data:
-                config.snipe_enabled = bool(extra_data['snipe_enabled'])
-            if 'target_enchant_sets' in extra_data and extra_data['target_enchant_sets']:
-                config.target_enchant_sets = extra_data['target_enchant_sets']
-            if 'whitelisted_uuids' in extra_data:
-                config.whitelisted_uuids = extra_data['whitelisted_uuids']
+             if 'farm_enabled' in extra_data:
+                 config.farm_enabled = bool(extra_data['farm_enabled'])
+             if 'snipe_enabled' in extra_data:
+                 config.snipe_enabled = bool(extra_data['snipe_enabled'])
+             if 'activate_panel' in extra_data:
+                 config.activate_panel = bool(extra_data['activate_panel'])
+             if 'target_enchant_sets' in extra_data and extra_data['target_enchant_sets']:
+                 config.target_enchant_sets = extra_data['target_enchant_sets']
+             if 'whitelisted_uuids' in extra_data:
+                 config.whitelisted_uuids = extra_data['whitelisted_uuids']
         
         # If config already existed but had empty defaults from prior db state, populate them:
         if not config.target_enchant_sets:
@@ -526,6 +531,8 @@ class C2Consumer(AsyncWebsocketConsumer):
                 config.farm_enabled = payload['farm_enabled']
             if 'snipe_enabled' in payload:
                 config.snipe_enabled = payload['snipe_enabled']
+            if 'activate_panel' in payload:
+                config.activate_panel = payload['activate_panel']
             if 'active_areas' in payload:
                 config.active_areas = payload['active_areas']
             if 'target_enchant_sets' in payload:
