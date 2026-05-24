@@ -35,7 +35,16 @@ def dashboard_view(request):
     user_id = request.user.id
     secret = getattr(settings, 'SECRET_KEY', 'default_secret')
     user_api_key = f"c2_usr_{hashlib.sha256(f'{user_id}:{secret}'.encode()).hexdigest()[:16]}"
-    return render(request, 'dashboard.html', {'user_api_key': user_api_key})
+    
+    try:
+        from .models import GlobalMetadata
+        import json
+        meta = GlobalMetadata.objects.get(key='game_data')
+        game_data_json = json.dumps(meta.data)
+    except:
+        game_data_json = "{}"
+        
+    return render(request, 'dashboard.html', {'user_api_key': user_api_key, 'game_data_json': game_data_json})
 
 def logout_view(request):
     auth_logout(request)
