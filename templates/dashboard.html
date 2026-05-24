@@ -688,7 +688,7 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6 max-h-[400px] overflow-y-auto pr-2">
                 <template x-if="gameData && gameData.Areas">
                     <template x-for="areaString in gameData.Areas" :key="areaString">
-                        <label @click="
+                        <div @click="
                                    let id = parseInt(areaString.match(/\[(\d+)\]/)[1]);
                                    if (!selectedBot.config.active_areas) selectedBot.config.active_areas = [];
                                    if (selectedBot.config.active_areas.includes(id)) {
@@ -712,7 +712,7 @@
                                 <span class="pointer-events-none inline-block h-3 w-3 transform rounded-full shadow transition-all duration-300 ease-in-out"
                                       :class="selectedBot?.config?.active_areas?.includes(parseInt(areaString.match(/\[(\d+)\]/)[1])) ? 'translate-x-3.5 bg-teal-400 shadow-[0_0_4px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
                             </button>
-                        </label>
+                        </div>
                     </template>
                 </template>
             </div>
@@ -967,7 +967,7 @@
                 <!-- Targeted accounts list grid -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[300px] overflow-y-auto pr-1">
                     <template x-for="bot in bots.filter(b => b.username.toLowerCase().includes(multiConfigSearch.toLowerCase()) && b.status !== 'Offline')" :key="bot.id">
-                        <label @click="
+                        <div @click="
                                    if (multiConfigSelectedIds.includes(bot.id)) {
                                        multiConfigSelectedIds = multiConfigSelectedIds.filter(id => id !== bot.id);
                                    } else {
@@ -1004,7 +1004,7 @@
                                       'bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.4)]': bot.status === 'Dead',
                                       'bg-zinc-700': bot.status === 'Offline'
                                   }"></span>
-                        </label>
+                        </div>
                     </template>
                 </div>
 
