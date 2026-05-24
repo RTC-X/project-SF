@@ -3,12 +3,16 @@
 {% block title %}C2 | Dashboard{% endblock %}
 
 {% block content %}
+<script>
+    window.SERVER_GAME_DATA = {{ game_data_json|safe }};
+</script>
+
 <div class="space-y-8" x-data="{ 
     selectedBot: null,
     showConfigModal: false,
     showMultiConfigModal: false,
     showMapOptions: false,
-    gameData: {{ game_data_json|safe }},
+    gameData: window.SERVER_GAME_DATA,
     multiConfigStep: 1,
     multiConfigSearch: '',
     multiConfigData: {
