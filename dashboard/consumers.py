@@ -445,9 +445,21 @@ class C2Consumer(AsyncWebsocketConsumer):
                             else:
                                 print(f"[C2 Server] [Auth Engine] [Luarmor Rejected] Key not active (Success: {res_data.get('success')}, Enabled: {res_data.get('enabled')}).")
                         else:
+                            server_ip = "Unknown"
+                            try:
+                                server_ip = requests.get("https://icanhazip.com", timeout=3).text.strip()
+                            except Exception:
+                                pass
                             print(f"[C2 Server] [Auth Engine] [Luarmor Rejected] API returned HTTP Status {response.status_code}. Response: {response.text}")
+                            print(f"[C2 Server] [Auth Engine] [Troubleshooting] Your C2 Server Outbound IP is '{server_ip}'. Please ensure this exact IP is Whitelisted on your Luarmor Developer Dashboard!")
                     except Exception as e:
+                        server_ip = "Unknown"
+                        try:
+                            server_ip = requests.get("https://icanhazip.com", timeout=3).text.strip()
+                        except Exception:
+                            pass
                         print("[C2 Server] [Auth Engine] [Luarmor Error] Connection error during license validation:", e)
+                        print(f"[C2 Server] [Auth Engine] [Troubleshooting] Your C2 Server Outbound IP is '{server_ip}'. Please ensure this exact IP is Whitelisted on your Luarmor Developer Dashboard!")
                 else:
                     print("[C2 Server] [Auth Engine] [Luarmor Rejected] Missing Luarmor license key in payload.")
                     is_license_valid = False
