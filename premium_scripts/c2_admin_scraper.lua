@@ -31,19 +31,23 @@ local MAX_ITEMS_PER_CATEGORY = 500
 local MAX_STRING_LENGTH = 100
 
 local function ExtractNames(module, maxItems)
-    local list = {}
-    local count = 0
+    local entries = {}
     pcall(function()
-        for _, data in pairs(module) do
-            if count >= maxItems then break end
-            if type(data) == "table" and data.Name then 
+        for id, data in pairs(module) do
+            if type(id) == "number" and type(data) == "table" and data.Name then 
                 local cleanName = string.sub(tostring(data.Name), 1, MAX_STRING_LENGTH)
-                table.insert(list, cleanName)
-                count = count + 1
+                table.insert(entries, {id = id, name = cleanName})
             end
         end
     end)
-    table.sort(list)
+    
+    -- Sort exactly by the underlying numeric ID in the module
+    table.sort(entries, function(a, b) return a.id < b.id end)
+    
+    local list = {}
+    for i = 1, math.min(#entries, maxItems) do
+        table.insert(list, entries[i].name)
+    end
     return list
 end
 

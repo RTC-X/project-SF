@@ -75,6 +75,38 @@
         const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
         const s = (seconds % 60).toString().padStart(2, '0');
         return `${h}:${m}:${s}`;
+    },
+    
+    formatWealth(num) {
+        if (!num || num < 1000) return Math.floor(num || 0).toString();
+        num = parseFloat(num);
+        if (isNaN(num)) return '0';
+        
+        const suffixes = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd"];
+        const suffixNum = Math.floor(Math.log10(num) / 3);
+        
+        let shortValue = num / Math.pow(1000, suffixNum);
+        if (shortValue % 1 !== 0) shortValue = shortValue.toFixed(2);
+        
+        if (suffixNum < suffixes.length) {
+            return shortValue + suffixes[suffixNum];
+        } else {
+            return num.toExponential(2);
+        }
+    },
+    
+    getItemName(item) {
+        if (!item) return 'Unknown Item';
+        return `[Lv. ${item.Level || 0}] ${item.Quality || ''} ${item.Rarity || ''} ${item.Mold || ''} ${item.Class || ''}`.replace(/\s+/g, ' ').trim();
+    },
+    
+    getItemTraits(item) {
+        if (!item) return '';
+        let traits = [];
+        if (item.Enchant1 && item.Enchant1 !== 'None') traits.push(item.Enchant1);
+        if (item.Enchant2 && item.Enchant2 !== 'None') traits.push(item.Enchant2);
+        if (item.Enchant3 && item.Enchant3 !== 'None') traits.push(item.Enchant3);
+        return traits.length > 0 ? traits.join(', ') : 'No Enchants';
     }
 }">
 
@@ -99,7 +131,7 @@
                 <i data-lucide="dollar-sign" class="w-8 h-8"></i>
             </div>
             <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Total Accumulated Wealth</p>
-            <p class="text-3xl font-extrabold text-emerald-400 mt-2 font-mono">$<span x-text="bots.reduce((acc, b) => acc + parseFloat(b.money), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})">0.00</span></p>
+            <p class="text-3xl font-extrabold text-emerald-400 mt-2 font-mono">$<span x-text="formatWealth(bots.reduce((acc, b) => acc + parseFloat(b.money), 0))">0</span></p>
         </div>
         <div class="glass-panel p-6 rounded-3xl relative overflow-hidden" x-data="{ copied: false }">
             <div class="absolute right-4 top-4 text-teal-400/20">
@@ -181,7 +213,7 @@
                                 </div>
                                 <div>
                                     <span class="text-zinc-500 block text-[10px] uppercase">Accumulated</span>
-                                    <span class="text-emerald-400 font-semibold" x-text="'$' + parseFloat(bot.money).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})">$0.00</span>
+                                    <span class="text-emerald-400 font-semibold" x-text="'$' + formatWealth(bot.money)">$0</span>
                                 </div>
                                 <div>
                                     <span class="text-zinc-500 block text-[10px] uppercase">Uptime</span>
@@ -279,7 +311,7 @@
 
             <!-- If managing live bot (matching game-monitoring console mockup exactly) -->
             <template x-if="selectedBot">
-                <div class="space-y-6">
+                <div class="space-y-6 transition-all duration-500" x-data="{ activatePanel: false, fpsCap: 60 }" :class="activatePanel ? 'drop-shadow-[0_0_20px_rgba(45,212,191,0.2)] border border-teal-500/30 rounded-3xl p-4 bg-teal-500/5' : ''">
                     
                     <!-- Premium Header Sub-Bar -->
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-zinc-900/40 border border-white/5">
@@ -313,7 +345,7 @@
                         <!-- Control Action Buttons Row -->
                         <div class="flex items-center flex-wrap gap-2.5">
                             <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900 border border-white/5 hover:border-white/10 transition-all cursor-pointer select-none">
-                                <input type="checkbox" :checked="selectedBot.status !== 'Offline'" class="rounded border-zinc-700 bg-zinc-800 text-teal-500 focus:ring-teal-500/30">
+                                <input type="checkbox" x-model="activatePanel" @change="if(activatePanel) { sendCommand(selectedBot.id, 'set3d', true); fpsCap = 60; sendCommand(selectedBot.id, 'setFPS', 60); }" class="rounded border-zinc-700 bg-zinc-800 text-teal-500 focus:ring-teal-500/30">
                                 <span class="text-xs text-zinc-300 font-medium font-mono">Activate</span>
                             </label>
                             
@@ -340,6 +372,19 @@
                             <button class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs rounded-xl transition-all font-mono flex items-center gap-1.5 shadow-lg shadow-amber-500/10">
                                 ⚙️ Options
                             </button>
+                        </div>
+                        
+                        <!-- FPS Slider Panel -->
+                        <div class="mt-2 p-4 rounded-xl bg-zinc-900/40 border border-white/5 flex flex-col gap-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-bold text-white font-mono uppercase tracking-wider">FPS Cap: <span class="text-teal-400" x-text="fpsCap"></span></span>
+                                <div class="flex gap-2">
+                                    <button @click="fpsCap = 3; sendCommand(selectedBot.id, 'setFPS', 3)" class="px-2 py-1 text-[9px] uppercase font-bold tracking-wider bg-zinc-800 hover:bg-zinc-700 rounded font-mono text-zinc-300 transition-colors">3 FPS</button>
+                                    <button @click="fpsCap = 30; sendCommand(selectedBot.id, 'setFPS', 30)" class="px-2 py-1 text-[9px] uppercase font-bold tracking-wider bg-zinc-800 hover:bg-zinc-700 rounded font-mono text-zinc-300 transition-colors">30 FPS</button>
+                                    <button @click="fpsCap = 60; sendCommand(selectedBot.id, 'setFPS', 60)" class="px-2 py-1 text-[9px] uppercase font-bold tracking-wider bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 border border-teal-500/30 rounded font-mono transition-colors">60 FPS</button>
+                                </div>
+                            </div>
+                            <input type="range" min="3" max="60" x-model="fpsCap" @change="sendCommand(selectedBot.id, 'setFPS', fpsCap)" class="w-full accent-teal-500 bg-zinc-800 h-1.5 rounded-lg appearance-none cursor-pointer">
                         </div>
                     </div>
 
@@ -383,10 +428,10 @@
                             
                             <!-- Substats indicators list -->
                             <div class="space-y-1.5 pt-2 border-t border-white/5 font-mono text-xs">
-                                <div class="text-zinc-400">1: Fortune (Lvl 25)</div>
-                                <div class="text-zinc-400">2: Fortune (Lvl 24)</div>
-                                <div class="text-zinc-400">3: Ancient (Lvl 19)</div>
-                                <div class="text-zinc-300 font-bold mt-2">Mode: <span class="text-amber-400">Rarity</span></div>
+                                <div class="text-zinc-400">1: <span x-text="selectedBot.ascender_enchant1">None</span></div>
+                                <div class="text-zinc-400">2: <span x-text="selectedBot.ascender_enchant2">None</span></div>
+                                <div class="text-zinc-400">3: <span x-text="selectedBot.ascender_enchant3">None</span></div>
+                                <div class="text-zinc-300 font-bold mt-2">Mode: <span class="text-amber-400" x-text="selectedBot.ascender_mode">None</span></div>
                             </div>
                             
                             <!-- Target Filter Selector Buttons -->
@@ -470,7 +515,7 @@
                                     <select x-model="newUuid" class="flex-1 bg-zinc-950/60 border border-white/5 text-[10px] rounded-lg px-2 py-1.5 text-zinc-400 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
                                         <option value="">Backpack empty...</option>
                                         <template x-for="item in selectedBot.backpack_items || []">
-                                            <option :value="item.uuid" x-text="item.name"></option>
+                                            <option :value="item.id" x-text="getItemName(item)"></option>
                                         </template>
                                     </select>
                                     <button @click="
@@ -506,11 +551,11 @@
                                         <div class="text-zinc-500 font-mono text-xs text-center py-20 italic">Backpack empty</div>
                                     </template>
                                     
-                                    <template x-for="item in selectedBot.backpack_items || []" :key="item.uuid">
+                                    <template x-for="item in selectedBot.backpack_items || []" :key="item.id">
                                         <div class="p-3 rounded-xl bg-zinc-950/60 border border-white/5 flex items-center justify-between gap-2 hover:border-orange-500/20 transition-all select-none">
                                             <div class="space-y-0.5">
-                                                <span class="block text-xs font-bold text-white font-mono" x-text="item.name">Ancient Broadsword</span>
-                                                <span class="block text-[9px] font-mono text-zinc-500" x-text="item.traits.join(', ')">Ancient II, Level 10</span>
+                                                <span class="block text-xs font-bold text-white font-mono" x-text="getItemName(item)">Ancient Broadsword</span>
+                                                <span class="block text-[9px] font-mono text-zinc-500" x-text="getItemTraits(item)">Ancient II, Level 10</span>
                                             </div>
                                             <!-- Action options if wanted -->
                                         </div>

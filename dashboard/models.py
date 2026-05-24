@@ -32,6 +32,10 @@ class BotAccount(models.Model):
     quality = models.CharField(max_length=100, default='Spectacular', help_text="Ascender Quality")
     rarity = models.CharField(max_length=100, default='Heavenly++', help_text="Ascender Rarity")
     mold = models.CharField(max_length=100, default='Crystal', help_text="Ascender Mold")
+    ascender_enchant1 = models.CharField(max_length=100, default='None', help_text="Ascender Enchant 1")
+    ascender_enchant2 = models.CharField(max_length=100, default='None', help_text="Ascender Enchant 2")
+    ascender_enchant3 = models.CharField(max_length=100, default='None', help_text="Ascender Enchant 3")
+    ascender_mode = models.CharField(max_length=100, default='None', help_text="Ascender Mode")
     backpack_items = models.JSONField(default=list, blank=True, help_text="Roblox in-game inventory backpack items")
 
     def save(self, *args, **kwargs):

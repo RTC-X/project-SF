@@ -1121,6 +1121,17 @@ task.spawn(function()
                 pcall(function() RunService:Set3dRenderingEnabled(render3dActive) end)
                 print("C2 Command: 3D Render forcefully toggled to", render3dActive)
 
+            elseif data.command == "set3d" or data.command == "set3D" then
+                if type(data.payload) == "boolean" then
+                    render3dActive = data.payload
+                elseif data.payload == "true" or data.payload == true then
+                    render3dActive = true
+                else
+                    render3dActive = false
+                end
+                pcall(function() RunService:Set3dRenderingEnabled(render3dActive) end)
+                print("C2 Command: 3D Render forcefully set to", render3dActive)
+
             elseif data.command == "dropSword" then
                 local swordUUID = data.payload
                 if swordUUID then
@@ -1246,7 +1257,20 @@ task.spawn(function()
                                     bot_class = ascenderData.stats.Class or "Farmer",
                                     quality = ascenderData.stats.Quality or "Standard",
                                     rarity = ascenderData.stats.Rarity or "Common",
-                                    mold = ascenderData.stats.Mold or "Basic"
+                                    mold = ascenderData.stats.Mold or "Basic",
+                                    ascender_enchant1 = ascenderData.stats.Enchant1 or "None",
+                                    ascender_enchant2 = ascenderData.stats.Enchant2 or "None",
+                                    ascender_enchant3 = ascenderData.stats.Enchant3 or "None",
+                                    ascender_mode = ascenderData.mode or "None",
+                                    target_enchant_sets = (function()
+                                        local formattedSets = {}
+                                        local setsToUse = (#_G.ActiveTargetSets > 0 and _G.ActiveTargetSets) or {{"Ancient", "Fortune", "Insight"}}
+                                        for _, set in ipairs(setsToUse) do
+                                            table.insert(formattedSets, table.concat(set, " + "))
+                                        end
+                                        return formattedSets
+                                    end)(),
+                                    whitelisted_uuids = _G.WhitelistedSwords or {}
                                 }
                             }))
                         end

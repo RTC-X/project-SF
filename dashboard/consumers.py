@@ -309,6 +309,10 @@ class C2Consumer(AsyncWebsocketConsumer):
                 'quality': bot.quality,
                 'rarity': bot.rarity,
                 'mold': bot.mold,
+                'ascender_enchant1': bot.ascender_enchant1,
+                'ascender_enchant2': bot.ascender_enchant2,
+                'ascender_enchant3': bot.ascender_enchant3,
+                'ascender_mode': bot.ascender_mode,
                 'backpack_items': bot.backpack_items,
                 'config': config_data
             })
@@ -360,6 +364,14 @@ class C2Consumer(AsyncWebsocketConsumer):
                 bot.rarity = str(extra_data['rarity'])[:50]
             if 'mold' in extra_data and extra_data['mold']:
                 bot.mold = str(extra_data['mold'])[:50]
+            if 'ascender_enchant1' in extra_data and extra_data['ascender_enchant1']:
+                bot.ascender_enchant1 = str(extra_data['ascender_enchant1'])[:100]
+            if 'ascender_enchant2' in extra_data and extra_data['ascender_enchant2']:
+                bot.ascender_enchant2 = str(extra_data['ascender_enchant2'])[:100]
+            if 'ascender_enchant3' in extra_data and extra_data['ascender_enchant3']:
+                bot.ascender_enchant3 = str(extra_data['ascender_enchant3'])[:100]
+            if 'ascender_mode' in extra_data and extra_data['ascender_mode']:
+                bot.ascender_mode = str(extra_data['ascender_mode'])[:100]
             
             # Prevent Status Poisoning memory flood
             if 'backpack_items' in extra_data and isinstance(extra_data['backpack_items'], list):
@@ -367,18 +379,6 @@ class C2Consumer(AsyncWebsocketConsumer):
                 safe_list = extra_data['backpack_items'][:500]
                 bot.backpack_items = safe_list
         
-        if created or not bot.backpack_items:
-            if not bot.backpack_items:
-                bot.level = bot.level or 490
-                bot.bot_class = bot.bot_class or "Unbeatable"
-                bot.quality = bot.quality or "Spectacular"
-                bot.rarity = bot.rarity or "Heavenly++"
-                bot.mold = bot.mold or "Crystal"
-                bot.backpack_items = [
-                    {"uuid": "sword_92k", "name": "Ancient Broadsword", "traits": ["Ancient II", "Level 10"]},
-                    {"uuid": "sword_41m", "name": "Fortune Katana", "traits": ["Fortune IV", "Level 25"]},
-                    {"uuid": "sword_15x", "name": "Lightning Dagger", "traits": ["Swift I", "Level 14"]},
-                ]
         bot.save()
         
         if not BotConfiguration.objects.filter(bot=bot).exists():
