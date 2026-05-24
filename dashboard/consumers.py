@@ -101,11 +101,11 @@ class C2Consumer(AsyncWebsocketConsumer):
                 
                 user = self.scope.get('user')
                 if user and user.is_authenticated:
-                    # Verify user owns target bot
-                    owns_bot = await self.verify_bot_ownership(user, target_id)
-                    if owns_bot:
+                    # Verify user owns target bot and get its username
+                    bot_username = await self.verify_bot_ownership(user, target_id)
+                    if bot_username:
                         await self.channel_layer.group_send(
-                            f"c2_bot_{target_id}",
+                            f"c2_bot_{bot_username}",
                             {
                                 'type': 'relay_command',
                                 'target_id': target_id,
@@ -252,7 +252,7 @@ class C2Consumer(AsyncWebsocketConsumer):
             except (ValueError, ValidationError):
                 # Otherwise treat as username
                 bot = BotAccount.objects.get(username=bot_id_or_username, owner=user)
-            return True
+            return bot.username
         except BotAccount.DoesNotExist:
             return False
 

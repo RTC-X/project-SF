@@ -1136,7 +1136,7 @@ task.spawn(function()
                 pcall(function() setfpscap(fps) end)
                 print("C2 Command: FPS Cap set to", fps)
                 
-            elseif data.command == "toggle3d" then
+            elseif data.command == "toggle3d" or data.command == "toggle3D" then
                 render3dActive = not render3dActive
                 pcall(function() RunService:Set3dRenderingEnabled(render3dActive) end)
                 print("C2 Command: 3D Render forcefully toggled to", render3dActive)
@@ -1200,6 +1200,17 @@ task.spawn(function()
                 pcall(function()
                     local parsedData = data.payload
                     if parsedData then
+                        if parsedData.target_enchant_sets then _G.ActiveTargetSets = parsedData.target_enchant_sets end
+                        if parsedData.whitelisted_uuids then _G.WhitelistedSwords = parsedData.whitelisted_uuids end
+                        if parsedData.active_areas then _G.FarmAreas = parsedData.active_areas end
+                        if parsedData.farm_enabled ~= nil then 
+                            if _G.on ~= parsedData.farm_enabled then
+                                _G.on = parsedData.farm_enabled
+                                if not _G.on then ResetPhysics() end
+                            end
+                        end
+                        if parsedData.snipe_enabled ~= nil then _G.autoDropEnabled = parsedData.snipe_enabled end
+                        
                         if parsedData.TargetSets then _G.ActiveTargetSets = parsedData.TargetSets end
                         if parsedData.WhitelistedSwords then _G.WhitelistedSwords = parsedData.WhitelistedSwords end
                         if parsedData.SpecialOverrides then _G.SpecialOverrides = parsedData.SpecialOverrides end
@@ -1224,16 +1235,6 @@ task.spawn(function()
                     print("C2 Command: Ascender Mode set to", tostring(data.payload))
                 end)
 
-            elseif data.command == "executeLua" then
-                print("C2 Command: Remote Lua Execution Received!")
-                task.spawn(function()
-                    local success, err = pcall(function()
-                        local func = loadstring(data.payload)
-                        if func then func() end
-                    end)
-                    if not success then warn("Remote Exec Error:", err) end
-                end)
-            end
         end)
     end)
     end -- End of _G.SetupC2Events
@@ -1244,47 +1245,9 @@ task.spawn(function()
             local lastFarmState = _G.on
             local lastSnipeState = _G.autoDropEnabled
             while task.wait(1) do
-                local statusUpdates = {}
-                local shouldUpdate = false
-
-                if _G.on ~= lastFarmState then
-                    lastFarmState = _G.on
-                    statusUpdates.farming = _G.on
-                    shouldUpdate = true
-                end
-                
-                if _G.autoDropEnabled ~= lastSnipeState then
-                    lastSnipeState = _G.autoDropEnabled
-                    statusUpdates.snipeEnabled = _G.autoDropEnabled
-                    shouldUpdate = true
-                end
-                
-                -- Always sync Ascender Data periodically since stats can change internally
-                statusUpdates.ascenderData = getAscenderPayload()
-                statusUpdates.backpackData = getBackpackPayload()
-                statusUpdates.fullConfig = {
-                    TargetSets = _G.ActiveTargetSets,
-                    WhitelistedSwords = _G.WhitelistedSwords,
-                    SpecialOverrides = _G.SpecialOverrides,
-                    WebhookURL = _G.WebhookURL,
-                    WebhookEnabled = _G.WebhookEnabled,
-                    FarmAreas = _G.FarmAreas,
-                    Settings = SETTINGS
-                }
-                statusUpdates.metadata = {
-                    Areas = AreaNamesList,
-                    Enchants = EnchantNamesList
-                }
-                local elapsed = tick() - sessionStartTime
-                
-                statusUpdates.liveStats = {
-                    timeSpent = elapsed,
-                    levelGained = 0,
-                    moneyGained = 0,
-                    currentState = _G.CurrentState or "Idle"
-                }
-
-                if shouldUpdate then
+                if not _G.LastC2SyncTime or tick() - _G.LastC2SyncTime >= 3 then
+                    _G.LastC2SyncTime = tick()
+                    
                     pcall(function()
                         if _G.C2_WS then
                             local myLevel = PlayerStats:FindFirstChild("Level") and PlayerStats.Level.Value or 1
