@@ -296,7 +296,7 @@ local function TeleportSequence(areaNum)
     -- [[ STEP 1: ALWAYS RETURN TO BASE FIRST ]]
     if currentVal ~= "0" and currentVal ~= "Base" and currentVal ~= "Spawn" then
         print("[DEBUG] Returning to Base first...")
-        pcall(function() remote:InvokeServer("Teleport In Base", "Home") end)
+        pcall(function() remote:InvokeServer("Teleport In Base", "Return") end)
         
         local waitBase = tick()
         while internalArea and tostring(internalArea.Value) ~= "0" and tick() - waitBase < 5 do
@@ -307,6 +307,9 @@ local function TeleportSequence(areaNum)
         task.wait(1)
     else
         print("[DEBUG] Already in Base.")
+        if tostring(areaNum) == "0" then
+            pcall(function() remote:InvokeServer("Teleport In Base", "Home") end)
+        end
     end
     
     if not _G.on and not _G.fetchingGodRoll then isTeleporting = false return end 
