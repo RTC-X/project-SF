@@ -1,11 +1,11 @@
 -- [[ ⚙️ CONFIGURATION - EDIT THESE IF RUNNING STANDALONE ]]
-local STANDALONE_C2_API_KEY = "your_api_key_here"      -- Paste your C2 API Key here (or leave blank if using a loader)
-local STANDALONE_LUARMOR_LICENSE = "your_license_here"  -- Paste your Luarmor License key here (or leave blank if using a loader)
+local STANDALONE_C2_API_KEY = "c2_usr_5a7d7fb71bad50fb"      -- Paste your C2 API Key here (or leave blank if using a loader)
+local STANDALONE_LUARMOR_LICENSE = "d0b0db064926dc83f414cd94e257495e7aa836956bcf4ba94a26"  -- Paste your Luarmor License key here (or leave blank if using a loader)
 
 -- [[ RESOLVE KEYS (Arguments -> Globals -> Config Variables) ]]
 local args = {...}
 local C2_API_KEY = (args[1] and type(args[1]) == "string" and args[1] ~= "") or (_G.C2_ApiKey and _G.C2_ApiKey ~= "") or (STANDALONE_C2_API_KEY ~= "your_api_key_here" and STANDALONE_C2_API_KEY) or ""
-local LUARMOR_LICENSE = (args[2] and type(args[2]) == "string" and args[2] ~= "") or (_G.Luarmor_License and _G.Luarmor_License ~= "") or (STANDALONE_LUARMOR_LICENSE ~= "your_license_here" and STANDALONE_LUARMOR_LICENSE) or ""
+local LUARMOR_LICENSE = (args[2] and type(args[2]) == "string" and args[2] ~= "") or (_G.Luarmor_License and _G.Luarmor_License ~= "") or (typeof(script_key) == "string" and script_key ~= "") or (STANDALONE_LUARMOR_LICENSE ~= "your_license_here" and STANDALONE_LUARMOR_LICENSE) or ""
 
 if not C2_API_KEY or C2_API_KEY == "" then
     warn("[!] Missing C2_API_KEY! Please configure STANDALONE_C2_API_KEY at the top of this script, or ensure your loader passes it.")
