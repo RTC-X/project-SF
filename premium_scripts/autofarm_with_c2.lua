@@ -1208,7 +1208,20 @@ task.spawn(function()
                 pcall(function()
                     local parsedData = data.payload
                     if parsedData then
-                        if parsedData.target_enchant_sets then _G.ActiveTargetSets = parsedData.target_enchant_sets end
+                        if parsedData.target_enchant_sets then 
+                            local parsedSets = {}
+                            for _, setStr in ipairs(parsedData.target_enchant_sets) do
+                                local currentSet = {}
+                                for enchant in string.gmatch(setStr, "([^%+]+)") do
+                                    local trimmed = enchant:match("^%s*(.-)%s*$")
+                                    if trimmed and trimmed ~= "" then
+                                        table.insert(currentSet, trimmed)
+                                    end
+                                end
+                                table.insert(parsedSets, currentSet)
+                            end
+                            _G.ActiveTargetSets = parsedSets
+                        end
                         if parsedData.whitelisted_uuids then _G.WhitelistedSwords = parsedData.whitelisted_uuids end
                         if parsedData.active_areas then _G.FarmAreas = parsedData.active_areas end
                         if parsedData.farm_enabled ~= nil then 

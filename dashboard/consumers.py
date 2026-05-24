@@ -182,6 +182,9 @@ class C2Consumer(AsyncWebsocketConsumer):
                     for key, val in metadata_payload.items():
                         if isinstance(val, list):
                             sanitized_meta[key] = [str(i)[:100] for i in val[:500]]
+                        elif isinstance(val, dict):
+                            # Limit dictionary size
+                            sanitized_meta[key] = {str(k)[:100]: str(v)[:100] for k, v in list(val.items())[:500]}
                     
                     await self.save_global_metadata(sanitized_meta)
                     print(f"GlobalMetadata updated successfully by Admin. Keys: {list(sanitized_meta.keys())}")
