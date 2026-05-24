@@ -48,6 +48,10 @@
             const data = JSON.parse(event.data);
             if (data.type === 'fleet_update') {
                 this.bots = data.bots;
+                if (this.selectedBot) {
+                    const updated = this.bots.find(b => b.id === this.selectedBot.id);
+                    if (updated) this.selectedBot = updated;
+                }
             } else if (data.type === 'new_log') {
                 this.logs.unshift(data.log);
                 if (this.logs.length > 50) this.logs.pop();
@@ -436,12 +440,12 @@
                             
                             <!-- Target Filter Selector Buttons -->
                             <div class="grid grid-cols-3 gap-1.5 pt-2">
-                                <button class="py-1 px-1.5 bg-zinc-900 border border-white/5 text-[9px] font-semibold font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all text-center">Quality</button>
-                                <button class="py-1 px-1.5 bg-zinc-900 border border-white/5 text-[9px] font-semibold font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all text-center">Rarity</button>
-                                <button class="py-1 px-1.5 bg-zinc-900 border border-white/5 text-[9px] font-semibold font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all text-center">Mold</button>
-                                <button class="py-1 px-1.5 bg-zinc-900 border border-white/5 text-[9px] font-semibold font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all text-center">Class</button>
-                                <button class="py-1 px-1.5 bg-zinc-900 border border-white/5 text-[9px] font-semibold font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all text-center">Enchant</button>
-                                <button class="py-1 px-1.5 bg-zinc-900 border border-white/5 text-[9px] font-semibold font-mono text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all text-center">Level</button>
+                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Quality')" :class="selectedBot.ascender_mode === 'Quality' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Quality</button>
+                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Rarity')" :class="selectedBot.ascender_mode === 'Rarity' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Rarity</button>
+                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Mold')" :class="selectedBot.ascender_mode === 'Mold' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Mold</button>
+                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Class')" :class="selectedBot.ascender_mode === 'Class' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Class</button>
+                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Enchant')" :class="selectedBot.ascender_mode === 'Enchant' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Enchant</button>
+                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Level')" :class="selectedBot.ascender_mode === 'Level' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Level</button>
                             </div>
                         </div>
 
@@ -472,9 +476,9 @@
                                 <!-- Multi-Enchant Builder Box -->
                                 <div class="space-y-1.5 pt-1">
                                     <div class="grid grid-cols-3 gap-1.5">
-                                        <input type="text" x-model="enchant1" placeholder="Enchant 1" class="bg-zinc-950/60 border border-white/5 text-[10px] rounded-lg px-2 py-1.5 text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
-                                        <input type="text" x-model="enchant2" placeholder="Enchant 2" class="bg-zinc-950/60 border border-white/5 text-[10px] rounded-lg px-2 py-1.5 text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
-                                        <input type="text" x-model="enchant3" placeholder="Enchant 3" class="bg-zinc-950/60 border border-white/5 text-[10px] rounded-lg px-2 py-1.5 text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                                        <input type="text" x-model="enchant1" placeholder="Enchant 1" class="bg-zinc-950/60 border border-white/5 text-xs rounded-lg px-2 py-2 text-white placeholder-zinc-500 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                                        <input type="text" x-model="enchant2" placeholder="Enchant 2" class="bg-zinc-950/60 border border-white/5 text-xs rounded-lg px-2 py-2 text-white placeholder-zinc-500 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                                        <input type="text" x-model="enchant3" placeholder="Enchant 3" class="bg-zinc-950/60 border border-white/5 text-xs rounded-lg px-2 py-2 text-white placeholder-zinc-500 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
                                     </div>
                                     
                                     <button @click="
@@ -512,7 +516,7 @@
                                 </div>
                                 
                                 <div class="flex items-center gap-1.5 pt-1">
-                                    <select x-model="newUuid" class="flex-1 bg-zinc-950/60 border border-white/5 text-[10px] rounded-lg px-2 py-1.5 text-zinc-400 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                                    <select x-model="newUuid" class="flex-1 w-full min-w-0 truncate bg-zinc-950/60 border border-white/5 text-[10px] rounded-lg px-2 py-1.5 text-zinc-400 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
                                         <option value="">Backpack empty...</option>
                                         <template x-for="item in selectedBot.backpack_items || []">
                                             <option :value="item.id" x-text="getItemName(item)"></option>
@@ -710,9 +714,9 @@
                         
                         <div class="space-y-2">
                             <div class="grid grid-cols-3 gap-1.5">
-                                <input type="text" x-model="multiEnchant1" placeholder="Enchant 1" class="bg-zinc-900 border border-white/10 text-[10px] rounded-lg px-2 py-1.5 text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
-                                <input type="text" x-model="multiEnchant2" placeholder="Enchant 2" class="bg-zinc-900 border border-white/10 text-[10px] rounded-lg px-2 py-1.5 text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
-                                <input type="text" x-model="multiEnchant3" placeholder="Enchant 3" class="bg-zinc-900 border border-white/10 text-[10px] rounded-lg px-2 py-1.5 text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                                <input type="text" x-model="multiEnchant1" placeholder="Enchant 1" class="bg-zinc-900 border border-white/10 text-xs rounded-lg px-2 py-2 text-white placeholder-zinc-500 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                                <input type="text" x-model="multiEnchant2" placeholder="Enchant 2" class="bg-zinc-900 border border-white/10 text-xs rounded-lg px-2 py-2 text-white placeholder-zinc-500 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                                <input type="text" x-model="multiEnchant3" placeholder="Enchant 3" class="bg-zinc-900 border border-white/10 text-xs rounded-lg px-2 py-2 text-white placeholder-zinc-500 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
                             </div>
                             <button @click="
                                 let combined = [];
@@ -749,7 +753,7 @@
                         </div>
 
                         <div class="flex items-center gap-1.5">
-                            <input type="text" x-model="multiUuid" placeholder="e.g. sword_92k" class="flex-1 bg-zinc-900 border border-white/10 text-[10px] rounded-lg px-2 py-1.5 text-white font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
+                            <input type="text" x-model="multiUuid" placeholder="e.g. sword_92k" class="flex-1 bg-zinc-900 border border-white/10 text-xs rounded-lg px-2 py-2 text-white placeholder-zinc-500 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
                             <button @click="
                                 if (multiUuid) {
                                     multiConfigData.whitelisted_uuids.push(multiUuid);

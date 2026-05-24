@@ -1271,7 +1271,9 @@ task.spawn(function()
                                         end
                                         return formattedSets
                                     end)(),
-                                    whitelisted_uuids = _G.WhitelistedSwords or {}
+                                    whitelisted_uuids = _G.WhitelistedSwords or {},
+                                    farm_enabled = _G.on,
+                                    snipe_enabled = _G.autoDropEnabled
                                 }
                             }))
                         end

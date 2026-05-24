@@ -381,15 +381,33 @@ class C2Consumer(AsyncWebsocketConsumer):
         
         bot.save()
         
-        if not BotConfiguration.objects.filter(bot=bot).exists():
-            BotConfiguration.objects.create(
-                bot=bot,
-                farm_enabled=True,
-                snipe_enabled=True,
-                active_areas=[1, 2, 5, 12],
-                target_enchant_sets=["Ancient + Fortune + Insight"],
-                whitelisted_uuids=["sword_92k"]
-            )
+        config, config_created = BotConfiguration.objects.get_or_create(
+            bot=bot,
+            defaults={
+                'farm_enabled': True,
+                'snipe_enabled': True,
+                'active_areas': [1, 2, 5, 12],
+                'target_enchant_sets': ["Ancient + Fortune + Insight"],
+                'whitelisted_uuids': ["sword_92k"]
+            }
+        )
+        
+        # Sync live state from Roblox telemetry
+        if extra_data:
+            if 'farm_enabled' in extra_data:
+                config.farm_enabled = bool(extra_data['farm_enabled'])
+            if 'snipe_enabled' in extra_data:
+                config.snipe_enabled = bool(extra_data['snipe_enabled'])
+            if 'target_enchant_sets' in extra_data and extra_data['target_enchant_sets']:
+                config.target_enchant_sets = extra_data['target_enchant_sets']
+            if 'whitelisted_uuids' in extra_data:
+                config.whitelisted_uuids = extra_data['whitelisted_uuids']
+        
+        # If config already existed but had empty defaults from prior db state, populate them:
+        if not config.target_enchant_sets:
+            config.target_enchant_sets = ["Ancient + Fortune + Insight"]
+            
+        config.save()
         return True
 
     @database_sync_to_async
