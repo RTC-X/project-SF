@@ -701,20 +701,30 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6 max-h-[400px] overflow-y-auto pr-2">
                 <template x-if="gameData && gameData.Areas">
                     <template x-for="areaString in gameData.Areas" :key="areaString">
-                        <label class="flex items-center gap-2 p-2 rounded-lg border border-white/5 bg-zinc-900/50 hover:bg-zinc-900 cursor-pointer transition-colors overflow-hidden">
-                            <input type="checkbox" :value="parseInt(areaString.match(/\[(\d+)\]/)[1])" 
-                                   :checked="selectedBot?.config?.active_areas?.includes(parseInt(areaString.match(/\[(\d+)\]/)[1]))"
-                                   @change="
-                                       let id = parseInt(areaString.match(/\[(\d+)\]/)[1]);
-                                       if (!selectedBot.config.active_areas) selectedBot.config.active_areas = [];
-                                       if ($event.target.checked) {
-                                           if (!selectedBot.config.active_areas.includes(id)) selectedBot.config.active_areas.push(id);
-                                       } else {
-                                           selectedBot.config.active_areas = selectedBot.config.active_areas.filter(a => a !== id);
-                                       }
-                                   "
-                                   class="w-3.5 h-3.5 rounded border border-white/10 bg-zinc-950 text-teal-400 focus:ring-0 focus:ring-offset-0 focus:outline-none transition-all cursor-pointer flex-shrink-0 checked:bg-teal-400 checked:border-teal-400 checked:shadow-[0_0_8px_rgba(45,212,191,0.6)]">
-                            <span class="text-[10px] text-zinc-300 font-mono truncate" x-text="areaString" :title="areaString"></span>
+                        <label @click="
+                                   let id = parseInt(areaString.match(/\[(\d+)\]/)[1]);
+                                   if (!selectedBot.config.active_areas) selectedBot.config.active_areas = [];
+                                   if (selectedBot.config.active_areas.includes(id)) {
+                                       selectedBot.config.active_areas = selectedBot.config.active_areas.filter(a => a !== id);
+                                   } else {
+                                       selectedBot.config.active_areas.push(id);
+                                   }
+                               "
+                               class="flex items-center justify-between p-2.5 rounded-xl border cursor-pointer select-none transition-all duration-300 gap-2 overflow-hidden"
+                               :class="selectedBot?.config?.active_areas?.includes(parseInt(areaString.match(/\[(\d+)\]/)[1])) 
+                                       ? 'border-teal-500/30 bg-teal-500/5 shadow-[0_0_15px_rgba(45,212,191,0.05)]' 
+                                       : 'border-white/5 bg-zinc-900/40 hover:bg-zinc-900/70'">
+                            <span class="text-[10px] font-mono truncate transition-colors" 
+                                  :class="selectedBot?.config?.active_areas?.includes(parseInt(areaString.match(/\[(\d+)\]/)[1])) ? 'text-teal-400 font-bold' : 'text-zinc-400'"
+                                  x-text="areaString" :title="areaString"></span>
+                            
+                            <!-- Custom Sliding Mini Switch -->
+                            <button type="button"
+                                    class="relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none pointer-events-none"
+                                    :class="selectedBot?.config?.active_areas?.includes(parseInt(areaString.match(/\[(\d+)\]/)[1])) ? 'bg-teal-500/20 border-teal-500/30' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
+                                <span class="pointer-events-none inline-block h-3 w-3 transform rounded-full shadow transition-all duration-300 ease-in-out"
+                                      :class="selectedBot?.config?.active_areas?.includes(parseInt(areaString.match(/\[(\d+)\]/)[1])) ? 'translate-x-3.5 bg-teal-400 shadow-[0_0_4px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
+                            </button>
                         </label>
                     </template>
                 </template>
@@ -970,11 +980,30 @@
                 <!-- Targeted accounts list grid -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[300px] overflow-y-auto pr-1">
                     <template x-for="bot in bots.filter(b => b.username.toLowerCase().includes(multiConfigSearch.toLowerCase()) && b.status !== 'Offline')" :key="bot.id">
-                        <label class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-900/60 border border-white/5 hover:border-white/10 transition-all cursor-pointer select-none">
+                        <label @click="
+                                   if (multiConfigSelectedIds.includes(bot.id)) {
+                                       multiConfigSelectedIds = multiConfigSelectedIds.filter(id => id !== bot.id);
+                                   } else {
+                                       multiConfigSelectedIds.push(bot.id);
+                                   }
+                               "
+                               class="flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer select-none transition-all duration-300"
+                               :class="multiConfigSelectedIds.includes(bot.id) 
+                                       ? 'border-teal-500/30 bg-teal-500/5 shadow-[0_0_15px_rgba(45,212,191,0.05)]' 
+                                       : 'border-white/5 bg-zinc-900/60 hover:bg-zinc-900/85'">
                             <div class="flex items-center gap-3">
-                                <input type="checkbox" :value="bot.id" x-model="multiConfigSelectedIds" class="w-4 h-4 rounded border border-white/10 bg-zinc-950 text-teal-400 focus:ring-0 focus:ring-offset-0 focus:outline-none transition-all cursor-pointer checked:bg-teal-400 checked:border-teal-400 checked:shadow-[0_0_8px_rgba(45,212,191,0.6)]">
+                                <!-- Custom Sliding Mini Switch -->
+                                <button type="button"
+                                        class="relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none pointer-events-none"
+                                        :class="multiConfigSelectedIds.includes(bot.id) ? 'bg-teal-500/20 border-teal-500/30' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
+                                    <span class="pointer-events-none inline-block h-3 w-3 transform rounded-full shadow transition-all duration-300 ease-in-out"
+                                          :class="multiConfigSelectedIds.includes(bot.id) ? 'translate-x-3.5 bg-teal-400 shadow-[0_0_4px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
+                                </button>
+                                
                                 <div>
-                                    <span class="block text-xs font-bold text-white font-mono" x-text="bot.username">Node</span>
+                                    <span class="block text-xs font-bold font-mono transition-colors" 
+                                          :class="multiConfigSelectedIds.includes(bot.id) ? 'text-teal-400' : 'text-white'"
+                                          x-text="bot.username">Node</span>
                                     <span class="block text-[9px] font-mono text-zinc-500" x-text="'Lvl ' + bot.level + ' • ' + bot.status">Lvl 0 • Offline</span>
                                 </div>
                             </div>
@@ -982,10 +1011,10 @@
                             <!-- Small colored indicator -->
                             <span class="h-2 w-2 rounded-full"
                                   :class="{
-                                      'bg-emerald-400': bot.status === 'Farming',
-                                      'bg-teal-400': bot.status === 'Sniping',
-                                      'bg-amber-400': bot.status === 'Idle',
-                                      'bg-red-400': bot.status === 'Dead',
+                                      'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.4)]': bot.status === 'Farming',
+                                      'bg-teal-400 shadow-[0_0_6px_rgba(45,212,191,0.4)]': bot.status === 'Sniping',
+                                      'bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.4)]': bot.status === 'Idle',
+                                      'bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.4)]': bot.status === 'Dead',
                                       'bg-zinc-700': bot.status === 'Offline'
                                   }"></span>
                         </label>
