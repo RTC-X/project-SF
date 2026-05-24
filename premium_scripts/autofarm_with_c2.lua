@@ -1407,6 +1407,7 @@ task.spawn(function()
                             pcall(function()
                                 _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
                                     action = "log",
+                                    username = player.Name,
                                     event_type = "Farming",
                                     message = "dY> " .. messageStr
                                 }))
