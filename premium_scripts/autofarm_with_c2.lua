@@ -1225,6 +1225,7 @@ task.spawn(function()
                     AscenderRemote:FireServer("Set Ascender Mode", tostring(data.payload))
                     print("C2 Command: Ascender Mode set to", tostring(data.payload))
                 end)
+            end
 
         end)
     end)
