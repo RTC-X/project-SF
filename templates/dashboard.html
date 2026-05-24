@@ -293,6 +293,7 @@
     <!-- Bespoke Modals (Alpine Dynamic Forms) -->
     <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
         x-show="showConfigModal" 
+        @click.self="showConfigModal = false; selectedBot = null"
         x-transition
         style="display: none;">
         
@@ -302,8 +303,11 @@
             <!-- Modal Header -->
             <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
                 <h4 class="text-lg font-bold text-white font-mono" x-text="selectedBot ? 'Manage Fleet Bot: ' + selectedBot.username : 'Provision New Bot Token'">Manage Fleet Bot</h4>
-                <button @click="showConfigModal = false" class="text-zinc-500 hover:text-white transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+                <button @click="showConfigModal = false; selectedBot = null" class="text-zinc-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/5 transition-all relative z-10" title="Close Modal">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
                 </button>
             </div>
 
@@ -585,12 +589,92 @@
                                     </template>
                                     
                                     <template x-for="item in selectedBot.backpack_items || []" :key="item.id">
-                                        <div class="p-3 rounded-xl bg-zinc-950/60 border border-white/5 flex items-center justify-between gap-2 hover:border-orange-500/20 transition-all select-none">
-                                            <div class="space-y-0.5">
-                                                <span class="block text-xs font-bold text-white font-mono" x-text="getItemName(item)">Ancient Broadsword</span>
-                                                <span class="block text-[9px] font-mono text-zinc-500" x-text="getItemTraits(item)">Ancient II, Level 10</span>
+                                        <div x-data="{ open: false }" @click.away="open = false" class="p-3 rounded-xl bg-zinc-950/60 border border-white/5 flex items-center justify-between gap-2 hover:border-orange-500/20 transition-all select-none relative">
+                                            <div class="space-y-0.5 flex-1 min-w-0">
+                                                <span class="block text-xs font-bold text-white font-mono truncate" x-text="getItemName(item)">Ancient Broadsword</span>
+                                                <span class="block text-[9px] font-mono text-zinc-500 truncate" x-text="getItemTraits(item)">Ancient II, Level 10</span>
                                             </div>
-                                            <!-- Action options if wanted -->
+                                            
+                                            <!-- Action dropdown -->
+                                            <div class="relative flex-shrink-0">
+                                                <button @click.stop="open = !open" class="h-7 w-7 rounded-lg bg-zinc-900 border border-white/5 hover:border-white/10 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                                        <circle cx="12" cy="5" r="2"/>
+                                                        <circle cx="12" cy="12" r="2"/>
+                                                        <circle cx="12" cy="19" r="2"/>
+                                                    </svg>
+                                                </button>
+                                                
+                                                <!-- Dropdown Menu -->
+                                                <div x-show="open" 
+                                                     x-transition:enter="transition ease-out duration-100"
+                                                     x-transition:enter-start="transform opacity-0 scale-95"
+                                                     x-transition:enter-end="transform opacity-100 scale-100"
+                                                     x-transition:leave="transition ease-in duration-75"
+                                                     x-transition:leave-start="transform opacity-100 scale-100"
+                                                     x-transition:leave-end="transform opacity-0 scale-95"
+                                                     class="absolute right-0 mt-1.5 w-36 glass-panel rounded-xl border border-white/10 bg-zinc-950/95 shadow-2xl z-50 overflow-hidden py-1"
+                                                     style="display: none;">
+                                                    
+                                                    <!-- Toggle Whitelist -->
+                                                    <button @click.stop="
+                                                                if (!selectedBot.config.whitelisted_uuids) selectedBot.config.whitelisted_uuids = [];
+                                                                if (selectedBot.config.whitelisted_uuids.includes(item.id)) {
+                                                                    selectedBot.config.whitelisted_uuids = selectedBot.config.whitelisted_uuids.filter(id => id !== item.id);
+                                                                } else {
+                                                                    selectedBot.config.whitelisted_uuids.push(item.id);
+                                                                }
+                                                                sendCommand(selectedBot.id, 'syncConfig', selectedBot.config);
+                                                                open = false;
+                                                            " 
+                                                            class="w-full text-left px-3 py-1.5 text-[10px] font-mono font-semibold hover:bg-white/5 transition-colors flex items-center gap-2 cursor-pointer"
+                                                            :class="selectedBot.config?.whitelisted_uuids?.includes(item.id) ? 'text-amber-400' : 'text-zinc-300'">
+                                                        <!-- Lock/Unlock SVG -->
+                                                        <template x-if="selectedBot.config?.whitelisted_uuids?.includes(item.id)">
+                                                            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                                                <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+                                                            </svg>
+                                                        </template>
+                                                        <template x-if="!selectedBot.config?.whitelisted_uuids?.includes(item.id)">
+                                                            <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                                            </svg>
+                                                        </template>
+                                                        <span x-text="selectedBot.config?.whitelisted_uuids?.includes(item.id) ? 'Unprotect' : 'Protect'">Protect</span>
+                                                    </button>
+                                                    
+                                                    <!-- Sell Item -->
+                                                    <button @click.stop="sendCommand(selectedBot.id, 'sellItem', { itemId: item.id }); open = false;" class="w-full text-left px-3 py-1.5 text-[10px] font-mono font-semibold text-emerald-400 hover:bg-white/5 transition-colors flex items-center gap-2 cursor-pointer">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                            <line x1="12" y1="1" x2="12" y2="23"/>
+                                                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                                                        </svg>
+                                                        <span>Sell Item</span>
+                                                    </button>
+
+                                                    <!-- Drop Item -->
+                                                    <button @click.stop="sendCommand(selectedBot.id, 'dropItem', { itemId: item.id }); open = false;" class="w-full text-left px-3 py-1.5 text-[10px] font-mono font-semibold text-red-400 hover:bg-white/5 transition-colors flex items-center gap-2 cursor-pointer">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                            <polyline points="3 6 5 6 21 6"/>
+                                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                                            <line x1="10" y1="11" x2="10" y2="17"/>
+                                                            <line x1="14" y1="11" x2="14" y2="17"/>
+                                                        </svg>
+                                                        <span>Drop Item</span>
+                                                    </button>
+
+                                                    <!-- Copy UUID -->
+                                                    <button @click.stop="window.navigator.clipboard.writeText(item.id); open = false;" class="w-full text-left px-3 py-1.5 text-[10px] font-mono font-semibold text-zinc-300 hover:bg-white/5 transition-colors flex items-center gap-2 cursor-pointer border-t border-white/5">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                                        </svg>
+                                                        <span>Copy UUID</span>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </template>
                                 </div>
@@ -603,10 +687,13 @@
     </div>
 
     <!-- Map Options Modal -->
-    <div x-show="showMapOptions" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" x-transition style="display: none;">
+    <div x-show="showMapOptions" @click.self="showMapOptions = false" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" x-transition style="display: none;">
         <div class="bg-zinc-950 border border-white/10 rounded-2xl p-6 w-full max-w-2xl shadow-2xl relative">
-            <button @click="showMapOptions = false" class="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors">
-                <i data-lucide="x" class="w-5 h-5"></i>
+            <button @click="showMapOptions = false" class="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5 transition-all relative z-10" title="Close Modal">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
             </button>
             <h2 class="text-xl font-bold text-white mb-4 font-mono">Map Selections</h2>
             <p class="text-xs text-zinc-400 mb-4">Select the areas the bot should cycle through when AutoFarm is active.</p>
@@ -646,6 +733,7 @@
     <!-- Multi Config Wizard Modal -->
     <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
         x-show="showMultiConfigModal" 
+        @click.self="showMultiConfigModal = false"
         x-transition
         style="display: none;">
         
@@ -661,8 +749,11 @@
                         <p class="text-[10px] text-zinc-500 font-mono tracking-widest uppercase" x-text="'Step ' + multiConfigStep + ' of 2'">Step 1 of 2</p>
                     </div>
                 </div>
-                <button @click="showMultiConfigModal = false" type="button" class="text-zinc-500 hover:text-white transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
+                <button @click="showMultiConfigModal = false" type="button" class="text-zinc-500 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5 transition-all relative z-10" title="Close Modal">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
                 </button>
             </div>
 
