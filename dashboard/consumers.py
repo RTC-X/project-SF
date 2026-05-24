@@ -291,6 +291,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                     'active_areas': config.active_areas,
                     'target_enchant_sets': config.target_enchant_sets,
                     'whitelisted_uuids': config.whitelisted_uuids,
+                    'target_priority': config.target_priority,
                 }
             except BotConfiguration.DoesNotExist:
                 config_data = {
@@ -299,6 +300,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                     'active_areas': [],
                     'target_enchant_sets': [],
                     'whitelisted_uuids': [],
+                    'target_priority': 'Closest',
                 }
             
             serialized.append({

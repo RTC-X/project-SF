@@ -40,9 +40,9 @@ def dashboard_view(request):
         from .models import GlobalMetadata
         import json
         meta = GlobalMetadata.objects.get(key='game_data')
-        game_data_json = json.dumps(meta.data)
+        game_data_json = meta.data
     except:
-        game_data_json = "{}"
+        game_data_json = {}
         
     return render(request, 'dashboard.html', {'user_api_key': user_api_key, 'game_data_json': game_data_json})
 

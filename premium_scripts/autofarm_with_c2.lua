@@ -72,6 +72,31 @@ local StagedEnchant1, StagedEnchant2, StagedEnchant3 = "None", "None", "None"
 local ManualWhitelistInput = ""
 local SaveFileName = "UltimateFarm_" .. player.Name .. "_" .. player.UserId .. ".json"
 
+local function SaveLocalConfig()
+    pcall(function()
+        if writefile then
+            local saveData = {TargetSets = _G.ActiveTargetSets, WhitelistedSwords = _G.WhitelistedSwords, SpecialOverrides = _G.SpecialOverrides, WebhookURL = _G.WebhookURL, WebhookEnabled = _G.WebhookEnabled, FarmAreas = _G.FarmAreas, Settings = SETTINGS}
+            writefile(SaveFileName, HttpService:JSONEncode(saveData))
+        end
+    end)
+end
+
+pcall(function()
+    if isfile and isfile(SaveFileName) and readfile then
+        local s2, parsedData = pcall(function() return HttpService:JSONDecode(readfile(SaveFileName)) end)
+        if s2 and parsedData then
+            _G.ActiveTargetSets = parsedData.TargetSets or _G.ActiveTargetSets
+            _G.WhitelistedSwords = parsedData.WhitelistedSwords or _G.WhitelistedSwords
+            _G.SpecialOverrides = parsedData.SpecialOverrides or _G.SpecialOverrides
+            _G.WebhookURL = parsedData.WebhookURL or _G.WebhookURL
+            _G.WebhookEnabled = parsedData.WebhookEnabled or _G.WebhookEnabled
+            if parsedData.Settings then
+                for k, v in pairs(parsedData.Settings) do SETTINGS[k] = v end
+            end
+        end
+    end
+end)
+
 local currentArea = 0
 local isTeleporting = false
 local lastTeleportEnd = 0 
@@ -1134,7 +1159,7 @@ task.spawn(function()
                     if pStats then
                         local myStats = pStats:FindFirstChild(tostring(player.Name))
                         if myStats and myStats:FindFirstChild("CurrentArea") then
-                            if myStats.CurrentArea.Value == 0 then
+                            if tostring(myStats.CurrentArea.Value) == "0" then
                                 targetStr = "Home"
                             end
                         end
@@ -1266,6 +1291,7 @@ task.spawn(function()
                         if parsedData.FarmAreas then _G.FarmAreas = parsedData.FarmAreas end
                         if parsedData.TargetPriority then _G.TargetPriority = parsedData.TargetPriority end
                         if parsedData.Settings then for k,v in pairs(parsedData.Settings) do SETTINGS[k] = v end end
+                        SaveLocalConfig()
                         print("C2 Command: Configuration Synced remotely from Website!")
                     end
                 end)
