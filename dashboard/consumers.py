@@ -445,7 +445,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                             else:
                                 print(f"[C2 Server] [Auth Engine] [Luarmor Rejected] Key not active (Success: {res_data.get('success')}, Enabled: {res_data.get('enabled')}).")
                         else:
-                            print(f"[C2 Server] [Auth Engine] [Luarmor Rejected] API returned HTTP Status {response.status_code}.")
+                            print(f"[C2 Server] [Auth Engine] [Luarmor Rejected] API returned HTTP Status {response.status_code}. Response: {response.text}")
                     except Exception as e:
                         print("[C2 Server] [Auth Engine] [Luarmor Error] Connection error during license validation:", e)
                 else:
