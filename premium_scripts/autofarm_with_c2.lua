@@ -1089,7 +1089,7 @@ task.spawn(function()
             local s, data = pcall(function() return HttpService:JSONDecode(msg) end)
             if not s then return end
 
-            if data.action == "toggleFarm" then
+            if data.command == "toggleFarm" then
                 _G.on = not _G.on
                 print("C2 Command: AutoFarm toggled to", _G.on)
                 
@@ -1110,12 +1110,8 @@ task.spawn(function()
                 else
                    ResetPhysics() 
                 end
-                
-                pcall(function()
-                    ws:Send(HttpService:JSONEncode({ type = "update_status", status = { farming = _G.on } }))
-                end)
 
-            elseif data.action == "teleportHome" then
+            elseif data.command == "teleportHome" then
                 print("C2 Command: Teleporting Home!")
                 task.spawn(function()
                     pcall(function() hrp.CFrame = CFrame.new(hrp.Position.X, hrp.Position.Y + 500, hrp.Position.Z) end)
@@ -1126,7 +1122,7 @@ task.spawn(function()
                     end)
                 end)
 
-            elseif data.action == "activateAccount" then
+            elseif data.command == "activateAccount" then
                 local isActive = data.payload
                 render3dActive = isActive
                 pcall(function() 
@@ -1134,35 +1130,27 @@ task.spawn(function()
                     setfpscap(isActive and 60 or 3)
                 end)
                 print("C2 Command: Account Activation toggled to", isActive)
-                pcall(function()
-                    ws:Send(HttpService:JSONEncode({ type = "update_status", status = { activeAccount = isActive, render3d = render3dActive } }))
-                end)
                 
-            elseif data.action == "setFPS" then
+            elseif data.command == "setFPS" then
                 local fps = tonumber(data.payload) or 60
                 pcall(function() setfpscap(fps) end)
                 print("C2 Command: FPS Cap set to", fps)
                 
-            elseif data.action == "toggle3d" then
+            elseif data.command == "toggle3d" then
                 render3dActive = not render3dActive
                 pcall(function() RunService:Set3dRenderingEnabled(render3dActive) end)
                 print("C2 Command: 3D Render forcefully toggled to", render3dActive)
-                pcall(function()
-                    ws:Send(HttpService:JSONEncode({ type = "update_status", status = { render3d = render3dActive } }))
-                end)
-            elseif data.action == "dropSword" then
+
+            elseif data.command == "dropSword" then
                 local swordUUID = data.payload
                 if swordUUID then
                     DropRemote:FireServer("Drop Sword", swordUUID)
                     print("C2 Command: Dropping sword manually ->", swordUUID)
                 end
                 
-            elseif data.action == "toggleSnipe" then
+            elseif data.command == "toggleSnipe" then
                 _G.autoDropEnabled = not _G.autoDropEnabled
                 print("C2 Command: Sniper/AutoDrop toggled to", _G.autoDropEnabled)
-                pcall(function()
-                    ws:Send(HttpService:JSONEncode({ type = "update_status", status = { snipeEnabled = _G.autoDropEnabled } }))
-                end)
                 if _G.autoDropEnabled then
                     pcall(function()
                         local pStats = ReplicatedStorage:FindFirstChild("Stats"):FindFirstChild(tostring(player.Name))
@@ -1170,12 +1158,9 @@ task.spawn(function()
                     end)
                 end
                 
-            elseif data.action == "setSnipe" then
+            elseif data.command == "setSnipe" then
                 _G.autoDropEnabled = data.payload
                 print("C2 Command: Sniper forcefully set to", _G.autoDropEnabled)
-                pcall(function()
-                    ws:Send(HttpService:JSONEncode({ type = "update_status", status = { snipeEnabled = _G.autoDropEnabled } }))
-                end)
                 if _G.autoDropEnabled then
                     pcall(function()
                         local pStats = ReplicatedStorage:FindFirstChild("Stats"):FindFirstChild(tostring(player.Name))
@@ -1183,7 +1168,7 @@ task.spawn(function()
                     end)
                 end
                 
-            elseif data.action == "saveConfig" then
+            elseif data.command == "saveConfig" then
                 pcall(function()
                     if writefile then
                         local saveData = {TargetSets = _G.ActiveTargetSets, WhitelistedSwords = _G.WhitelistedSwords, SpecialOverrides = _G.SpecialOverrides, WebhookURL = _G.WebhookURL, WebhookEnabled = _G.WebhookEnabled, FarmAreas = _G.FarmAreas, Settings = SETTINGS}
@@ -1192,7 +1177,7 @@ task.spawn(function()
                     end
                 end)
 
-            elseif data.action == "loadConfig" then
+            elseif data.command == "loadConfig" then
                 pcall(function()
                     if isfile and isfile(SaveFileName) and readfile then
                         local s2, parsedData = pcall(function() return HttpService:JSONDecode(readfile(SaveFileName)) end)
@@ -1205,14 +1190,13 @@ task.spawn(function()
                             _G.FarmAreas = parsedData.FarmAreas or {}
                             if parsedData.Settings then for k,v in pairs(parsedData.Settings) do SETTINGS[k] = v end end
                             print("C2 Command: Configuration Loaded locally from " .. SaveFileName)
-                            pcall(function() ws:Send(HttpService:JSONEncode({ type = "update_status", status = { activeTargetSets = _G.ActiveTargetSets } })) end)
                         end
                     else
                         warn("C2 Command: No config file found to load.")
                     end
                 end)
             
-            elseif data.action == "syncConfig" then
+            elseif data.command == "syncConfig" then
                 pcall(function()
                     local parsedData = data.payload
                     if parsedData then
@@ -1225,25 +1209,22 @@ task.spawn(function()
                         if parsedData.TargetPriority then _G.TargetPriority = parsedData.TargetPriority end
                         if parsedData.Settings then for k,v in pairs(parsedData.Settings) do SETTINGS[k] = v end end
                         print("C2 Command: Configuration Synced remotely from Website!")
-                        
-                        pcall(function() ws:Send(HttpService:JSONEncode({ type = "update_status", status = { activeTargetSets = _G.ActiveTargetSets } })) end)
                     end
                 end)
                 
-            elseif data.action == "updateWishlist" then
+            elseif data.command == "updateWishlist" then
                 if typeof(data.payload) == "table" then
                     _G.ActiveTargetSets = data.payload
                     print("C2 Command: Wishlist updated. Size: " .. tostring(#_G.ActiveTargetSets))
-                    pcall(function() ws:Send(HttpService:JSONEncode({ type = "update_status", status = { activeTargetSets = _G.ActiveTargetSets } })) end)
                 end
 
-            elseif data.action == "setAscenderMode" then
+            elseif data.command == "setAscenderMode" then
                 pcall(function()
                     AscenderRemote:FireServer("Set Ascender Mode", tostring(data.payload))
                     print("C2 Command: Ascender Mode set to", tostring(data.payload))
                 end)
 
-            elseif data.action == "executeLua" then
+            elseif data.command == "executeLua" then
                 print("C2 Command: Remote Lua Execution Received!")
                 task.spawn(function()
                     local success, err = pcall(function()
