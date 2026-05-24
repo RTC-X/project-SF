@@ -80,113 +80,136 @@ end
 
 -- Connect to WebSocket using WebSocket.connect or syn.websocket.connect
 local ws
-local success, err = pcall(function()
-    if WebSocket and WebSocket.connect then
-        ws = WebSocket.connect(WS_URL)
-    elseif syn and syn.websocket and syn.websocket.connect then
-        ws = syn.websocket.connect(WS_URL)
-    else
-        error("Executor does not support WebSockets! Need syn.websocket or WebSocket library.")
-    end
-end)
+local isKicked = false
 
-if not success then
-    warn("[C2 Client] Connection failure: " .. tostring(err))
-    return
+local function startC2Connection()
+    while not isKicked do
+        print("[C2 Client] Attempting to connect to C2 Server...")
+        local socket = nil
+        local success, err = pcall(function()
+            if WebSocket and WebSocket.connect then
+                socket = WebSocket.connect(WS_URL)
+            elseif syn and syn.websocket and syn.websocket.connect then
+                socket = syn.websocket.connect(WS_URL)
+            else
+                error("Executor does not support WebSockets! Need syn.websocket or WebSocket library.")
+            end
+        end)
+        
+        if success and socket then
+            print("[C2 Client] Connected successfully to " .. WS_URL)
+            
+            -- Auto-register Node
+            local registerPayload = {
+                action = "register",
+                username = LocalPlayer.Name,
+                api_key = _G.C2_ApiKey or "",
+                license_key = _G.Luarmor_License or ""
+            }
+            local regSuccess = pcall(function()
+                socket:Send(HttpService:JSONEncode(registerPayload))
+            end)
+            
+            if regSuccess then
+                print("[C2 Client] Registered Node for user: " .. LocalPlayer.Name .. " (API Key: " .. tostring(_G.C2_ApiKey) .. ", License: " .. tostring(_G.Luarmor_License) .. ")")
+                ws = socket -- Assign active socket globally for telemetry heartbeats
+                
+                -- Message receiver loop (blocks this thread until connection is severed)
+                while not isKicked do
+                    local message
+                    local receiveSuccess = pcall(function()
+                        message = socket:Receive()
+                    end)
+                    
+                    if not receiveSuccess or not message then
+                        warn("[C2 Client] Lost socket connection.")
+                        break
+                    end
+                    
+                    local decodeSuccess, data = pcall(function()
+                        return HttpService:JSONDecode(message)
+                    end)
+                    
+                    if decodeSuccess and data and data.type == "command" then
+                        local command = data.command
+                        local payload = data.payload or {}
+                        
+                        print("[C2 Client] Incoming Command: " .. tostring(command))
+                        
+                        if command == "syncConfig" then
+                            -- Sync active config variables
+                            _G.C2_FarmEnabled = payload.farm_enabled
+                            _G.C2_SnipeEnabled = payload.snipe_enabled
+                            _G.C2_TargetEnchantSets = payload.target_enchant_sets or {}
+                            _G.C2_WhitelistedUUIDs = payload.whitelisted_uuids or {}
+                            print("[C2 Client] Configuration synchronized successfully.")
+                            
+                        elseif command == "teleportHome" then
+                            -- Relaying home teleportation logic
+                            pcall(function()
+                                local character = LocalPlayer.Character
+                                if character and character:FindFirstChild("HumanoidRootPart") then
+                                    character.HumanoidRootPart.CFrame = CFrame.new(0, 50, 0)
+                                    print("[C2 Client] Teleported to home coordinates.")
+                                end
+                            end)
+                            
+                        elseif command == "toggle3D" then
+                            -- Toggle 3D rendering to optimize CPU/RAM
+                            _G.C2_3DRendering = not _G.C2_3DRendering
+                            pcall(function()
+                                game:GetService("RunService"):Set3dRenderingEnabled(_G.C2_3DRendering)
+                            end)
+                            print("[C2 Client] 3D rendering enabled: " .. tostring(_G.C2_3DRendering))
+                            
+                        elseif command == "kick" then
+                            isKicked = true
+                            local reason = payload.reason or "Disconnected by C2 Server."
+                            print("[C2 Client] Kicking player: " .. reason)
+                            pcall(function()
+                                LocalPlayer:Kick(reason)
+                            end)
+                            break
+                        end
+                    end
+                end
+            else
+                warn("[C2 Client] Registration failed.")
+            end
+        else
+            warn("[C2 Client] Connection failure: " .. tostring(err))
+        end
+        
+        -- Clean up references on disconnect
+        ws = nil
+        if isKicked then break end
+        
+        print("[C2 Client] Retrying connection in 10 seconds...")
+        task.wait(10)
+    end
 end
 
-print("[C2 Client] Connected successfully to " .. WS_URL)
-
--- Auto-register Node
-local registerPayload = {
-    action = "register",
-    username = LocalPlayer.Name,
-    api_key = _G.C2_ApiKey or "",
-    license_key = _G.Luarmor_License or ""
-}
-ws:Send(HttpService:JSONEncode(registerPayload))
-print("[C2 Client] Registered Node for user: " .. LocalPlayer.Name .. " (API Key: " .. tostring(_G.C2_ApiKey) .. ", License: " .. tostring(_G.Luarmor_License) .. ")")
+-- Start connection coordinator thread
+task.spawn(startC2Connection)
 
 -- Send continuous gameplay telemetry heartbeat logs
 task.spawn(function()
     while true do
         task.wait(TELEMETRY_DELAY)
         
-        -- Generate realistic telemetry logs
-        local stats = getLocalStats()
-        local backpack = getBackpackItems()
-        
-        local logPayload = {
-            action = "log",
-            username = LocalPlayer.Name,
-            event_type = _G.C2_FarmEnabled and "Farming" or "Idle",
-            message = "Farming nodes in active area. level = " .. tostring(stats.level) .. ", money = " .. tostring(stats.money)
-        }
-        
-        pcall(function()
-            ws:Send(HttpService:JSONEncode(logPayload))
-        end)
-    end
-end)
-
--- Receive and execute remote control actions from the dashboard in real-time
-task.spawn(function()
-    while true do
-        local message
-        local receiveSuccess = pcall(function()
-            message = ws:Receive()
-        end)
-        
-        if not receiveSuccess or not message then
-            warn("[C2 Client] Lost socket connection. Retrying...")
-            break
-        end
-        
-        local decodeSuccess, data = pcall(function()
-            return HttpService:JSONDecode(message)
-        end)
-        
-        if decodeSuccess and data and data.type == "command" then
-            local command = data.command
-            local payload = data.payload or {}
+        if ws and not isKicked then
+            -- Generate realistic telemetry logs
+            local stats = getLocalStats()
+            local logPayload = {
+                action = "log",
+                username = LocalPlayer.Name,
+                event_type = _G.C2_FarmEnabled and "Farming" or "Idle",
+                message = "Farming nodes in active area. level = " .. tostring(stats.level) .. ", money = " .. tostring(stats.money)
+            }
             
-            print("[C2 Client] Incoming Command: " .. tostring(command))
-            
-            if command == "syncConfig" then
-                -- Sync active config variables
-                _G.C2_FarmEnabled = payload.farm_enabled
-                _G.C2_SnipeEnabled = payload.snipe_enabled
-                _G.C2_TargetEnchantSets = payload.target_enchant_sets or {}
-                _G.C2_WhitelistedUUIDs = payload.whitelisted_uuids or {}
-                
-                print("[C2 Client] Configuration synchronized successfully.")
-                
-            elseif command == "teleportHome" then
-                -- Relaying home teleportation logic
-                pcall(function()
-                    local character = LocalPlayer.Character
-                    if character and character:FindFirstChild("HumanoidRootPart") then
-                        character.HumanoidRootPart.CFrame = CFrame.new(0, 50, 0) -- Coordinates of home zone
-                        print("[C2 Client] Teleported to home coordinates.")
-                    end
-                end)
-                
-            elseif command == "toggle3D" then
-                -- Toggle 3D rendering to optimize CPU/RAM
-                _G.C2_3DRendering = not _G.C2_3DRendering
-                pcall(function()
-                    game:GetService("RunService"):Set3dRenderingEnabled(_G.C2_3DRendering)
-                end)
-                print("[C2 Client] 3D rendering enabled: " .. tostring(_G.C2_3DRendering))
-                
-            elseif command == "kick" then
-                -- Server rejected client (invalid/missing API key) -> Kick player from game
-                local reason = payload.reason or "Disconnected by C2 Server."
-                print("[C2 Client] Kicking player: " .. reason)
-                pcall(function()
-                    LocalPlayer:Kick(reason)
-                end)
-            end
+            pcall(function()
+                ws:Send(HttpService:JSONEncode(logPayload))
+            end)
         end
     end
 end)
