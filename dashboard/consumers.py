@@ -6,8 +6,10 @@ class C2Consumer(AsyncWebsocketConsumer):
     async def connect(self):
         user = self.scope.get('user')
         self.bot_username = None
+        print("[C2 Server] New WebSocket connection request received.")
 
         if user and user.is_authenticated:
+            print(f"[C2 Server] Frontend User connected: '{user.username}' (ID: {user.id})")
             self.room_group_name = f'c2_fleet_user_{user.id}'
             # Join user's private fleet channel group
             await self.channel_layer.group_add(
@@ -31,11 +33,17 @@ class C2Consumer(AsyncWebsocketConsumer):
                     'log': log
                 }))
         else:
+            print("[C2 Server] Bot/Client connection accepted (awaiting registration payload).")
             self.room_group_name = None
             # Allow bot connection to accept; they will dynamically join their group during register/log
             await self.accept()
 
     async def disconnect(self, close_code):
+        if getattr(self, 'bot_username', None):
+            print(f"[C2 Server] Bot/Client '{self.bot_username}' disconnected (Close Code: {close_code}). Marking offline.")
+        else:
+            print(f"[C2 Server] Connection closed / Frontend disconnected (Close Code: {close_code}).")
+
         # Leave current room group if set
         if self.room_group_name:
             await self.channel_layer.group_discard(
@@ -63,6 +71,8 @@ class C2Consumer(AsyncWebsocketConsumer):
                 api_key = data.get('api_key')
                 license_key = data.get('license_key')
                 
+                print(f"[C2 Server] Registration Request received: username='{bot_id}', api_key='{api_key}', license_key='{license_key}'")
+                
                 # Check validation (checks both C2 API Key and Luarmor License Key)
                 is_valid = await self.update_bot_status(bot_id, 'Idle', {
                     'api_key': api_key,
@@ -70,6 +80,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                     'perform_luarmor_check': True
                 })
                 if not is_valid:
+                    print(f"[C2 Server] [Registration Rejected] Credentials check failed for bot '{bot_id}'. Closing connection.")
                     # Send kick command first
                     await self.send(text_data=json.dumps({
                         'type': 'command',
@@ -80,6 +91,8 @@ class C2Consumer(AsyncWebsocketConsumer):
                     }))
                     await self.close()
                     return
+                
+                print(f"[C2 Server] [Registration Approved] Session established for bot '{bot_id}'.")
                 
                 self.bot_username = bot_id
                 self.license_validated = True
@@ -130,6 +143,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 
                 # Anti-hijacking: Prevent unauthenticated clients from spoofing another bot's logs
                 if not getattr(self, 'license_validated', False) or username != self.bot_username:
+                    print(f"[C2 Server] [Security Warning] Log request rejected. Session hijack attempt or missing validation. Username: '{username}', Expected: '{getattr(self, 'bot_username', None)}'")
                     await self.send(text_data=json.dumps({
                         'type': 'command',
                         'command': 'kick',
@@ -150,6 +164,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 
                 event_type = data.get('event_type', 'General')
                 message = data.get('message')
+                print(f"[C2 Server] [Telemetry Received] Bot '{username}' ({event_type}): {message}")
                 
                 log_data = await self.create_telemetry_log(username, event_type, message)
                 if log_data:
@@ -174,6 +189,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 
                 # Anti-hijacking: Ensure client identity matches the registered session parameters
                 if not getattr(self, 'license_validated', False) or bot_id != self.bot_username or api_key != self.api_key:
+                    print(f"[C2 Server] [Security Warning] Status update rejected. Session hijack attempt. Username: '{bot_id}', Expected: '{getattr(self, 'bot_username', None)}'")
                     await self.send(text_data=json.dumps({
                         'type': 'command', 
                         'command': 'kick', 
@@ -369,6 +385,7 @@ class C2Consumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def update_bot_status(self, username, status, extra_data=None):
         from .models import BotAccount, BotConfiguration
+        print(f"[C2 Server] [Auth Engine] Authenticating credentials for bot '{username}'...")
         
         is_valid_key = False
         owner_user = None
@@ -385,21 +402,24 @@ class C2Consumer(AsyncWebsocketConsumer):
                     break
         
         if not is_valid_key:
+            print(f"[C2 Server] [Auth Engine] [API Key Failed] Provided API Key '{extra_data.get('api_key') if extra_data else 'None'}' is invalid or missing.")
             return False
             
+        print(f"[C2 Server] [Auth Engine] [API Key Success] API Key resolved to Dashboard User: '{owner_user.username}' (ID: {owner_user.id})")
+        
         # Luarmor License Validation
         is_license_valid = False
         license_key = extra_data.get('license_key') if extra_data else None
         perform_luarmor_check = extra_data.get('perform_luarmor_check', True) if extra_data else True
         
         if not perform_luarmor_check:
-            # If already validated in this socket connection session, bypass HTTP lookup to avoid rate limit locks
+            print("[C2 Server] [Auth Engine] Luarmor API check bypassed (License already verified in this session).")
             is_license_valid = True
         else:
             from django.conf import settings
             dev_key = getattr(settings, 'LUARMOR_DEV_KEY', '')
             if not dev_key:
-                # If developer key is not configured, we pass for local testing
+                print("[C2 Server] [Auth Engine] [Warning] LUARMOR_DEV_KEY not configured. Granting local mock-validation bypass.")
                 is_license_valid = True
             else:
                 if license_key:
@@ -410,6 +430,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                         "Authorization": dev_key,
                         "Content-Type": "application/json"
                     }
+                    print(f"[C2 Server] [Auth Engine] Contacting Luarmor Web API to validate key: '{license_key}'...")
                     try:
                         response = requests.get(url, headers=headers, timeout=5)
                         if response.status_code == 200:
@@ -417,13 +438,22 @@ class C2Consumer(AsyncWebsocketConsumer):
                             if res_data.get("success") is True and res_data.get("enabled") == 1:
                                 expires_at = res_data.get("expires_at")
                                 if expires_at is None or expires_at > int(time.time()):
+                                    print(f"[C2 Server] [Auth Engine] [Luarmor Approved] Key is active and verified! Expires at: {expires_at or 'Never'}")
                                     is_license_valid = True
+                                else:
+                                    print(f"[C2 Server] [Auth Engine] [Luarmor Rejected] Key has expired (Expiration: {expires_at}).")
+                            else:
+                                print(f"[C2 Server] [Auth Engine] [Luarmor Rejected] Key not active (Success: {res_data.get('success')}, Enabled: {res_data.get('enabled')}).")
+                        else:
+                            print(f"[C2 Server] [Auth Engine] [Luarmor Rejected] API returned HTTP Status {response.status_code}.")
                     except Exception as e:
-                        print("Error validating Luarmor license:", e)
+                        print("[C2 Server] [Auth Engine] [Luarmor Error] Connection error during license validation:", e)
                 else:
+                    print("[C2 Server] [Auth Engine] [Luarmor Rejected] Missing Luarmor license key in payload.")
                     is_license_valid = False
                     
         if not is_license_valid:
+            print(f"[C2 Server] [Auth Engine] [Validation Failed] Luarmor License Check failed for bot '{username}'.")
             return False
             
         bot, created = BotAccount.objects.get_or_create(username=username)
