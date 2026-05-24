@@ -8,6 +8,29 @@ if not LPH_NO_VIRTUALIZE then
     LPH_NO_VIRTUALIZE = function(f) return f end
 end
 
+-- [[ 0. MEMORY LEAK CLEANUP ]]
+local function disconnectIfConnected(conn)
+    if conn and typeof(conn) == "RBXScriptConnection" and conn.Connected then
+        conn:Disconnect()
+    end
+end
+disconnectIfConnected(_G.UltimateFarmConnection)
+disconnectIfConnected(_G.CharRespawnConnection)
+disconnectIfConnected(_G.SwordAddedConnection)
+disconnectIfConnected(_G.InvAddedConnection)
+disconnectIfConnected(_G.SellingAddedConnection)
+disconnectIfConnected(_G.GraphicsStripperConnection)
+
+if _G.AntiAFKConnection then task.cancel(_G.AntiAFKConnection); _G.AntiAFKConnection = nil end
+if _G.InventorySweeperConnection then task.cancel(_G.InventorySweeperConnection); _G.InventorySweeperConnection = nil end
+if _G.C2ConnectionTask then task.cancel(_G.C2ConnectionTask); _G.C2ConnectionTask = nil end
+if _G.MainLoopTask then task.cancel(_G.MainLoopTask); _G.MainLoopTask = nil end
+
+if _G.C2_WS then 
+    pcall(function() _G.C2_WS:Close() end)
+    _G.C2_WS = nil
+end
+
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualInputManager = game:GetService("VirtualInputManager")
@@ -1266,7 +1289,7 @@ task.spawn(function()
 
     -- 3. Heartbeat listener to push local Rayfield UI changes & Ascender data to the C2 Dashboard
     pcall(function()
-        task.spawn(function()
+        _G.MainLoopTask = task.spawn(function()
             local lastFarmState = _G.on
             local lastSnipeState = _G.autoDropEnabled
             while task.wait(1) do
@@ -1316,7 +1339,7 @@ task.spawn(function()
         end)
     end)
     
-    task.spawn(function()
+    _G.C2ConnectionTask = task.spawn(function()
         maintainC2Connection()
     end)
 end)

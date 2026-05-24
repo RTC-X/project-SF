@@ -324,10 +324,9 @@ class C2Consumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def update_bot_status(self, username, status, extra_data=None):
         from .models import BotAccount, BotConfiguration
-        bot, created = BotAccount.objects.get_or_create(username=username)
-        bot.status = status
         
         is_valid_key = False
+        owner_user = None
         if extra_data and 'api_key' in extra_data and extra_data['api_key']:
             import hashlib
             from django.contrib.auth.models import User
@@ -336,12 +335,16 @@ class C2Consumer(AsyncWebsocketConsumer):
             for user in User.objects.all():
                 expected_key = f"c2_usr_{hashlib.sha256(f'{user.id}:{secret}'.encode()).hexdigest()[:16]}"
                 if expected_key == extra_data['api_key']:
-                    bot.owner = user
+                    owner_user = user
                     is_valid_key = True
                     break
         
         if not is_valid_key:
             return False
+            
+        bot, created = BotAccount.objects.get_or_create(username=username)
+        bot.owner = owner_user
+        bot.status = status
         
         if extra_data:
             import math
