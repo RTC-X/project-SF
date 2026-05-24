@@ -1,10 +1,18 @@
-local C2_API_KEY, LUARMOR_LICENSE = ...
-if not C2_API_KEY or type(C2_API_KEY) ~= "string" then
-    warn("[!] Please pass your C2_API_KEY as the first argument to the loadstring!")
+-- [[ ⚙️ CONFIGURATION - EDIT THESE IF RUNNING STANDALONE ]]
+local STANDALONE_C2_API_KEY = "your_api_key_here"      -- Paste your C2 API Key here (or leave blank if using a loader)
+local STANDALONE_LUARMOR_LICENSE = "your_license_here"  -- Paste your Luarmor License key here (or leave blank if using a loader)
+
+-- [[ RESOLVE KEYS (Arguments -> Globals -> Config Variables) ]]
+local args = {...}
+local C2_API_KEY = (args[1] and type(args[1]) == "string" and args[1] ~= "") or (_G.C2_ApiKey and _G.C2_ApiKey ~= "") or (STANDALONE_C2_API_KEY ~= "your_api_key_here" and STANDALONE_C2_API_KEY) or ""
+local LUARMOR_LICENSE = (args[2] and type(args[2]) == "string" and args[2] ~= "") or (_G.Luarmor_License and _G.Luarmor_License ~= "") or (STANDALONE_LUARMOR_LICENSE ~= "your_license_here" and STANDALONE_LUARMOR_LICENSE) or ""
+
+if not C2_API_KEY or C2_API_KEY == "" then
+    warn("[!] Missing C2_API_KEY! Please configure STANDALONE_C2_API_KEY at the top of this script, or ensure your loader passes it.")
     return
 end
-if not LUARMOR_LICENSE or type(LUARMOR_LICENSE) ~= "string" then
-    warn("[!] Please pass your LUARMOR_LICENSE as the second argument to the loadstring!")
+if not LUARMOR_LICENSE or LUARMOR_LICENSE == "" then
+    warn("[!] Missing LUARMOR_LICENSE! Please configure STANDALONE_LUARMOR_LICENSE at the top of this script, or ensure your loader passes it.")
     return
 end
 
