@@ -29,6 +29,7 @@ if _G.AntiAFKConnection then task.cancel(_G.AntiAFKConnection); _G.AntiAFKConnec
 if _G.InventorySweeperConnection then task.cancel(_G.InventorySweeperConnection); _G.InventorySweeperConnection = nil end
 if _G.C2ConnectionTask then task.cancel(_G.C2ConnectionTask); _G.C2ConnectionTask = nil end
 if _G.MainLoopTask then task.cancel(_G.MainLoopTask); _G.MainLoopTask = nil end
+if _G.PeriodicLogTask then task.cancel(_G.PeriodicLogTask); _G.PeriodicLogTask = nil end
 
 if _G.C2_WS then 
     pcall(function() _G.C2_WS:Close() end)
@@ -352,9 +353,11 @@ local function TeleportSequence(areaNum)
         
         local waitBase = tick()
         while internalArea and tostring(internalArea.Value) ~= "0" and tick() - waitBase < 5 do
+            if not _G.on and not _G.fetchingGodRoll then isTeleporting = false; return end
             if hrp then hrp.AssemblyLinearVelocity = Vector3.zero end
             task.wait(0.1)
         end
+        if not _G.on and not _G.fetchingGodRoll then isTeleporting = false; return end
         print("[DEBUG] Arrived in Base.")
         task.wait(1)
     else
@@ -364,7 +367,7 @@ local function TeleportSequence(areaNum)
         end
     end
     
-    if not _G.on and not _G.fetchingGodRoll then isTeleporting = false return end 
+    if not _G.on and not _G.fetchingGodRoll then isTeleporting = false; return end
     DestroyCutscene() 
     
     -- [[ STEP 2: TELEPORT TO TARGET MAP ]]
@@ -374,9 +377,11 @@ local function TeleportSequence(areaNum)
         
         local waitArea = tick()
         while internalArea and tostring(internalArea.Value) ~= tostring(areaNum) and tick() - waitArea < 7 do
+            if not _G.on and not _G.fetchingGodRoll then isTeleporting = false; return end
             if hrp then hrp.AssemblyLinearVelocity = Vector3.zero end
             task.wait(0.1)
         end
+        if not _G.on and not _G.fetchingGodRoll then isTeleporting = false; return end
         print("[DEBUG] Arrived in Target Area:", areaNum)
         task.wait(2.5) 
     end
@@ -1376,6 +1381,43 @@ task.spawn(function()
                 end
             end
         end)
+    end)
+    
+    _G.PeriodicLogTask = task.spawn(function()
+        local lastMoney = -1
+        local lastLevel = -1
+        while task.wait(60) do
+            if _G.C2_WS then
+                local pStats = ReplicatedStorage:FindFirstChild("Stats")
+                local myStats = pStats and pStats:FindFirstChild(tostring(player.Name))
+                if myStats then
+                    local currentMoney = myStats:FindFirstChild("Money") and myStats.Money.Value or 0
+                    local currentLevel = myStats:FindFirstChild("Level") and myStats.Level.Value or 0
+                    
+                    if lastMoney ~= -1 and lastLevel ~= -1 then
+                        local moneyDiff = currentMoney - lastMoney
+                        local levelDiff = currentLevel - lastLevel
+                        
+                        if moneyDiff > 0 or levelDiff > 0 then
+                            local msgParts = {}
+                            if levelDiff > 0 then table.insert(msgParts, "Leveled up " .. levelDiff .. " times (Now Lvl " .. currentLevel .. ")") end
+                            if moneyDiff > 0 then table.insert(msgParts, "Earned " .. moneyDiff .. " Coins") end
+                            
+                            local messageStr = table.concat(msgParts, " | ")
+                            pcall(function()
+                                _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
+                                    action = "log",
+                                    event_type = "Farming",
+                                    message = "dY> " .. messageStr
+                                }))
+                            end)
+                        end
+                    end
+                    lastMoney = currentMoney
+                    lastLevel = currentLevel
+                end
+            end
+        end
     end)
     
     _G.C2ConnectionTask = task.spawn(function()
