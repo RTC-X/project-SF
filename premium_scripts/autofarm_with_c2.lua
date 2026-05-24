@@ -1033,18 +1033,25 @@ task.spawn(function()
             if invFolder then
                 for _, sword in pairs(invFolder:GetChildren()) do
                     if sword:IsA("Folder") then
-                        local entry = {
-                            id = sword.Name,
-                            Equipped = sword:GetAttribute("Equipped") or false,
-                            Level = sword:GetAttribute("Level") or 0,
-                            Quality = getName("Quality", sword:GetAttribute("Quality")),
-                            Rarity = getName("Rarity", sword:GetAttribute("Rarity")),
-                            Mold = getName("Mold", sword:GetAttribute("Mold")),
-                            Class = getName("Class", sword:GetAttribute("Class")),
-                            Enchant1 = getName("Enchant", sword:GetAttribute("Enchant1")),
-                            Enchant2 = getName("Enchant", sword:GetAttribute("Enchant2")),
-                            Enchant3 = getName("Enchant", sword:GetAttribute("Enchant3"))
-                        }
+                        local entry = { id = sword.Name }
+                        if sword:GetAttribute("Equipped") then entry.Equipped = true end
+                        entry.Level = sword:GetAttribute("Level") or 0
+                        
+                        local q = sword:GetAttribute("Quality")
+                        if q and q > 0 then entry.Quality = getName("Quality", q) end
+                        
+                        entry.Rarity = getName("Rarity", sword:GetAttribute("Rarity"))
+                        
+                        local m = sword:GetAttribute("Mold")
+                        if m and m > 0 then entry.Mold = getName("Mold", m) end
+                        
+                        local c = sword:GetAttribute("Class")
+                        if c and c > 0 then entry.Class = getName("Class", c) end
+                        
+                        entry.Enchant1 = getName("Enchant", sword:GetAttribute("Enchant1"))
+                        entry.Enchant2 = getName("Enchant", sword:GetAttribute("Enchant2"))
+                        entry.Enchant3 = getName("Enchant", sword:GetAttribute("Enchant3"))
+                        
                         table.insert(payload, entry)
                     end
                 end
@@ -1092,11 +1099,21 @@ task.spawn(function()
                 end
 
             elseif data.command == "teleportHome" then
-                print("C2 Command: Teleporting Home!")
+                print("C2 Command: Teleporting Home/Return!")
                 task.spawn(function()
                     pcall(function() hrp.CFrame = CFrame.new(hrp.Position.X, hrp.Position.Y + 500, hrp.Position.Z) end)
                     task.wait(0.5)
-                    local args = { [1] = "Teleport In Base", [2] = "Home" }
+                    local targetStr = "Return"
+                    local pStats = ReplicatedStorage:FindFirstChild("Stats")
+                    if pStats then
+                        local myStats = pStats:FindFirstChild(tostring(player.Name))
+                        if myStats and myStats:FindFirstChild("CurrentArea") then
+                            if myStats.CurrentArea.Value == 0 then
+                                targetStr = "Home"
+                            end
+                        end
+                    end
+                    local args = { [1] = "Teleport In Base", [2] = targetStr }
                     pcall(function()
                         game:GetService("ReplicatedStorage"):WaitForChild("Paper", 9e9):WaitForChild("Remotes", 9e9):WaitForChild("__remotefunction", 9e9):InvokeServer(unpack(args))
                     end)
@@ -1237,7 +1254,7 @@ task.spawn(function()
             local lastFarmState = _G.on
             local lastSnipeState = _G.autoDropEnabled
             while task.wait(1) do
-                if not _G.LastC2SyncTime or tick() - _G.LastC2SyncTime >= 3 then
+                if not _G.LastC2SyncTime or tick() - _G.LastC2SyncTime >= 2 then
                     _G.LastC2SyncTime = tick()
                     
                     pcall(function()

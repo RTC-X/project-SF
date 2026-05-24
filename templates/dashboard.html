@@ -7,6 +7,7 @@
     selectedBot: null,
     showConfigModal: false,
     showMultiConfigModal: false,
+    showMapOptions: false,
     multiConfigStep: 1,
     multiConfigSearch: '',
     multiConfigData: {
@@ -373,8 +374,8 @@
                                 Toggle 3D
                             </button>
                             
-                            <button class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs rounded-xl transition-all font-mono flex items-center gap-1.5 shadow-lg shadow-amber-500/10">
-                                ⚙️ Options
+                            <button @click="showMapOptions = true" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs rounded-xl transition-all font-mono flex items-center gap-1.5 shadow-lg shadow-amber-500/10">
+                                <i data-lucide="settings" class="w-3.5 h-3.5"></i> Options
                             </button>
                         </div>
                         
@@ -572,6 +573,45 @@
             </template>
         </div>
     </div>
+
+    <!-- Map Options Modal -->
+    <div x-show="showMapOptions" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" x-transition style="display: none;">
+        <div @click.away="showMapOptions = false" class="bg-zinc-950 border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button @click="showMapOptions = false" class="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <h2 class="text-xl font-bold text-white mb-4 font-mono">Map Selections</h2>
+            <p class="text-xs text-zinc-400 mb-4">Select the areas the bot should cycle through when AutoFarm is active.</p>
+            
+            <div class="grid grid-cols-4 gap-2 mb-6 max-h-[300px] overflow-y-auto pr-2">
+                <template x-for="i in 30">
+                    <label class="flex items-center gap-2 p-2 rounded-lg border border-white/5 bg-zinc-900/50 hover:bg-zinc-900 cursor-pointer transition-colors">
+                        <input type="checkbox" :value="i" 
+                               :checked="selectedBot?.config?.active_areas?.includes(i)"
+                               @change="
+                                   if (!selectedBot.config.active_areas) selectedBot.config.active_areas = [];
+                                   if ($event.target.checked) {
+                                       if (!selectedBot.config.active_areas.includes(i)) selectedBot.config.active_areas.push(i);
+                                   } else {
+                                       selectedBot.config.active_areas = selectedBot.config.active_areas.filter(a => a !== i);
+                                   }
+                               "
+                               class="rounded bg-black border-zinc-700 text-teal-500 focus:ring-teal-500 focus:ring-offset-zinc-900">
+                        <span class="text-[10px] text-zinc-300 font-mono" x-text="`Area ${i}`"></span>
+                    </label>
+                </template>
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button @click="showMapOptions = false" class="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all border border-white/10">Cancel</button>
+                <button @click="
+                    sendCommand(selectedBot.id, 'syncConfig', selectedBot.config);
+                    showMapOptions = false;
+                " class="px-4 py-2 bg-teal-500 hover:bg-teal-400 text-black text-xs font-bold rounded-xl transition-all shadow-lg shadow-teal-500/20">Save Areas</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Multi Config Wizard Modal -->
     <div class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
         x-show="showMultiConfigModal" 
