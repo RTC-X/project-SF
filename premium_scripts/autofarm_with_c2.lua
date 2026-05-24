@@ -49,7 +49,7 @@ local StagedEnchant1, StagedEnchant2, StagedEnchant3 = "None", "None", "None"
 local ManualWhitelistInput = ""
 local SaveFileName = "UltimateFarm_" .. player.Name .. "_" .. player.UserId .. ".json"
 
-local currentArea = 1
+local currentArea = 0
 local isTeleporting = false
 local lastTeleportEnd = 0 
 local isEscaping = false
@@ -712,7 +712,7 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
         wantedNum = _G.FarmAreas[1]
         currentArea = wantedNum
     elseif (not wantedNum or wantedNum == 0) then 
-        wantedNum = 1; currentArea = 1 
+        wantedNum = 0; currentArea = 0 
     end
 
     if actualNum ~= wantedNum then 
