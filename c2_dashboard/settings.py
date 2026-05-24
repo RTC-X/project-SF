@@ -19,6 +19,8 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-coolify-c2-dashboard-super-secret-key-123')
 DEBUG = env('DEBUG', default=True)
 
+ADMIN_UPLOAD_KEY = env('ADMIN_UPLOAD_KEY', default=None)
+
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
 
 INSTALLED_APPS = [
