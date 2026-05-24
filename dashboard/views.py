@@ -33,7 +33,7 @@ def login_view(request):
 @login_required
 def dashboard_view(request):
     user_id = request.user.id
-    secret = getattr(settings, 'SECRET_KEY', 'default_secret')
+    secret = settings.SECRET_KEY
     user_api_key = f"c2_usr_{hashlib.sha256(f'{user_id}:{secret}'.encode()).hexdigest()[:16]}"
     
     try:
@@ -58,7 +58,7 @@ from django.conf import settings
 
 def is_valid_api_key(api_key):
     if not api_key: return False
-    secret = getattr(settings, 'SECRET_KEY', 'default_secret')
+    secret = settings.SECRET_KEY
     for user in User.objects.all():
         expected_key = f"c2_usr_{hashlib.sha256(f'{user.id}:{secret}'.encode()).hexdigest()[:16]}"
         if api_key == expected_key:

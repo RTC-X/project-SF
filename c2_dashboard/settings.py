@@ -16,12 +16,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Read .env file if it exists
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-SECRET_KEY = env('SECRET_KEY', default='django-insecure-coolify-c2-dashboard-super-secret-key-123')
-DEBUG = env('DEBUG', default=True)
+SECRET_KEY = env('SECRET_KEY')
+DEBUG = env('DEBUG', default=False)
 
 ADMIN_UPLOAD_KEY = env('ADMIN_UPLOAD_KEY', default=None)
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 
 INSTALLED_APPS = [
     'daphne', # Must be before django.contrib.staticfiles

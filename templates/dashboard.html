@@ -3,8 +3,9 @@
 {% block title %}C2 | Dashboard{% endblock %}
 
 {% block content %}
+{{ game_data_json|json_script:"gameDataJSON" }}
 <script>
-    window.SERVER_GAME_DATA = {{ game_data_json|safe }};
+    window.SERVER_GAME_DATA = JSON.parse(document.getElementById('gameDataJSON').textContent);
 </script>
 
 <div class="space-y-8" x-data="{ 

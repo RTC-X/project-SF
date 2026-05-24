@@ -170,7 +170,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 from django.conf import settings
                 expected_admin_key = getattr(settings, 'ADMIN_UPLOAD_KEY', None)
                 
-                if admin_key != expected_admin_key:
+                if not expected_admin_key or admin_key != expected_admin_key:
                     await self.send(text_data=json.dumps({'type': 'command', 'command': 'kick', 'payload': {'reason': 'Invalid Admin Key'}}))
                     await self.close()
                     return
@@ -332,7 +332,7 @@ class C2Consumer(AsyncWebsocketConsumer):
             import hashlib
             from django.contrib.auth.models import User
             from django.conf import settings
-            secret = getattr(settings, 'SECRET_KEY', 'default_secret')
+            secret = settings.SECRET_KEY
             for user in User.objects.all():
                 expected_key = f"c2_usr_{hashlib.sha256(f'{user.id}:{secret}'.encode()).hexdigest()[:16]}"
                 if expected_key == extra_data['api_key']:
