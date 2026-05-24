@@ -407,66 +407,8 @@ class C2Consumer(AsyncWebsocketConsumer):
             
         print(f"[C2 Server] [Auth Engine] [API Key Success] API Key resolved to Dashboard User: '{owner_user.username}' (ID: {owner_user.id})")
         
-        # Luarmor License Validation
-        is_license_valid = False
-        license_key = extra_data.get('license_key') if extra_data else None
-        perform_luarmor_check = extra_data.get('perform_luarmor_check', True) if extra_data else True
-        
-        if not perform_luarmor_check:
-            print("[C2 Server] [Auth Engine] Luarmor API check bypassed (License already verified in this session).")
-            is_license_valid = True
-        else:
-            from django.conf import settings
-            dev_key = getattr(settings, 'LUARMOR_DEV_KEY', '')
-            if not dev_key:
-                print("[C2 Server] [Auth Engine] [Warning] LUARMOR_DEV_KEY not configured. Granting local mock-validation bypass.")
-                is_license_valid = True
-            else:
-                if license_key:
-                    import requests
-                    import time
-                    url = f"https://api.luarmor.net/v3/keys/{license_key}/details"
-                    headers = {
-                        "Authorization": dev_key,
-                        "Content-Type": "application/json"
-                    }
-                    print(f"[C2 Server] [Auth Engine] Contacting Luarmor Web API to validate key: '{license_key}'...")
-                    try:
-                        response = requests.get(url, headers=headers, timeout=5)
-                        if response.status_code == 200:
-                            res_data = response.json()
-                            if res_data.get("success") is True and res_data.get("enabled") == 1:
-                                expires_at = res_data.get("expires_at")
-                                if expires_at is None or expires_at > int(time.time()):
-                                    print(f"[C2 Server] [Auth Engine] [Luarmor Approved] Key is active and verified! Expires at: {expires_at or 'Never'}")
-                                    is_license_valid = True
-                                else:
-                                    print(f"[C2 Server] [Auth Engine] [Luarmor Rejected] Key has expired (Expiration: {expires_at}).")
-                            else:
-                                print(f"[C2 Server] [Auth Engine] [Luarmor Rejected] Key not active (Success: {res_data.get('success')}, Enabled: {res_data.get('enabled')}).")
-                        else:
-                            server_ip = "Unknown"
-                            try:
-                                server_ip = requests.get("https://icanhazip.com", timeout=3).text.strip()
-                            except Exception:
-                                pass
-                            print(f"[C2 Server] [Auth Engine] [Luarmor Rejected] API returned HTTP Status {response.status_code}. Response: {response.text}")
-                            print(f"[C2 Server] [Auth Engine] [Troubleshooting] Your C2 Server Outbound IP is '{server_ip}'. Please ensure this exact IP is Whitelisted on your Luarmor Developer Dashboard!")
-                    except Exception as e:
-                        server_ip = "Unknown"
-                        try:
-                            server_ip = requests.get("https://icanhazip.com", timeout=3).text.strip()
-                        except Exception:
-                            pass
-                        print("[C2 Server] [Auth Engine] [Luarmor Error] Connection error during license validation:", e)
-                        print(f"[C2 Server] [Auth Engine] [Troubleshooting] Your C2 Server Outbound IP is '{server_ip}'. Please ensure this exact IP is Whitelisted on your Luarmor Developer Dashboard!")
-                else:
-                    print("[C2 Server] [Auth Engine] [Luarmor Rejected] Missing Luarmor license key in payload.")
-                    is_license_valid = False
-                    
-        if not is_license_valid:
-            print(f"[C2 Server] [Auth Engine] [Validation Failed] Luarmor License Check failed for bot '{username}'.")
-            return False
+        # Luarmor License Validation (Bypassed by User request - Only API key is needed to authenticate)
+        is_license_valid = True
             
         bot, created = BotAccount.objects.get_or_create(username=username)
         bot.owner = owner_user
