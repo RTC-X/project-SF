@@ -679,7 +679,13 @@
     </div>
 
     <!-- Map Options Modal -->
-    <div x-show="showMapOptions" @click.self="showMapOptions = false" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" x-transition style="display: none;">
+    <div x-show="showMapOptions" 
+         x-data="{ localActiveAreas: [] }" 
+         x-effect="if (showMapOptions && selectedBot) { localActiveAreas = [...(selectedBot.config?.active_areas || [])].map(Number); }"
+         @click.self="showMapOptions = false" 
+         class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" 
+         x-transition 
+         style="display: none;">
         <div class="bg-zinc-950 border border-white/10 rounded-2xl p-6 w-full max-w-2xl shadow-2xl relative">
             
             <h2 class="text-xl font-bold text-white mb-4 font-mono">Map Selections</h2>
@@ -690,27 +696,26 @@
                     <template x-for="areaString in gameData.Areas" :key="areaString">
                         <div @click="
                                    let id = parseInt(areaString.match(/\[(\d+)\]/)[1]);
-                                   if (!selectedBot.config.active_areas) selectedBot.config.active_areas = [];
-                                   if (selectedBot.config.active_areas.includes(id)) {
-                                       selectedBot.config.active_areas = selectedBot.config.active_areas.filter(a => a !== id);
+                                   if (localActiveAreas.includes(id)) {
+                                       localActiveAreas = localActiveAreas.filter(a => a !== id);
                                    } else {
-                                       selectedBot.config.active_areas.push(id);
+                                       localActiveAreas.push(id);
                                    }
                                "
                                class="flex items-center justify-between p-2.5 rounded-xl border cursor-pointer select-none transition-all duration-300 gap-2 overflow-hidden"
-                               :class="selectedBot?.config?.active_areas?.includes(parseInt(areaString.match(/\[(\d+)\]/)[1])) 
+                               :class="localActiveAreas.includes(parseInt(areaString.match(/\[(\d+)\]/)[1])) 
                                        ? 'border-teal-500/30 bg-teal-500/5 shadow-[0_0_15px_rgba(45,212,191,0.05)]' 
                                        : 'border-white/5 bg-zinc-900/40 hover:bg-zinc-900/70'">
                             <span class="text-[10px] font-mono truncate transition-colors" 
-                                  :class="selectedBot?.config?.active_areas?.includes(parseInt(areaString.match(/\[(\d+)\]/)[1])) ? 'text-teal-400 font-bold' : 'text-zinc-400'"
+                                  :class="localActiveAreas.includes(parseInt(areaString.match(/\[(\d+)\]/)[1])) ? 'text-teal-400 font-bold' : 'text-zinc-400'"
                                   x-text="areaString" :title="areaString"></span>
                             
                             <!-- Custom Sliding Mini Switch -->
                             <button type="button"
                                     class="relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none pointer-events-none"
-                                    :class="selectedBot?.config?.active_areas?.includes(parseInt(areaString.match(/\[(\d+)\]/)[1])) ? 'bg-teal-500/20 border-teal-500/30' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
+                                    :class="localActiveAreas.includes(parseInt(areaString.match(/\[(\d+)\]/)[1])) ? 'bg-teal-500/20 border-teal-500/30' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
                                 <span class="pointer-events-none inline-block h-3 w-3 transform rounded-full shadow transition-all duration-300 ease-in-out"
-                                      :class="selectedBot?.config?.active_areas?.includes(parseInt(areaString.match(/\[(\d+)\]/)[1])) ? 'translate-x-3.5 bg-teal-400 shadow-[0_0_4px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
+                                      :class="localActiveAreas.includes(parseInt(areaString.match(/\[(\d+)\]/)[1])) ? 'translate-x-3.5 bg-teal-400 shadow-[0_0_4px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
                             </button>
                         </div>
                     </template>
@@ -720,6 +725,7 @@
             <div class="flex justify-end gap-3">
                 <button @click="showMapOptions = false" class="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all border border-white/10">Cancel</button>
                 <button @click="
+                    selectedBot.config.active_areas = localActiveAreas;
                     sendCommand(selectedBot.id, 'syncConfig', selectedBot.config);
                     showMapOptions = false;
                 " class="px-4 py-2 bg-teal-500 hover:bg-teal-400 text-black text-xs font-bold rounded-xl transition-all shadow-lg shadow-teal-500/20">Save Areas</button>
