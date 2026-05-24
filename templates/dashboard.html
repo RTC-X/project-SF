@@ -355,21 +355,29 @@
                         
                         <!-- Control Action Buttons Row -->
                         <div class="flex items-center flex-wrap gap-2.5">
-                            <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900 border border-white/5 hover:border-white/10 transition-all cursor-pointer select-none">
-                                <input type="checkbox" x-model="activatePanel" @change="if(activatePanel) { sendCommand(selectedBot.id, 'set3d', true); fpsCap = 60; sendCommand(selectedBot.id, 'setFPS', 60); }" class="rounded border-zinc-700 bg-zinc-800 text-teal-500 focus:ring-teal-500/30">
+                            <label class="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-zinc-900/60 border border-white/5 hover:border-white/10 transition-all cursor-pointer select-none">
                                 <span class="text-xs text-zinc-300 font-medium font-mono">Activate</span>
+                                <button @click="activatePanel = !activatePanel; if(activatePanel) { sendCommand(selectedBot.id, 'set3d', true); fpsCap = 60; sendCommand(selectedBot.id, 'setFPS', 60); }" 
+                                        type="button"
+                                        class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none"
+                                        :class="activatePanel ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_10px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
+                                    <span class="pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full shadow transition-all duration-300 ease-in-out"
+                                          :class="activatePanel ? 'translate-x-4 bg-teal-400 shadow-[0_0_6px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
+                                </button>
                             </label>
                             
                             <button @click="selectedBot.config.farm_enabled = !selectedBot.config.farm_enabled; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
-                                    class="px-4 py-1.5 bg-zinc-900 border text-xs font-semibold rounded-xl transition-all font-mono"
-                                    :class="selectedBot.config.farm_enabled ? 'border-teal-500/30 text-teal-400 hover:bg-teal-500/10' : 'border-white/5 text-zinc-300 hover:bg-zinc-800'">
-                                Toggle Farm
+                                    class="px-4 py-1.5 bg-zinc-900/80 border text-xs font-semibold rounded-xl transition-all duration-300 font-mono flex items-center gap-1.5 select-none"
+                                    :class="selectedBot.config.farm_enabled ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5 shadow-[0_0_15px_rgba(52,211,153,0.1)] hover:bg-emerald-500/10' : 'border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'">
+                                <span class="h-1.5 w-1.5 rounded-full transition-all duration-300" :class="selectedBot.config.farm_enabled ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] animate-pulse' : 'bg-zinc-600'"></span>
+                                <span>Toggle Farm</span>
                             </button>
                             
                             <button @click="selectedBot.config.snipe_enabled = !selectedBot.config.snipe_enabled; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
-                                    class="px-4 py-1.5 bg-zinc-900 border text-xs font-semibold rounded-xl transition-all font-mono"
-                                    :class="selectedBot.config.snipe_enabled ? 'border-orange-500/30 text-orange-400 hover:bg-orange-500/10' : 'border-white/5 text-zinc-300 hover:bg-zinc-800'">
-                                Toggle Sniper
+                                    class="px-4 py-1.5 bg-zinc-900/80 border text-xs font-semibold rounded-xl transition-all duration-300 font-mono flex items-center gap-1.5 select-none"
+                                    :class="selectedBot.config.snipe_enabled ? 'border-orange-500/30 text-orange-400 bg-orange-500/5 shadow-[0_0_15px_rgba(249,115,22,0.1)] hover:bg-orange-500/10' : 'border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'">
+                                <span class="h-1.5 w-1.5 rounded-full transition-all duration-300" :class="selectedBot.config.snipe_enabled ? 'bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.8)] animate-pulse' : 'bg-zinc-600'"></span>
+                                <span>Toggle Sniper</span>
                             </button>
                             
                             <button @click="sendCommand(selectedBot.id, 'teleportHome')" class="px-4 py-1.5 bg-zinc-900 border border-white/5 text-xs text-zinc-300 font-semibold rounded-xl hover:bg-zinc-800 transition-all font-mono flex items-center gap-1">
@@ -618,7 +626,7 @@
                                            selectedBot.config.active_areas = selectedBot.config.active_areas.filter(a => a !== id);
                                        }
                                    "
-                                   class="rounded bg-black border-zinc-700 text-teal-500 focus:ring-teal-500 focus:ring-offset-zinc-900 flex-shrink-0">
+                                   class="w-3.5 h-3.5 rounded border border-white/10 bg-zinc-950 text-teal-400 focus:ring-0 focus:ring-offset-0 focus:outline-none transition-all cursor-pointer flex-shrink-0 checked:bg-teal-400 checked:border-teal-400 checked:shadow-[0_0_8px_rgba(45,212,191,0.6)]">
                             <span class="text-[10px] text-zinc-300 font-mono truncate" x-text="areaString" :title="areaString"></span>
                         </label>
                     </template>
@@ -663,62 +671,62 @@
                 <!-- Grid of general farm settings -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Toggle Sniper -->
-                    <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/60 border border-white/5">
+                    <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/60 border border-white/5 hover:border-white/10 transition-all duration-300">
                         <div>
                             <span class="block text-xs font-bold text-white font-mono">Sniper Mode</span>
                             <span class="block text-[10px] text-zinc-500 font-mono">Automated god-roll sniping</span>
                         </div>
                         <button @click="multiConfigData.snipe_enabled = !multiConfigData.snipe_enabled" 
                                 type="button"
-                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-                                :class="multiConfigData.snipe_enabled ? 'bg-teal-400' : 'bg-zinc-800'">
-                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-zinc-950 shadow ring-0 transition duration-200 ease-in-out"
-                                  :class="multiConfigData.snipe_enabled ? 'translate-x-5' : 'translate-x-0'"></span>
+                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]"
+                                :class="multiConfigData.snipe_enabled ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
+                            <span class="pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full shadow transition-all duration-300 ease-in-out"
+                                  :class="multiConfigData.snipe_enabled ? 'translate-x-5 bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
                         </button>
                     </div>
 
                     <!-- Toggle Farm -->
-                    <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/60 border border-white/5">
+                    <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/60 border border-white/5 hover:border-white/10 transition-all duration-300">
                         <div>
                             <span class="block text-xs font-bold text-white font-mono">Farming Mode</span>
                             <span class="block text-[10px] text-zinc-500 font-mono">Automated target level farming</span>
                         </div>
                         <button @click="multiConfigData.farm_enabled = !multiConfigData.farm_enabled" 
                                 type="button"
-                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-                                :class="multiConfigData.farm_enabled ? 'bg-teal-400' : 'bg-zinc-800'">
-                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-zinc-950 shadow ring-0 transition duration-200 ease-in-out"
-                                  :class="multiConfigData.farm_enabled ? 'translate-x-5' : 'translate-x-0'"></span>
+                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]"
+                                :class="multiConfigData.farm_enabled ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
+                            <span class="pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full shadow transition-all duration-300 ease-in-out"
+                                  :class="multiConfigData.farm_enabled ? 'translate-x-5 bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
                         </button>
                     </div>
 
                     <!-- Toggle Home -->
-                    <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/60 border border-white/5">
+                    <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/60 border border-white/5 hover:border-white/10 transition-all duration-300">
                         <div>
                             <span class="block text-xs font-bold text-white font-mono">Teleport Home</span>
                             <span class="block text-[10px] text-zinc-500 font-mono">Relay teleport-to-home command</span>
                         </div>
                         <button @click="multiConfigData.teleport_home = !multiConfigData.teleport_home" 
                                 type="button"
-                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-                                :class="multiConfigData.teleport_home ? 'bg-teal-400' : 'bg-zinc-800'">
-                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-zinc-950 shadow ring-0 transition duration-200 ease-in-out"
-                                  :class="multiConfigData.teleport_home ? 'translate-x-5' : 'translate-x-0'"></span>
+                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]"
+                                :class="multiConfigData.teleport_home ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
+                            <span class="pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full shadow transition-all duration-300 ease-in-out"
+                                  :class="multiConfigData.teleport_home ? 'translate-x-5 bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
                         </button>
                     </div>
 
                     <!-- Toggle 3D Rendering -->
-                    <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/60 border border-white/5">
+                    <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/60 border border-white/5 hover:border-white/10 transition-all duration-300">
                         <div>
                             <span class="block text-xs font-bold text-white font-mono">Toggle 3D Rendering</span>
                             <span class="block text-[10px] text-zinc-500 font-mono">Disable 3D rendering to save CPU</span>
                         </div>
                         <button @click="multiConfigData.toggle_3d = !multiConfigData.toggle_3d" 
                                 type="button"
-                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-                                :class="multiConfigData.toggle_3d ? 'bg-teal-400' : 'bg-zinc-800'">
-                            <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-zinc-950 shadow ring-0 transition duration-200 ease-in-out"
-                                  :class="multiConfigData.toggle_3d ? 'translate-x-5' : 'translate-x-0'"></span>
+                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]"
+                                :class="multiConfigData.toggle_3d ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
+                            <span class="pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full shadow transition-all duration-300 ease-in-out"
+                                  :class="multiConfigData.toggle_3d ? 'translate-x-5 bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
                         </button>
                     </div>
                 </div>
@@ -873,7 +881,7 @@
                     <template x-for="bot in bots.filter(b => b.username.toLowerCase().includes(multiConfigSearch.toLowerCase()) && b.status !== 'Offline')" :key="bot.id">
                         <label class="flex items-center justify-between p-3.5 rounded-2xl bg-zinc-900/60 border border-white/5 hover:border-white/10 transition-all cursor-pointer select-none">
                             <div class="flex items-center gap-3">
-                                <input type="checkbox" :value="bot.id" x-model="multiConfigSelectedIds" class="rounded border-zinc-700 bg-zinc-800 text-teal-500 focus:ring-teal-500/30">
+                                <input type="checkbox" :value="bot.id" x-model="multiConfigSelectedIds" class="w-4 h-4 rounded border border-white/10 bg-zinc-950 text-teal-400 focus:ring-0 focus:ring-offset-0 focus:outline-none transition-all cursor-pointer checked:bg-teal-400 checked:border-teal-400 checked:shadow-[0_0_8px_rgba(45,212,191,0.6)]">
                                 <div>
                                     <span class="block text-xs font-bold text-white font-mono" x-text="bot.username">Node</span>
                                     <span class="block text-[9px] font-mono text-zinc-500" x-text="'Lvl ' + bot.level + ' • ' + bot.status">Lvl 0 • Offline</span>
