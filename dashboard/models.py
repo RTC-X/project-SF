@@ -56,6 +56,8 @@ class BotConfiguration(models.Model):
     target_enchant_sets = models.JSONField(default=list, blank=True, help_text="Target sets of enchants (wishlist)")
     whitelisted_uuids = models.JSONField(default=list, blank=True, help_text="Protected sword UUIDs/names")
     
+    target_priority = models.CharField(max_length=50, default="Closest")
+    
     webhook_url = models.URLField(max_length=500, blank=True)
     webhook_enabled = models.BooleanField(default=False)
 

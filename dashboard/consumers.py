@@ -461,6 +461,8 @@ class C2Consumer(AsyncWebsocketConsumer):
                 config.target_enchant_sets = payload['target_enchant_sets']
             if 'whitelisted_uuids' in payload:
                 config.whitelisted_uuids = payload['whitelisted_uuids']
+            if 'target_priority' in payload:
+                config.target_priority = payload['target_priority']
             config.save()
             
             if 'bot_class' in payload and payload['bot_class']:
