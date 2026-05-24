@@ -1,3 +1,13 @@
+local C2_API_KEY = ...
+if not C2_API_KEY or type(C2_API_KEY) ~= "string" then
+    warn("[!] Please pass your C2_API_KEY as an argument to the loadstring!")
+    return
+end
+
+if not LPH_NO_VIRTUALIZE then
+    LPH_NO_VIRTUALIZE = function(f) return f end
+end
+
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VirtualInputManager = game:GetService("VirtualInputManager")
@@ -448,7 +458,7 @@ local function evaluateWorkspaceSword(swordModel)
 end
 
 -- [[ 7. TARGETING ]]
-local function GetBestTarget()
+local GetBestTarget = LPH_NO_VIRTUALIZE(function()
     local bestTarget, bestScore, shortestDist = nil, -math.huge, math.huge
     local now = tick()
     local validNpcCount = 0 
@@ -520,7 +530,7 @@ local function GetBestTarget()
     
     if validNpcCount < SETTINGS.MIN_NPCS_TO_STAY then return nil end
     return bestTarget
-end
+end)
 
 -- UI REMOVED: Managed Entirely via C2 Dashboard
 
@@ -714,7 +724,7 @@ local function CheckMissingSwords()
 end
 
 -- 🧠 FSM Brain: Determines absolute priority
-local function DetermineState()
+local DetermineState = LPH_NO_VIRTUALIZE(function()
     if not _G.on then return "Disabled" end
     if not character or not character.Parent or not humanoid or humanoid.Health <= 0 then return "Dead" end
     if _G.fetchingGodRoll then return "Sniping" end
@@ -800,10 +810,10 @@ local function DetermineState()
 
     -- Priority 6: Nothing left to do
     return "Idle"
-end
+end)
 
 -- ⚙️ Executor Loop
-_G.UltimateFarmConnection = RunService.Heartbeat:Connect(function()
+_G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(function()
     -- Ask the Brain what we should be doing right now
     local newState, extraData = DetermineState()
     BotState = newState
@@ -940,7 +950,7 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(function()
         _G.CurrentState = "Area Clear / Hovering..."
         hrp.CFrame = CFrame.new(hrp.Position.X, SETTINGS.WAIT_ALTITUDE, hrp.Position.Z)
     end
-end)
+end))
 
 -- [[ 12. C2 WEB PANEL INTEGRATION ]]
 task.spawn(function()
@@ -1073,30 +1083,9 @@ task.spawn(function()
         -- 1. Register this specific client
     pcall(function()
         ws:Send(HttpService:JSONEncode({
-            type = "register",
-            clientType = "game",
+            action = "register",
             username = player.Name,
-            status = {
-                farming = _G.on or false,
-                render3d = render3dActive,
-                snipeEnabled = _G.autoDropEnabled or false,
-                activeTargetSets = _G.ActiveTargetSets or {},
-                ascenderData = getAscenderPayload(),
-                backpackData = getBackpackPayload(),
-                fullConfig = {
-                    TargetSets = _G.ActiveTargetSets,
-                    WhitelistedSwords = _G.WhitelistedSwords,
-                    SpecialOverrides = _G.SpecialOverrides,
-                    WebhookURL = _G.WebhookURL,
-                    WebhookEnabled = _G.WebhookEnabled,
-                    FarmAreas = _G.FarmAreas,
-                    Settings = SETTINGS
-                },
-                metadata = {
-                    Areas = AreaNamesList,
-                    Enchants = EnchantNamesList
-                }
-            }
+            api_key = C2_API_KEY
         }))
     end)
 
@@ -1320,14 +1309,26 @@ task.spawn(function()
                     currentState = _G.CurrentState or "Idle"
                 }
 
-                shouldUpdate = true
-
                 if shouldUpdate then
                     pcall(function()
                         if _G.C2_WS then
+                            local myLevel = PlayerStats:FindFirstChild("Level") and PlayerStats.Level.Value or 1
+                            local myMoney = PlayerStats:FindFirstChild("Money") and PlayerStats.Money.Value or 0
+                            
                             _G.C2_WS:Send(HttpService:JSONEncode({
-                                type = "update_status",
-                                status = statusUpdates
+                                action = "update_status",
+                                username = player.Name,
+                                api_key = C2_API_KEY,
+                                payload = {
+                                    status = _G.CurrentState or "Idle",
+                                    level = myLevel,
+                                    money = myMoney,
+                                    backpack_items = getBackpackPayload(),
+                                    bot_class = "Farmer",
+                                    quality = "Standard",
+                                    rarity = "Common",
+                                    mold = "Basic"
+                                }
                             }))
                         end
                     end)

@@ -23,7 +23,7 @@ class BotAccount(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Offline')
     last_seen = models.DateTimeField(auto_now=True)
     level = models.IntegerField(default=1)
-    money = models.DecimalField(max_digits=18, decimal_places=2, default=0.0)
+    money = models.FloatField(default=0.0, help_text="Supports up to 10^308 for massive simulator values")
     session_time = models.IntegerField(default=0, help_text="Session time in seconds")
     c2_token = models.CharField(max_length=64, unique=True, blank=True, help_text="Authentication token for Roblox bot websocket connection")
     
@@ -69,6 +69,22 @@ class TelemetryLog(models.Model):
 
     def __str__(self):
         return f"[{self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}] {self.bot.username}: {self.message}"
+
+# ==============================================================================
+# GLOBAL GAME METADATA
+# ==============================================================================
+
+class GlobalMetadata(models.Model):
+    """
+    Stores the scraped game data (Areas, Enchants) uploaded by the Admin Scraper.
+    Using a flexible JSONField allows new game mechanics to be added without DB migrations.
+    """
+    key = models.CharField(max_length=50, primary_key=True, default='game_data')
+    data = models.JSONField(default=dict, blank=True, help_text="Stores the JSON payload containing Areas, Enchants, Molds, etc.")
+    last_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Global Metadata (Updated: {self.last_updated.strftime('%Y-%m-%d %H:%M')})"
 
 # ==============================================================================
 # DISCORD OAUTH AUTO-JOIN GUILD SIGNAL RECEIVER

@@ -145,6 +145,47 @@ class C2Consumer(AsyncWebsocketConsumer):
                         )
                         # Broadcast fleet size / status updates to owner
                         await self.broadcast_fleet_update_for_user(owner_user)
+
+            elif action == 'update_status':
+                # Sanitize and validate incoming live stats
+                bot_id = data.get('username')
+                payload = data.get('payload', {})
+                api_key = data.get('api_key')
+                
+                # Check validation and update
+                is_valid = await self.update_bot_status(bot_id, payload.get('status', 'Farming'), {'api_key': api_key, **payload})
+                if not is_valid:
+                    await self.send(text_data=json.dumps({'type': 'command', 'command': 'kick', 'payload': {'reason': 'Invalid API Key'}}))
+                    await self.close()
+                    return
+                
+                owner_user = await self.get_bot_owner(bot_id)
+                if owner_user:
+                    await self.broadcast_fleet_update_for_user(owner_user)
+
+            elif action == 'update_metadata':
+                # Secure Admin Scraper Endpoint
+                admin_key = data.get('admin_key')
+                metadata_payload = data.get('metadata', {})
+                from django.conf import settings
+                expected_admin_key = getattr(settings, 'ADMIN_UPLOAD_KEY', 'my_super_secret_123')
+                
+                if admin_key != expected_admin_key:
+                    await self.send(text_data=json.dumps({'type': 'command', 'command': 'kick', 'payload': {'reason': 'Invalid Admin Key'}}))
+                    await self.close()
+                    return
+                
+                # Basic Schema Validation to prevent JSON injection/bloat
+                if isinstance(metadata_payload, dict):
+                    # Validate depth and limits (max 500 items per list)
+                    sanitized_meta = {}
+                    for key, val in metadata_payload.items():
+                        if isinstance(val, list):
+                            sanitized_meta[key] = [str(i)[:100] for i in val[:500]]
+                    
+                    await self.save_global_metadata(sanitized_meta)
+                    print(f"GlobalMetadata updated successfully by Admin. Keys: {list(sanitized_meta.keys())}")
+                    
         except Exception as e:
             print("WebSocket error in C2Consumer:", e)
 
@@ -181,6 +222,13 @@ class C2Consumer(AsyncWebsocketConsumer):
                 'bots': bots
             }
         )
+
+    @database_sync_to_async
+    def save_global_metadata(self, metadata_dict):
+        from .models import GlobalMetadata
+        obj, _ = GlobalMetadata.objects.get_or_create(key='game_data')
+        obj.data = metadata_dict
+        obj.save()
 
     @database_sync_to_async
     def get_bot_owner(self, username):
@@ -289,20 +337,35 @@ class C2Consumer(AsyncWebsocketConsumer):
             return False
         
         if extra_data:
+            import math
             if 'level' in extra_data and extra_data['level'] is not None:
-                bot.level = int(extra_data['level'])
+                try:
+                    lvl = int(extra_data['level'])
+                    if 0 <= lvl <= 1000000:
+                        bot.level = lvl
+                except ValueError:
+                    pass
             if 'money' in extra_data and extra_data['money'] is not None:
-                bot.money = float(extra_data['money'])
+                try:
+                    money_val = float(extra_data['money'])
+                    if not math.isnan(money_val) and not math.isinf(money_val):
+                        bot.money = money_val
+                except ValueError:
+                    pass
             if 'bot_class' in extra_data and extra_data['bot_class']:
-                bot.bot_class = extra_data['bot_class']
+                bot.bot_class = str(extra_data['bot_class'])[:50]
             if 'quality' in extra_data and extra_data['quality']:
-                bot.quality = extra_data['quality']
+                bot.quality = str(extra_data['quality'])[:50]
             if 'rarity' in extra_data and extra_data['rarity']:
-                bot.rarity = extra_data['rarity']
+                bot.rarity = str(extra_data['rarity'])[:50]
             if 'mold' in extra_data and extra_data['mold']:
-                bot.mold = extra_data['mold']
-            if 'backpack_items' in extra_data and extra_data['backpack_items']:
-                bot.backpack_items = extra_data['backpack_items']
+                bot.mold = str(extra_data['mold'])[:50]
+            
+            # Prevent Status Poisoning memory flood
+            if 'backpack_items' in extra_data and isinstance(extra_data['backpack_items'], list):
+                # Cap the list to 500 items max
+                safe_list = extra_data['backpack_items'][:500]
+                bot.backpack_items = safe_list
         
         if created or not bot.backpack_items:
             if not bot.backpack_items:
