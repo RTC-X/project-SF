@@ -73,6 +73,7 @@ local MoldNamesList = ExtractNames(require(Tables:WaitForChild("Mold")), MAX_ITE
 local QualityNamesList = ExtractNames(require(Tables:WaitForChild("Quality")), MAX_ITEMS_PER_CATEGORY)
 local RarityNamesList = ExtractNames(require(Tables:WaitForChild("Rarity")), MAX_ITEMS_PER_CATEGORY)
 local ClassNamesList = ExtractNames(require(Tables:WaitForChild("Class")), MAX_ITEMS_PER_CATEGORY)
+local MobTraitNamesList = ExtractNames(require(Tables:WaitForChild("MobTrait")), MAX_ITEMS_PER_CATEGORY)
 
 local globalMetadata = {
     Areas = AreaNamesList,
@@ -80,7 +81,8 @@ local globalMetadata = {
     Molds = MoldNamesList,
     Qualities = QualityNamesList,
     Rarities = RarityNamesList,
-    Classes = ClassNamesList
+    Classes = ClassNamesList,
+    MobTraits = MobTraitNamesList
 }
 
 print("[+] Connecting to Django C2 Server...")

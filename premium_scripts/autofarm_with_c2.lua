@@ -168,33 +168,32 @@ local SwordModules = {
     MobTrait = require(Tables.MobTrait)
 }
 
-local AreasModule = require(Tables.Areas)
 local AreaNamesList = {}
 local AreaMap = {} 
-for id, data in pairs(AreasModule) do
-    if id ~= 0 then 
-        local req = data.LevelReq or 0
-        local str = "[" .. tostring(id) .. "] " .. data.Name .. " (Lvl " .. req .. ")"
-        table.insert(AreaNamesList, str)
-        AreaMap[str] = id
-    end
-end
-table.sort(AreaNamesList, function(a, b) return AreaMap[a] < AreaMap[b] end)
+local EnchantNamesList = {}
+local MoldNamesList = {}
+local QualityNamesList = {}
+local RarityNamesList = {}
+local ClassNamesList = {}
 
-local function ExtractNames(module)
-    local list = {}
-    for _, data in pairs(module) do
-        if type(data) == "table" and data.Name then table.insert(list, data.Name) end
+pcall(function()
+    local url = "https://c2scripts.xyz/api/metadata/"
+    local response = HttpService:GetAsync(url)
+    local decoded = HttpService:JSONDecode(response)
+    if decoded and decoded.success and decoded.data then
+        AreaNamesList = decoded.data.Areas or {}
+        EnchantNamesList = decoded.data.Enchants or {}
+        MoldNamesList = decoded.data.Molds or {}
+        QualityNamesList = decoded.data.Qualities or {}
+        RarityNamesList = decoded.data.Rarities or {}
+        ClassNamesList = decoded.data.Classes or {}
+        
+        for _, str in ipairs(AreaNamesList) do
+            local idStr = string.match(str, "%[(%d+)%]")
+            if idStr then AreaMap[str] = tonumber(idStr) end
+        end
     end
-    table.sort(list)
-    return list
-end
-
-local EnchantNamesList = ExtractNames(SwordModules.Enchant1)
-local MoldNamesList = ExtractNames(SwordModules.Mold)
-local QualityNamesList = ExtractNames(SwordModules.Quality)
-local RarityNamesList = ExtractNames(SwordModules.Rarity)
-local ClassNamesList = ExtractNames(SwordModules.Class)
+end)
 
 -- [[ 5. ROBUST LEADERSTATS INITIALIZATION ]]
 local sessionStartTime = tick()
@@ -1004,25 +1003,21 @@ task.spawn(function()
         end
     end
 
-    local populateData = {}
-    local RequiredModules = {"Mold", "Rarity", "Enchant", "Class", "Quality"}
-
-    pcall(function()
-        for _, moduleName in ipairs(RequiredModules) do 
-            local moduleScript = Tables:FindFirstChild(moduleName)
-            if moduleScript then populateData[moduleName] = require(moduleScript) end
-        end
-    end)
-
-    local function getName(category, id)
-        local categoryData = populateData[category]
-        if not categoryData or id == nil then return "None" end
-        return categoryData[id] and categoryData[id].Name or "None"
-    end
-
     local function getAscenderPayload()
         local payload = { hasSword = false, mode = "None", stats = {} }
         pcall(function()
+            local stats = {}
+            pcall(function()
+                local ascenderStats = AscenderRemote:InvokeServer("GetStats")
+                if ascenderStats then
+                    stats.Level = ascenderStats.Level or 1
+                    stats.Class = tostring(ascenderStats.Class or "Unknown")
+                    stats.Quality = tostring(ascenderStats.Quality or "Unknown")
+                    stats.Rarity = tostring(ascenderStats.Rarity or "Unknown")
+                    stats.Mold = tostring(ascenderStats.Mold or "Unknown")
+                end
+            end)
+            
             local ascenderModeObj = PlayerStats:FindFirstChild("AscenderMode")
             if ascenderModeObj then payload.mode = ascenderModeObj.Value end
             
@@ -1057,13 +1052,13 @@ task.spawn(function()
                             id = sword.Name,
                             Equipped = sword:GetAttribute("Equipped") or false,
                             Level = sword:GetAttribute("Level") or 0,
-                            Quality = getName("Quality", sword:GetAttribute("Quality")),
-                            Rarity = getName("Rarity", sword:GetAttribute("Rarity")),
-                            Mold = getName("Mold", sword:GetAttribute("Mold")),
-                            Class = getName("Class", sword:GetAttribute("Class")),
-                            Enchant1 = getName("Enchant", sword:GetAttribute("Enchant1")),
-                            Enchant2 = getName("Enchant", sword:GetAttribute("Enchant2")),
-                            Enchant3 = getName("Enchant", sword:GetAttribute("Enchant3"))
+                            Quality = tostring(sword:GetAttribute("Quality") or "None"),
+                            Rarity = tostring(sword:GetAttribute("Rarity") or "None"),
+                            Mold = tostring(sword:GetAttribute("Mold") or "None"),
+                            Class = tostring(sword:GetAttribute("Class") or "None"),
+                            Enchant1 = tostring(sword:GetAttribute("Enchant1") or "None"),
+                            Enchant2 = tostring(sword:GetAttribute("Enchant2") or "None"),
+                            Enchant3 = tostring(sword:GetAttribute("Enchant3") or "None")
                         }
                         table.insert(payload, entry)
                     end

@@ -40,3 +40,13 @@ def dashboard_view(request):
 def logout_view(request):
     auth_logout(request)
     return redirect('index')
+
+from django.http import JsonResponse
+from .models import GlobalMetadata
+
+def metadata_api_view(request):
+    try:
+        meta = GlobalMetadata.objects.get(key='game_data')
+        return JsonResponse({"success": True, "data": meta.data})
+    except GlobalMetadata.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Metadata not initialized"}, status=404)
