@@ -589,13 +589,13 @@
             <p class="text-xs text-zinc-400 mb-4">Select the areas the bot should cycle through when AutoFarm is active.</p>
             
             <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6 max-h-[400px] overflow-y-auto pr-2">
-                <template x-if="gameData && gameData.Area">
-                    <template x-for="(areaName, areaId) in gameData.Area" :key="areaId">
+                <template x-if="gameData && gameData.Areas">
+                    <template x-for="areaString in gameData.Areas" :key="areaString">
                         <label class="flex items-center gap-2 p-2 rounded-lg border border-white/5 bg-zinc-900/50 hover:bg-zinc-900 cursor-pointer transition-colors overflow-hidden">
-                            <input type="checkbox" :value="parseInt(areaId)" 
-                                   :checked="selectedBot?.config?.active_areas?.includes(parseInt(areaId))"
+                            <input type="checkbox" :value="parseInt(areaString.match(/\[(\d+)\]/)[1])" 
+                                   :checked="selectedBot?.config?.active_areas?.includes(parseInt(areaString.match(/\[(\d+)\]/)[1]))"
                                    @change="
-                                       let id = parseInt(areaId);
+                                       let id = parseInt(areaString.match(/\[(\d+)\]/)[1]);
                                        if (!selectedBot.config.active_areas) selectedBot.config.active_areas = [];
                                        if ($event.target.checked) {
                                            if (!selectedBot.config.active_areas.includes(id)) selectedBot.config.active_areas.push(id);
@@ -604,7 +604,7 @@
                                        }
                                    "
                                    class="rounded bg-black border-zinc-700 text-teal-500 focus:ring-teal-500 focus:ring-offset-zinc-900 flex-shrink-0">
-                            <span class="text-[10px] text-zinc-300 font-mono truncate" x-text="`${areaId}. ${areaName}`" :title="areaName"></span>
+                            <span class="text-[10px] text-zinc-300 font-mono truncate" x-text="areaString" :title="areaString"></span>
                         </label>
                     </template>
                 </template>
