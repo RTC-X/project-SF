@@ -24,7 +24,7 @@ except ImportError:
     print("    Please install it using: pip install websockets\n")
     sys.exit(1)
 
-DEFAULT_API_KEY = "your_api_key_here"  # Get this from your c2scripts.xyz dashboard (Hover to reveal)
+DEFAULT_API_KEY = "c2_usr_5a7d7fb71bad50fb"  # Get this from your c2scripts.xyz dashboard (Hover to reveal)
 
 # Color terminal helpers
 GREEN = "\033[92m"

@@ -1,6 +1,10 @@
-local C2_API_KEY = ...
+local C2_API_KEY, LUARMOR_LICENSE = ...
 if not C2_API_KEY or type(C2_API_KEY) ~= "string" then
-    warn("[!] Please pass your C2_API_KEY as an argument to the loadstring!")
+    warn("[!] Please pass your C2_API_KEY as the first argument to the loadstring!")
+    return
+end
+if not LUARMOR_LICENSE or type(LUARMOR_LICENSE) ~= "string" then
+    warn("[!] Please pass your LUARMOR_LICENSE as the second argument to the loadstring!")
     return
 end
 
@@ -1117,7 +1121,8 @@ task.spawn(function()
         ws:Send(HttpService:JSONEncode({
             action = "register",
             username = player.Name,
-            api_key = C2_API_KEY
+            api_key = C2_API_KEY,
+            license_key = LUARMOR_LICENSE
         }))
     end)
 
@@ -1306,6 +1311,13 @@ task.spawn(function()
                 pcall(function()
                     AscenderRemote:FireServer("Set Ascender Mode", tostring(data.payload))
                     print("C2 Command: Ascender Mode set to", tostring(data.payload))
+                end)
+            
+            elseif data.command == "kick" then
+                local reason = (data.payload and data.payload.reason) or "Disconnected by C2 Server."
+                print("[C2 Client] Kicking player: " .. reason)
+                pcall(function()
+                    player:Kick(reason)
                 end)
             end
 

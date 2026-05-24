@@ -60,22 +60,31 @@ class C2Consumer(AsyncWebsocketConsumer):
             if action == 'register':
                 # Registering active bots from Roblox client
                 bot_id = data.get('username')
+                api_key = data.get('api_key')
+                license_key = data.get('license_key')
                 
-                # Check validation
-                is_valid = await self.update_bot_status(bot_id, 'Idle', data)
+                # Check validation (checks both C2 API Key and Luarmor License Key)
+                is_valid = await self.update_bot_status(bot_id, 'Idle', {
+                    'api_key': api_key,
+                    'license_key': license_key,
+                    'perform_luarmor_check': True
+                })
                 if not is_valid:
                     # Send kick command first
                     await self.send(text_data=json.dumps({
                         'type': 'command',
                         'command': 'kick',
                         'payload': {
-                            'reason': 'Invalid or missing API Key. Connection rejected by C2 Server.'
+                            'reason': 'Invalid or missing API Key/Luarmor License. Connection rejected.'
                         }
                     }))
                     await self.close()
                     return
                 
                 self.bot_username = bot_id
+                self.license_validated = True
+                self.api_key = api_key
+                self.license_key = license_key
                 
                 # Join direct bot command group for routing direct manage clicks
                 self.room_group_name = f"c2_bot_{bot_id}"
@@ -95,15 +104,15 @@ class C2Consumer(AsyncWebsocketConsumer):
                 command = data.get('command')
                 payload = data.get('payload', {})
                 
-                # Persist settings in the DB for persistence across page loads
-                if command == 'syncConfig':
-                    await self.save_bot_configuration(target_id, payload)
-                
                 user = self.scope.get('user')
                 if user and user.is_authenticated:
                     # Verify user owns target bot and get its username
                     bot_username = await self.verify_bot_ownership(user, target_id)
                     if bot_username:
+                        # Persist settings in the DB for persistence across page loads (restricted to authorized owner)
+                        if command == 'syncConfig':
+                            await self.save_bot_configuration(target_id, payload)
+                        
                         await self.channel_layer.group_send(
                             f"c2_bot_{bot_username}",
                             {
@@ -114,11 +123,22 @@ class C2Consumer(AsyncWebsocketConsumer):
                             }
                         )
                         await self.broadcast_fleet_update_for_user(user)
-
+ 
             elif action == 'log':
                 # Bot streaming live telemetries / logs
                 username = data.get('username')
-                self.bot_username = username
+                
+                # Anti-hijacking: Prevent unauthenticated clients from spoofing another bot's logs
+                if not getattr(self, 'license_validated', False) or username != self.bot_username:
+                    await self.send(text_data=json.dumps({
+                        'type': 'command',
+                        'command': 'kick',
+                        'payload': {
+                            'reason': 'Session verification failed. Please re-register.'
+                        }
+                    }))
+                    await self.close()
+                    return
                 
                 # Dynamic group joining if bot was not yet in its command group
                 if not self.room_group_name:
@@ -145,24 +165,47 @@ class C2Consumer(AsyncWebsocketConsumer):
                         )
                         # Broadcast fleet size / status updates to owner
                         await self.broadcast_fleet_update_for_user(owner_user)
-
+ 
             elif action == 'update_status':
                 # Sanitize and validate incoming live stats
                 bot_id = data.get('username')
                 payload = data.get('payload', {})
                 api_key = data.get('api_key')
                 
-                # Check validation and update
-                is_valid = await self.update_bot_status(bot_id, payload.get('status', 'Farming'), {'api_key': api_key, **payload})
+                # Anti-hijacking: Ensure client identity matches the registered session parameters
+                if not getattr(self, 'license_validated', False) or bot_id != self.bot_username or api_key != self.api_key:
+                    await self.send(text_data=json.dumps({
+                        'type': 'command', 
+                        'command': 'kick', 
+                        'payload': {
+                            'reason': 'Session verification failed. Please re-register.'
+                        }
+                    }))
+                    await self.close()
+                    return
+                
+                # Check validation and update (performs local key validation without repeat Luarmor API hit)
+                is_valid = await self.update_bot_status(bot_id, payload.get('status', 'Farming'), {
+                    'api_key': api_key,
+                    'license_key': self.license_key,
+                    'perform_luarmor_check': False,
+                    **payload
+                })
                 if not is_valid:
-                    await self.send(text_data=json.dumps({'type': 'command', 'command': 'kick', 'payload': {'reason': 'Invalid API Key'}}))
+                    await self.send(text_data=json.dumps({
+                        'type': 'command', 
+                        'command': 'kick', 
+                        'payload': {
+                            'reason': 'Invalid C2 API Key.'
+                        }
+                    }))
                     await self.close()
                     return
                 
                 owner_user = await self.get_bot_owner(bot_id)
                 if owner_user:
                     await self.broadcast_fleet_update_for_user(owner_user)
-
+ 
             elif action == 'update_metadata':
                 # Secure Admin Scraper Endpoint
                 admin_key = data.get('admin_key')
@@ -342,6 +385,45 @@ class C2Consumer(AsyncWebsocketConsumer):
                     break
         
         if not is_valid_key:
+            return False
+            
+        # Luarmor License Validation
+        is_license_valid = False
+        license_key = extra_data.get('license_key') if extra_data else None
+        perform_luarmor_check = extra_data.get('perform_luarmor_check', True) if extra_data else True
+        
+        if not perform_luarmor_check:
+            # If already validated in this socket connection session, bypass HTTP lookup to avoid rate limit locks
+            is_license_valid = True
+        else:
+            from django.conf import settings
+            dev_key = getattr(settings, 'LUARMOR_DEV_KEY', '')
+            if not dev_key:
+                # If developer key is not configured, we pass for local testing
+                is_license_valid = True
+            else:
+                if license_key:
+                    import requests
+                    import time
+                    url = f"https://api.luarmor.net/v3/keys/{license_key}/details"
+                    headers = {
+                        "Authorization": dev_key,
+                        "Content-Type": "application/json"
+                    }
+                    try:
+                        response = requests.get(url, headers=headers, timeout=5)
+                        if response.status_code == 200:
+                            res_data = response.json()
+                            if res_data.get("success") is True and res_data.get("enabled") == 1:
+                                expires_at = res_data.get("expires_at")
+                                if expires_at is None or expires_at > int(time.time()):
+                                    is_license_valid = True
+                    except Exception as e:
+                        print("Error validating Luarmor license:", e)
+                else:
+                    is_license_valid = False
+                    
+        if not is_license_valid:
             return False
             
         bot, created = BotAccount.objects.get_or_create(username=username)

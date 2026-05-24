@@ -18,6 +18,7 @@ print("[C2 Client] Initializing Roblox Fleet Node...")
 
 -- Global State Control Variables (used by your external autofarm scripts)
 _G.C2_ApiKey = "your_api_key_here" -- Get your API Key from the c2scripts.xyz dashboard (Hover to reveal it) and paste it here
+_G.Luarmor_License = "your_luarmor_license_here" -- Paste your active Luarmor license here
 _G.C2_FarmEnabled = true
 _G.C2_SnipeEnabled = true
 _G.C2_TargetEnchantSets = {}
@@ -100,10 +101,11 @@ print("[C2 Client] Connected successfully to " .. WS_URL)
 local registerPayload = {
     action = "register",
     username = LocalPlayer.Name,
-    api_key = _G.C2_ApiKey or ""
+    api_key = _G.C2_ApiKey or "",
+    license_key = _G.Luarmor_License or ""
 }
 ws:Send(HttpService:JSONEncode(registerPayload))
-print("[C2 Client] Registered Node for user: " .. LocalPlayer.Name .. " (API Key: " .. tostring(_G.C2_ApiKey) .. ")")
+print("[C2 Client] Registered Node for user: " .. LocalPlayer.Name .. " (API Key: " .. tostring(_G.C2_ApiKey) .. ", License: " .. tostring(_G.Luarmor_License) .. ")")
 
 -- Send continuous gameplay telemetry heartbeat logs
 task.spawn(function()
