@@ -56,15 +56,17 @@ def is_valid_api_key(api_key):
             return True
     return False
 
+from django.http import JsonResponse, Http404
+
 def metadata_api_view(request):
     api_key = request.GET.get('api_key')
     
     # Strictly require a valid API key to access this endpoint
     if not is_valid_api_key(api_key):
-        return JsonResponse({"success": False, "error": "Unauthorized: Missing or Invalid API Key"}, status=403)
+        raise Http404("Page not found")
         
     try:
         meta = GlobalMetadata.objects.get(key='game_data')
         return JsonResponse({"success": True, "data": meta.data}, json_dumps_params={'indent': 4})
     except GlobalMetadata.DoesNotExist:
-        return JsonResponse({"success": False, "error": "Metadata not initialized"}, status=404, json_dumps_params={'indent': 4})
+        raise Http404("Page not found")
