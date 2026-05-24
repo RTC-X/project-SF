@@ -1,4 +1,5 @@
 import json
+import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 
@@ -37,6 +38,8 @@ class C2Consumer(AsyncWebsocketConsumer):
             self.room_group_name = None
             # Allow bot connection to accept; they will dynamically join their group during register/log
             await self.accept()
+            # Enforce 10 second registration timeout to prevent resource exhaustion attacks
+            asyncio.create_task(self.enforce_registration_timeout(10))
 
     async def disconnect(self, close_code):
         if getattr(self, 'bot_username', None):
@@ -59,8 +62,65 @@ class C2Consumer(AsyncWebsocketConsumer):
             if owner_user:
                 await self.broadcast_fleet_update_for_user(owner_user)
 
+    async def enforce_registration_timeout(self, seconds):
+        await asyncio.sleep(seconds)
+        if not getattr(self, 'bot_username', None):
+            print("[C2 Server] [Security Warning] Registration timeout exceeded. Rejecting unauthenticated connection.")
+            try:
+                await self.send(text_data=json.dumps({
+                    'type': 'command',
+                    'command': 'kick',
+                    'payload': {
+                        'reason': 'Registration timeout exceeded. You must register within 10 seconds of connection.'
+                    }
+                }))
+                await self.close()
+            except Exception:
+                pass
+
+    async def check_rate_limit(self):
+        """
+        In-memory per-connection sliding window rate limiter.
+        Allows a maximum of 25 messages per 10 seconds (avg 2.5/sec) with a burst threshold.
+        """
+        import time
+        now = time.time()
+        
+        # Initialize message timestamps list if not present
+        if not hasattr(self, 'message_timestamps'):
+            self.message_timestamps = []
+            
+        # Filter out timestamps older than 10 seconds
+        self.message_timestamps = [t for t in self.message_timestamps if now - t < 10]
+        
+        # Record the current message
+        self.message_timestamps.append(now)
+        
+        # Validate count
+        if len(self.message_timestamps) > 25:
+            client_id = getattr(self, 'bot_username', None) or "Unregistered Client"
+            print(f"[C2 Server] [Security Warning] Rate limit exceeded for client '{client_id}'. Disconnecting.")
+            
+            try:
+                await self.send(text_data=json.dumps({
+                    'type': 'command',
+                    'command': 'kick',
+                    'payload': {
+                        'reason': 'Rate limit exceeded (Max 25 messages per 10s).'
+                    }
+                }))
+                await self.close()
+            except Exception:
+                pass
+            return False
+        return True
+
     # Receive message from WebSocket (from frontends or Roblox bots)
     async def receive(self, text_data):
+        # 1. Enforce per-socket rate limiting to prevent spam and resource exhaustion
+        if not await self.check_rate_limit():
+            return
+            
         try:
             data = json.loads(text_data)
             action = data.get('action')
