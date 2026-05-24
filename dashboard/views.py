@@ -43,10 +43,28 @@ def logout_view(request):
 
 from django.http import JsonResponse
 from .models import GlobalMetadata
+import hashlib
+from django.contrib.auth.models import User
+from django.conf import settings
+
+def is_valid_api_key(api_key):
+    if not api_key: return False
+    secret = getattr(settings, 'SECRET_KEY', 'default_secret')
+    for user in User.objects.all():
+        expected_key = f"c2_usr_{hashlib.sha256(f'{user.id}:{secret}'.encode()).hexdigest()[:16]}"
+        if api_key == expected_key:
+            return True
+    return False
 
 def metadata_api_view(request):
+    api_key = request.GET.get('api_key')
+    
+    # Allow access if the user is logged into the dashboard OR provides a valid api_key
+    if not request.user.is_authenticated and not is_valid_api_key(api_key):
+        return JsonResponse({"success": False, "error": "Unauthorized: Missing or Invalid API Key"}, status=403)
+        
     try:
         meta = GlobalMetadata.objects.get(key='game_data')
-        return JsonResponse({"success": True, "data": meta.data})
+        return JsonResponse({"success": True, "data": meta.data}, json_dumps_params={'indent': 4})
     except GlobalMetadata.DoesNotExist:
-        return JsonResponse({"success": False, "error": "Metadata not initialized"}, status=404)
+        return JsonResponse({"success": False, "error": "Metadata not initialized"}, status=404, json_dumps_params={'indent': 4})
