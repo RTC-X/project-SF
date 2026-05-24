@@ -168,7 +168,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 admin_key = data.get('admin_key')
                 metadata_payload = data.get('metadata', {})
                 from django.conf import settings
-                expected_admin_key = getattr(settings, 'ADMIN_UPLOAD_KEY', 'my_super_secret_123')
+                expected_admin_key = getattr(settings, 'ADMIN_UPLOAD_KEY', '42033329e29abeb8')
                 
                 if admin_key != expected_admin_key:
                     await self.send(text_data=json.dumps({'type': 'command', 'command': 'kick', 'payload': {'reason': 'Invalid Admin Key'}}))
