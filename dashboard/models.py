@@ -24,6 +24,7 @@ class BotAccount(models.Model):
     last_seen = models.DateTimeField(auto_now=True)
     level = models.IntegerField(default=1)
     money = models.FloatField(default=0.0, help_text="Supports up to 10^308 for massive simulator values")
+    bank_level = models.IntegerField(default=0, help_text="Ascension bank capacity level")
     session_time = models.IntegerField(default=0, help_text="Session time in seconds")
     c2_token = models.CharField(max_length=64, unique=True, blank=True, help_text="Authentication token for Roblox bot websocket connection")
     
@@ -51,6 +52,11 @@ class BotConfiguration(models.Model):
     farm_enabled = models.BooleanField(default=False)
     snipe_enabled = models.BooleanField(default=False)
     activate_panel = models.BooleanField(default=False)
+    
+    # Auto Ascender configurations
+    ascender_enabled = models.BooleanField(default=False)
+    ascender_queue = models.JSONField(default=list, blank=True, help_text="Queue of UUIDs/names to upgrade")
+    ascender_criteria = models.JSONField(default=list, blank=True, help_text="Criteria logic for ascension selection")
     
     # Custom configurations stored cleanly in JSON format
     active_areas = models.JSONField(default=list, blank=True, help_text="List of active area IDs")

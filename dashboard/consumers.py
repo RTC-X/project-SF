@@ -412,6 +412,9 @@ class C2Consumer(AsyncWebsocketConsumer):
                     'target_enchant_sets': config.target_enchant_sets,
                     'whitelisted_uuids': config.whitelisted_uuids,
                     'target_priority': config.target_priority,
+                    'ascender_enabled': config.ascender_enabled,
+                    'ascender_queue': config.ascender_queue,
+                    'ascender_criteria': config.ascender_criteria,
                 }
             except BotConfiguration.DoesNotExist:
                 config_data = {
@@ -422,6 +425,9 @@ class C2Consumer(AsyncWebsocketConsumer):
                     'target_enchant_sets': [],
                     'whitelisted_uuids': [],
                     'target_priority': 'Closest',
+                    'ascender_enabled': False,
+                    'ascender_queue': [],
+                    'ascender_criteria': [],
                 }
             
             serialized.append({
@@ -430,6 +436,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 'status': bot.status,
                 'level': bot.level,
                 'money': float(bot.money),
+                'bank_level': bot.bank_level,
                 'session_time': bot.session_time,
                 'bot_class': bot.bot_class,
                 'quality': bot.quality,
@@ -492,6 +499,13 @@ class C2Consumer(AsyncWebsocketConsumer):
                         bot.money = money_val
                 except ValueError:
                     pass
+            if 'bank_level' in extra_data and extra_data['bank_level'] is not None:
+                try:
+                    bl_val = int(extra_data['bank_level'])
+                    if 0 <= bl_val <= 1000:
+                        bot.bank_level = bl_val
+                except ValueError:
+                    pass
             if 'bot_class' in extra_data and extra_data['bot_class']:
                 bot.bot_class = str(extra_data['bot_class'])[:50]
             if 'quality' in extra_data and extra_data['quality']:
@@ -537,6 +551,12 @@ class C2Consumer(AsyncWebsocketConsumer):
                  config.snipe_enabled = bool(extra_data['snipe_enabled'])
              if 'activate_panel' in extra_data:
                  config.activate_panel = bool(extra_data['activate_panel'])
+             if 'ascender_enabled' in extra_data:
+                 config.ascender_enabled = bool(extra_data['ascender_enabled'])
+             if 'ascender_queue' in extra_data and isinstance(extra_data['ascender_queue'], list):
+                 config.ascender_queue = extra_data['ascender_queue']
+             if 'ascender_criteria' in extra_data and isinstance(extra_data['ascender_criteria'], list):
+                 config.ascender_criteria = extra_data['ascender_criteria']
              if 'target_enchant_sets' in extra_data and extra_data['target_enchant_sets']:
                  config.target_enchant_sets = extra_data['target_enchant_sets']
              if 'whitelisted_uuids' in extra_data:
@@ -601,6 +621,12 @@ class C2Consumer(AsyncWebsocketConsumer):
                 config.whitelisted_uuids = payload['whitelisted_uuids']
             if 'target_priority' in payload:
                 config.target_priority = payload['target_priority']
+            if 'ascender_enabled' in payload:
+                config.ascender_enabled = payload['ascender_enabled']
+            if 'ascender_queue' in payload:
+                config.ascender_queue = payload['ascender_queue']
+            if 'ascender_criteria' in payload:
+                config.ascender_criteria = payload['ascender_criteria']
             config.save()
             
             if 'bot_class' in payload and payload['bot_class']:
