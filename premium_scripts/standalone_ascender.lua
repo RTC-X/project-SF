@@ -246,8 +246,8 @@ task.spawn(function()
 end)
 
 -- UI SETUP
-if game.CoreGui:FindFirstChild("StandaloneAscenderUI") then
-    game.CoreGui.StandaloneAscenderUI:Destroy()
+if game.CoreGui:FindFirstChild("Rayfield") then
+    game.CoreGui.Rayfield:Destroy()
 end
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
@@ -258,7 +258,6 @@ local Window = Rayfield:CreateWindow({
     ConfigurationSaving = { Enabled = false },
     KeySystem = false
 })
-Window.Instance.Name = "StandaloneAscenderUI"
 
 local Tab = Window:CreateTab("Ascender Config")
 
