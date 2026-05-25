@@ -421,10 +421,11 @@
                             <button @click="
                                 showAscenderQueueModal = true; 
                                 localQueue = [...(selectedBot.config?.ascender_queue || [])];
-                                localCriteria = JSON.parse(JSON.stringify(selectedBot.config?.ascender_criteria || {
+                                let _crit = selectedBot.config?.ascender_criteria;
+                                localCriteria = Object.assign({
                                     Level: 0, Class: 'None', Quality: 'None', Rarity: 'None', Mold: 'None',
                                     Enchant1Level: 0, Enchant2Level: 0, Enchant3Level: 0
-                                }));
+                                }, (Array.isArray(_crit) || !_crit) ? {} : JSON.parse(JSON.stringify(_crit)));
                             " class="px-4 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold text-xs rounded-xl transition-all font-mono flex items-center gap-1.5 hover:bg-amber-500/20">
                                 Ascender Queue
                             </button>
