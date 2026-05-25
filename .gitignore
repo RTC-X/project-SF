@@ -13,3 +13,7 @@ db.sqlite3
 
 # Exclude plans per user request
 docs/
+
+# Local private script files
+premium_scripts/c2_anti_afk.lua
+
