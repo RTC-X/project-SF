@@ -1640,6 +1640,7 @@ task.spawn(function()
                                     bank_level = myBankLevel,
                                     backpack_items = getBackpackPayload(),
                                     bot_class = ascenderData.stats.Class or "Farmer",
+                                    ascender_level = ascenderData.stats.Level or 0,
                                     quality = ascenderData.stats.Quality or "Standard",
                                     rarity = ascenderData.stats.Rarity or "Common",
                                     mold = ascenderData.stats.Mold or "Basic",

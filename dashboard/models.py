@@ -30,6 +30,7 @@ class BotAccount(models.Model):
     
     # Premium C2 Gaming Telemetries
     bot_class = models.CharField(max_length=100, default='Unbeatable', help_text="Ascender Class")
+    ascender_level = models.IntegerField(default=1, help_text="Ascender Sword Level")
     quality = models.CharField(max_length=100, default='Spectacular', help_text="Ascender Quality")
     rarity = models.CharField(max_length=100, default='Heavenly++', help_text="Ascender Rarity")
     mold = models.CharField(max_length=100, default='Crystal', help_text="Ascender Mold")

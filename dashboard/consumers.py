@@ -499,6 +499,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 'bank_level': bot.bank_level,
                 'session_time': bot.session_time,
                 'bot_class': bot.bot_class,
+                'ascender_level': bot.ascender_level,
                 'quality': bot.quality,
                 'rarity': bot.rarity,
                 'mold': bot.mold,
@@ -573,7 +574,12 @@ class C2Consumer(AsyncWebsocketConsumer):
             if 'rarity' in extra_data and extra_data['rarity']:
                 bot.rarity = str(extra_data['rarity'])[:50]
             if 'mold' in extra_data and extra_data['mold']:
-                bot.mold = str(extra_data['mold'])[:50]
+                bot.mold = str(extra_data['mold'])[:100]
+            if 'ascender_level' in extra_data:
+                try:
+                    bot.ascender_level = int(extra_data['ascender_level'])
+                except (ValueError, TypeError):
+                    pass
             if 'ascender_enchant1' in extra_data and extra_data['ascender_enchant1']:
                 bot.ascender_enchant1 = str(extra_data['ascender_enchant1'])[:100]
             if 'ascender_enchant2' in extra_data and extra_data['ascender_enchant2']:
