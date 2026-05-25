@@ -418,7 +418,14 @@
                                 Toggle 3D
                             </button>
                             
-                            <button @click="showAscenderQueueModal = true; localQueue = [...(selectedBot.config?.ascender_queue || [])]" class="px-4 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold text-xs rounded-xl transition-all font-mono flex items-center gap-1.5 hover:bg-amber-500/20">
+                            <button @click="
+                                showAscenderQueueModal = true; 
+                                localQueue = [...(selectedBot.config?.ascender_queue || [])];
+                                localCriteria = JSON.parse(JSON.stringify(selectedBot.config?.ascender_criteria || {
+                                    Level: 0, Class: 'None', Quality: 'None', Rarity: 'None', Mold: 'None',
+                                    Enchant1Level: 0, Enchant2Level: 0, Enchant3Level: 0
+                                }));
+                            " class="px-4 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold text-xs rounded-xl transition-all font-mono flex items-center gap-1.5 hover:bg-amber-500/20">
                                 Ascender Queue
                             </button>
                             
@@ -768,6 +775,7 @@
     <div x-show="showAscenderQueueModal" 
          x-data="{ 
              localQueue: [],
+             localCriteria: {},
              getBankCapacity() {
                  if (!selectedBot || !selectedBot.bank_level) return 0;
                  let lvl = selectedBot.bank_level;
@@ -808,14 +816,12 @@
                         <div class="space-y-1">
                             <label class="text-[10px] font-mono text-zinc-500">Target Sword Level</label>
                             <input type="number" min="0" max="100" 
-                                   :value="selectedBot.config?.ascender_criteria?.Level || 0"
-                                   @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                   x-model.number="localCriteria.Level"
                                    class="w-full bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
                         </div>
                         <div class="space-y-1">
                             <label class="text-[10px] font-mono text-zinc-500">Target Class</label>
-                            <select :value="selectedBot.config?.ascender_criteria?.Class || 'None'"
-                                    @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Class = $event.target.value; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                            <select x-model="localCriteria.Class"
                                     class="w-full bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
                                 <option value="None">None</option>
                                 <template x-for="c in gameData.Classes || []"><option :value="c.Name || c" x-text="c.Name || c"></option></template>
@@ -823,8 +829,7 @@
                         </div>
                         <div class="space-y-1">
                             <label class="text-[10px] font-mono text-zinc-500">Target Quality</label>
-                            <select :value="selectedBot.config?.ascender_criteria?.Quality || 'None'"
-                                    @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Quality = $event.target.value; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                            <select x-model="localCriteria.Quality"
                                     class="w-full bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
                                 <option value="None">None</option>
                                 <template x-for="q in gameData.Qualities || []"><option :value="q.Name || q" x-text="q.Name || q"></option></template>
@@ -832,8 +837,7 @@
                         </div>
                         <div class="space-y-1">
                             <label class="text-[10px] font-mono text-zinc-500">Target Rarity</label>
-                            <select :value="selectedBot.config?.ascender_criteria?.Rarity || 'None'"
-                                    @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Rarity = $event.target.value; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                            <select x-model="localCriteria.Rarity"
                                     class="w-full bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
                                 <option value="None">None</option>
                                 <template x-for="r in gameData.Rarities || []"><option :value="r.Name || r" x-text="r.Name || r"></option></template>
@@ -843,8 +847,7 @@
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
                         <div class="space-y-1">
                             <label class="text-[10px] font-mono text-zinc-500">Target Mold</label>
-                            <select :value="selectedBot.config?.ascender_criteria?.Mold || 'None'"
-                                    @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Mold = $event.target.value; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                            <select x-model="localCriteria.Mold"
                                     class="w-full bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
                                 <option value="None">None</option>
                                 <template x-for="m in gameData.Molds || []"><option :value="m.Name || m" x-text="m.Name || m"></option></template>
@@ -853,33 +856,27 @@
                         <div class="space-y-1">
                             <label class="text-[10px] font-mono text-zinc-500">Enchant 1 Min Lvl</label>
                             <div class="flex items-center gap-2">
-                                <input type="range" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant1Level || 0"
-                                       @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant1Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                <input type="range" min="0" max="100" x-model.number="localCriteria.Enchant1Level"
                                        class="flex-1 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
-                                <input type="number" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant1Level || 0"
-                                       @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant1Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                <input type="number" min="0" max="100" x-model.number="localCriteria.Enchant1Level"
                                        class="w-12 bg-zinc-950 border border-white/10 rounded-lg px-1 py-1 text-xs text-center text-white font-mono">
                             </div>
                         </div>
                         <div class="space-y-1">
                             <label class="text-[10px] font-mono text-zinc-500">Enchant 2 Min Lvl</label>
                             <div class="flex items-center gap-2">
-                                <input type="range" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant2Level || 0"
-                                       @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant2Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                <input type="range" min="0" max="100" x-model.number="localCriteria.Enchant2Level"
                                        class="flex-1 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
-                                <input type="number" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant2Level || 0"
-                                       @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant2Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                <input type="number" min="0" max="100" x-model.number="localCriteria.Enchant2Level"
                                        class="w-12 bg-zinc-950 border border-white/10 rounded-lg px-1 py-1 text-xs text-center text-white font-mono">
                             </div>
                         </div>
                         <div class="space-y-1">
                             <label class="text-[10px] font-mono text-zinc-500">Enchant 3 Min Lvl</label>
                             <div class="flex items-center gap-2">
-                                <input type="range" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant3Level || 0"
-                                       @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant3Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                <input type="range" min="0" max="100" x-model.number="localCriteria.Enchant3Level"
                                        class="flex-1 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
-                                <input type="number" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant3Level || 0"
-                                       @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant3Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                <input type="number" min="0" max="100" x-model.number="localCriteria.Enchant3Level"
                                        class="w-12 bg-zinc-950 border border-white/10 rounded-lg px-1 py-1 text-xs text-center text-white font-mono">
                             </div>
                         </div>
@@ -939,6 +936,7 @@
                 <button @click="showAscenderQueueModal = false" class="px-5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all border border-white/10 font-mono">Cancel</button>
                 <button @click="
                     selectedBot.config.ascender_queue = localQueue;
+                    selectedBot.config.ascender_criteria = localCriteria;
                     sendCommand(selectedBot.id, 'syncConfig', selectedBot.config);
                     showAscenderQueueModal = false;
                 " class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-black text-xs font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 font-mono">Deploy Queue</button>
