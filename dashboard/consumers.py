@@ -540,102 +540,114 @@ class C2Consumer(AsyncWebsocketConsumer):
         # Luarmor License Validation (Bypassed by User request - Only API key is needed to authenticate)
         is_license_valid = True
             
-        bot, created = BotAccount.objects.get_or_create(username=username)
-        bot.owner = owner_user
-        bot.status = status
-        
-        if extra_data:
-            import math
-            if 'level' in extra_data and extra_data['level'] is not None:
-                try:
-                    lvl = int(extra_data['level'])
-                    if 0 <= lvl <= 1000000:
-                        bot.level = lvl
-                except ValueError:
-                    pass
-            if 'money' in extra_data and extra_data['money'] is not None:
-                try:
-                    money_val = float(extra_data['money'])
-                    if not math.isnan(money_val) and not math.isinf(money_val):
-                        bot.money = money_val
-                except ValueError:
-                    pass
-            if 'bank_level' in extra_data and extra_data['bank_level'] is not None:
-                try:
-                    bl_val = int(extra_data['bank_level'])
-                    if 0 <= bl_val <= 1000:
-                        bot.bank_level = bl_val
-                except ValueError:
-                    pass
-            if 'bot_class' in extra_data and extra_data['bot_class']:
-                bot.bot_class = str(extra_data['bot_class'])[:50]
-            if 'quality' in extra_data and extra_data['quality']:
-                bot.quality = str(extra_data['quality'])[:50]
-            if 'rarity' in extra_data and extra_data['rarity']:
-                bot.rarity = str(extra_data['rarity'])[:50]
-            if 'mold' in extra_data and extra_data['mold']:
-                bot.mold = str(extra_data['mold'])[:100]
-            if 'ascender_level' in extra_data:
-                try:
-                    bot.ascender_level = int(extra_data['ascender_level'])
-                except (ValueError, TypeError):
-                    pass
-            if 'ascender_enchant1' in extra_data and extra_data['ascender_enchant1']:
-                bot.ascender_enchant1 = str(extra_data['ascender_enchant1'])[:100]
-            if 'ascender_enchant2' in extra_data and extra_data['ascender_enchant2']:
-                bot.ascender_enchant2 = str(extra_data['ascender_enchant2'])[:100]
-            if 'ascender_enchant3' in extra_data and extra_data['ascender_enchant3']:
-                bot.ascender_enchant3 = str(extra_data['ascender_enchant3'])[:100]
-            if 'ascender_mode' in extra_data and extra_data['ascender_mode']:
-                bot.ascender_mode = str(extra_data['ascender_mode'])[:100]
+        try:
+            bot, created = BotAccount.objects.get_or_create(username=username)
+            bot.owner = owner_user
+            bot.status = status
             
-            # Prevent Status Poisoning memory flood
-            if 'backpack_items' in extra_data and isinstance(extra_data['backpack_items'], list):
-                # Cap the list to 500 items max
-                safe_list = extra_data['backpack_items'][:500]
-                bot.backpack_items = safe_list
-        
-        bot.save()
-        
-        config, config_created = BotConfiguration.objects.get_or_create(
-            bot=bot,
-            defaults={
-                'farm_enabled': True,
-                'snipe_enabled': True,
-                'activate_panel': False,
-                'active_areas': [1, 2, 5, 12],
-                'target_enchant_sets': ["Ancient + Fortune + Insight"],
-                'whitelisted_uuids': ["sword_92k"]
-            }
-        )
-        
-        # Sync live state from Roblox telemetry
-        if extra_data:
-             if 'farm_enabled' in extra_data:
-                 config.farm_enabled = bool(extra_data['farm_enabled'])
-             if 'snipe_enabled' in extra_data:
-                 config.snipe_enabled = bool(extra_data['snipe_enabled'])
-             if 'activate_panel' in extra_data:
-                 config.activate_panel = bool(extra_data['activate_panel'])
-             if 'ascender_enabled' in extra_data:
-                 config.ascender_enabled = bool(extra_data['ascender_enabled'])
-             if 'ascender_queue' in extra_data and isinstance(extra_data['ascender_queue'], list):
-                 config.ascender_queue = extra_data['ascender_queue']
-             if 'target_enchant_sets' in extra_data and extra_data['target_enchant_sets']:
-                 config.target_enchant_sets = extra_data['target_enchant_sets']
-             if 'whitelisted_uuids' in extra_data:
-                 config.whitelisted_uuids = extra_data['whitelisted_uuids']
-             if 'active_areas' in extra_data and isinstance(extra_data['active_areas'], list):
-                 config.active_areas = extra_data['active_areas']
-        
-        # If config already existed but had empty defaults from prior db state, populate them:
-        if not config.target_enchant_sets:
-            config.target_enchant_sets = ["Ancient + Fortune + Insight"]
+            if extra_data:
+                import math
+                if 'level' in extra_data and extra_data['level'] is not None:
+                    try:
+                        lvl = int(extra_data['level'])
+                        if 0 <= lvl <= 1000000:
+                            bot.level = lvl
+                    except ValueError:
+                        pass
+                if 'money' in extra_data and extra_data['money'] is not None:
+                    try:
+                        money_val = float(extra_data['money'])
+                        if not math.isnan(money_val) and not math.isinf(money_val):
+                            bot.money = money_val
+                    except ValueError:
+                        pass
+                if 'bot_class' in extra_data and extra_data['bot_class']:
+                    bot.bot_class = str(extra_data['bot_class'])[:50]
+                if 'quality' in extra_data and extra_data['quality']:
+                    bot.quality = str(extra_data['quality'])[:50]
+                if 'rarity' in extra_data and extra_data['rarity']:
+                    bot.rarity = str(extra_data['rarity'])[:50]
+                if 'mold' in extra_data and extra_data['mold']:
+                    bot.mold = str(extra_data['mold'])[:100]
+                
+                # Defensively write newly added columns (protect against delayed VPS migrations)
+                try:
+                    if 'bank_level' in extra_data and extra_data['bank_level'] is not None:
+                        bot.bank_level = int(extra_data['bank_level'])
+                except Exception as e:
+                    print(f"[C2 Server] [DB Defend] Failed to set bank_level (unmigrated?): {e}")
+
+                try:
+                    if 'ascender_level' in extra_data and extra_data['ascender_level'] is not None:
+                        bot.ascender_level = int(extra_data['ascender_level'])
+                except Exception as e:
+                    print(f"[C2 Server] [DB Defend] Failed to set ascender_level (unmigrated?): {e}")
+
+                try:
+                    if 'ascender_enchant1' in extra_data and extra_data['ascender_enchant1']:
+                        bot.ascender_enchant1 = str(extra_data['ascender_enchant1'])[:100]
+                    if 'ascender_enchant2' in extra_data and extra_data['ascender_enchant2']:
+                        bot.ascender_enchant2 = str(extra_data['ascender_enchant2'])[:100]
+                    if 'ascender_enchant3' in extra_data and extra_data['ascender_enchant3']:
+                        bot.ascender_enchant3 = str(extra_data['ascender_enchant3'])[:100]
+                    if 'ascender_mode' in extra_data and extra_data['ascender_mode']:
+                        bot.ascender_mode = str(extra_data['ascender_mode'])[:100]
+                except Exception as e:
+                    print(f"[C2 Server] [DB Defend] Failed to set ascender details (unmigrated?): {e}")
+                
+                # Prevent Status Poisoning memory flood
+                if 'backpack_items' in extra_data and isinstance(extra_data['backpack_items'], list):
+                    # Cap the list to 500 items max
+                    safe_list = extra_data['backpack_items'][:500]
+                    bot.backpack_items = safe_list
             
-        config.save()
+            bot.save()
+            
+            # Save or Fetch configuration defensively
+            config, config_created = BotConfiguration.objects.get_or_create(
+                bot=bot,
+                defaults={
+                    'farm_enabled': True,
+                    'snipe_enabled': True,
+                    'activate_panel': False,
+                    'active_areas': [1, 2, 5, 12],
+                    'target_enchant_sets': ["Ancient + Fortune + Insight"],
+                    'whitelisted_uuids': ["sword_92k"]
+                }
+            )
+            
+            # Sync live state from Roblox telemetry
+            if extra_data:
+                 if 'farm_enabled' in extra_data:
+                     config.farm_enabled = bool(extra_data['farm_enabled'])
+                 if 'snipe_enabled' in extra_data:
+                     config.snipe_enabled = bool(extra_data['snipe_enabled'])
+                 if 'activate_panel' in extra_data:
+                     config.activate_panel = bool(extra_data['activate_panel'])
+                 if 'ascender_enabled' in extra_data:
+                     config.ascender_enabled = bool(extra_data['ascender_enabled'])
+                 if 'ascender_queue' in extra_data and isinstance(extra_data['ascender_queue'], list):
+                     config.ascender_queue = extra_data['ascender_queue']
+                 if 'target_enchant_sets' in extra_data and extra_data['target_enchant_sets']:
+                     config.target_enchant_sets = extra_data['target_enchant_sets']
+                 if 'whitelisted_uuids' in extra_data:
+                     config.whitelisted_uuids = extra_data['whitelisted_uuids']
+                 if 'active_areas' in extra_data and isinstance(extra_data['active_areas'], list):
+                     config.active_areas = extra_data['active_areas']
+            
+            # If config already existed but had empty defaults from prior db state, populate them:
+            if not config.target_enchant_sets:
+                config.target_enchant_sets = ["Ancient + Fortune + Insight"]
+                
+            config.save()
+        except Exception as e:
+            print(f"[C2 Server] [DB Defend] Core database error in update_bot_status: {e}")
+            # Even if DB fails/locks, return True so the bot registration succeeds and does not get kicked!
+            return True
+            
         return True
 
-    @database_sync_to_async
+
     def set_bot_offline(self, username):
         from .models import BotAccount
         try:
