@@ -43,6 +43,7 @@
     enchant2: '',
     enchant3: '',
     newUuid: '',
+    isConnected: false,
     
     init() {
         this.connectWS();
@@ -51,6 +52,10 @@
     connectWS() {
         const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
         this.ws = new WebSocket(`${wsScheme}://${window.location.host}/ws/c2/`);
+        
+        this.ws.onopen = () => {
+            this.isConnected = true;
+        };
         
         this.ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -67,6 +72,7 @@
         };
         
         this.ws.onclose = () => {
+            this.isConnected = false;
             console.log('WS connection lost, retrying in 3 seconds...');
             setTimeout(() => this.connectWS(), 3000);
         };
@@ -122,8 +128,14 @@
     }
 }">
 
+    <!-- Reconnection Banner -->
+    <div x-show="!isConnected" class="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl flex items-center justify-center gap-3 font-mono font-bold animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+        <i data-lucide="wifi-off" class="w-5 h-5"></i>
+        <span>Connection to C2 Server Lost. Attempting to Reconnect...</span>
+    </div>
+
     <!-- Top Dashboard Statistics Bar -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6" :class="!isConnected ? 'opacity-50 pointer-events-none grayscale transition-all duration-500' : 'transition-all duration-500'">
         <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
             <div class="absolute right-4 top-4 text-teal-400/20">
                 <i data-lucide="cpu" class="w-8 h-8"></i>
@@ -165,7 +177,7 @@
     </div>
 
     <!-- Layout Columns: Telemetry Grid & Activity Feed -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" :class="!isConnected ? 'opacity-50 pointer-events-none grayscale transition-all duration-500' : 'transition-all duration-500'">
         
         <!-- Live Telemetry Area -->
         <div class="lg:col-span-2 space-y-6">
