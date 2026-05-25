@@ -36,10 +36,13 @@ class C2Consumer(AsyncWebsocketConsumer):
         else:
             print("[C2 Server] Bot/Client connection accepted (awaiting registration payload).")
             self.room_group_name = None
+            self.last_heartbeat = time.time()
             # Allow bot connection to accept; they will dynamically join their group during register/log
             await self.accept()
             # Enforce 10 second registration timeout to prevent resource exhaustion attacks
             asyncio.create_task(self.enforce_registration_timeout(10))
+            # Start heartbeat monitor for ghost connections
+            self.heartbeat_task = asyncio.create_task(self.monitor_heartbeat(15))
 
     async def disconnect(self, close_code):
         if getattr(self, 'bot_username', None):
@@ -61,6 +64,10 @@ class C2Consumer(AsyncWebsocketConsumer):
             owner_user = await self.get_bot_owner(self.bot_username)
             if owner_user:
                 await self.broadcast_fleet_update_for_user(owner_user)
+                
+        # Cancel heartbeat task if running
+        if hasattr(self, 'heartbeat_task'):
+            self.heartbeat_task.cancel()
 
     async def enforce_registration_timeout(self, seconds):
         await asyncio.sleep(seconds)
@@ -75,8 +82,22 @@ class C2Consumer(AsyncWebsocketConsumer):
                     }
                 }))
                 await self.close()
+                await self.close()
             except Exception:
                 pass
+
+    async def monitor_heartbeat(self, timeout_seconds):
+        import time
+        while True:
+            await asyncio.sleep(5)
+            if hasattr(self, 'last_heartbeat'):
+                if time.time() - self.last_heartbeat > timeout_seconds:
+                    print(f"[C2 Server] Client '{getattr(self, 'bot_username', 'Unregistered')}' timed out (no heartbeat in {timeout_seconds}s). Disconnecting.")
+                    try:
+                        await self.close()
+                    except Exception:
+                        pass
+                    break
 
     async def check_rate_limit(self):
         """
@@ -214,6 +235,10 @@ class C2Consumer(AsyncWebsocketConsumer):
                         await self.broadcast_fleet_update_for_user(user)
  
             elif action == 'log':
+                # Update heartbeat timestamp
+                import time
+                self.last_heartbeat = time.time()
+                
                 # Bot streaming live telemetries / logs
                 username = data.get('username')
                 

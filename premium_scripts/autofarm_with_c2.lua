@@ -1551,10 +1551,29 @@ task.spawn(function()
                         if parsedData.farm_enabled ~= nil then 
                             if _G.on ~= parsedData.farm_enabled then
                                 _G.on = parsedData.farm_enabled
-                                if not _G.on then ResetPhysics() end
+                                if not _G.on then 
+                                    ResetPhysics() 
+                                else
+                                    if #_G.FarmAreas > 0 then
+                                       local actualArea = currentArea
+                                       local pStats = ReplicatedStorage:FindFirstChild("Stats")
+                                       if pStats then
+                                           local myStats = pStats:FindFirstChild(tostring(player.Name))
+                                           local internalArea = myStats and myStats:FindFirstChild("CurrentArea")
+                                           if internalArea then actualArea = internalArea.Value end
+                                       end
+                                       if not table.find(_G.FarmAreas, actualArea) and not isTeleporting then
+                                           isTeleporting = true
+                                           task.spawn(function() TeleportSequence(_G.FarmAreas[1]) end)
+                                       end
+                                    end
+                                end
                             end
                         end
                         if parsedData.snipe_enabled ~= nil then _G.autoDropEnabled = parsedData.snipe_enabled end
+                        if parsedData.ascender_enabled ~= nil then _G.AutoAscenderEnabled = parsedData.ascender_enabled end
+                        if parsedData.ascender_queue then _G.AscenderQueue = parsedData.ascender_queue end
+                        if parsedData.ascender_criteria then _G.AscenderCriteria = parsedData.ascender_criteria end
                         
                         if parsedData.TargetSets then _G.ActiveTargetSets = parsedData.TargetSets end
                         if parsedData.WhitelistedSwords then _G.WhitelistedSwords = parsedData.WhitelistedSwords end

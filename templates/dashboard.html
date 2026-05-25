@@ -801,7 +801,7 @@
                                     @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Class = $event.target.value; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
                                     class="w-full bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
                                 <option value="None">None</option>
-                                <template x-for="c in gameData.Class || []"><option :value="c.Name || c" x-text="c.Name || c"></option></template>
+                                <template x-for="c in gameData.Classes || []"><option :value="c.Name || c" x-text="c.Name || c"></option></template>
                             </select>
                         </div>
                         <div class="space-y-1">
@@ -810,7 +810,7 @@
                                     @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Quality = $event.target.value; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
                                     class="w-full bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
                                 <option value="None">None</option>
-                                <template x-for="q in gameData.Quality || []"><option :value="q.Name || q" x-text="q.Name || q"></option></template>
+                                <template x-for="q in gameData.Qualities || []"><option :value="q.Name || q" x-text="q.Name || q"></option></template>
                             </select>
                         </div>
                         <div class="space-y-1">
@@ -819,7 +819,7 @@
                                     @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Rarity = $event.target.value; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
                                     class="w-full bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
                                 <option value="None">None</option>
-                                <template x-for="r in gameData.Rarity || []"><option :value="r.Name || r" x-text="r.Name || r"></option></template>
+                                <template x-for="r in gameData.Rarities || []"><option :value="r.Name || r" x-text="r.Name || r"></option></template>
                             </select>
                         </div>
                     </div>
@@ -830,7 +830,7 @@
                                     @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Mold = $event.target.value; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
                                     class="w-full bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
                                 <option value="None">None</option>
-                                <template x-for="m in gameData.Mold || []"><option :value="m.Name || m" x-text="m.Name || m"></option></template>
+                                <template x-for="m in gameData.Molds || []"><option :value="m.Name || m" x-text="m.Name || m"></option></template>
                             </select>
                         </div>
                         <div class="space-y-1">
