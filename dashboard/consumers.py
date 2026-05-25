@@ -36,13 +36,15 @@ class C2Consumer(AsyncWebsocketConsumer):
         else:
             print("[C2 Server] Bot/Client connection accepted (awaiting registration payload).")
             self.room_group_name = None
+            import time
             self.last_heartbeat = time.time()
             # Allow bot connection to accept; they will dynamically join their group during register/log
             await self.accept()
             # Enforce 10 second registration timeout to prevent resource exhaustion attacks
             asyncio.create_task(self.enforce_registration_timeout(10))
-            # Start heartbeat monitor for ghost connections
-            self.heartbeat_task = asyncio.create_task(self.monitor_heartbeat(15))
+            # Start heartbeat monitor (expects a ping at least every 120 seconds)
+            self.last_heartbeat = time.time()
+            self.heartbeat_task = asyncio.create_task(self.monitor_heartbeat(120))
 
     async def disconnect(self, close_code):
         if getattr(self, 'bot_username', None):
@@ -148,6 +150,8 @@ class C2Consumer(AsyncWebsocketConsumer):
             
             if action == 'register':
                 # Registering active bots from Roblox client
+                import time
+                self.last_heartbeat = time.time()
                 bot_id = data.get('username')
                 api_key = data.get('api_key')
                 license_key = data.get('license_key')
