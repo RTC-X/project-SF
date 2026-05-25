@@ -555,12 +555,14 @@ class C2Consumer(AsyncWebsocketConsumer):
                  config.ascender_enabled = bool(extra_data['ascender_enabled'])
              if 'ascender_queue' in extra_data and isinstance(extra_data['ascender_queue'], list):
                  config.ascender_queue = extra_data['ascender_queue']
-             if 'ascender_criteria' in extra_data and isinstance(extra_data['ascender_criteria'], list):
+             if 'ascender_criteria' in extra_data and isinstance(extra_data['ascender_criteria'], dict):
                  config.ascender_criteria = extra_data['ascender_criteria']
              if 'target_enchant_sets' in extra_data and extra_data['target_enchant_sets']:
                  config.target_enchant_sets = extra_data['target_enchant_sets']
              if 'whitelisted_uuids' in extra_data:
                  config.whitelisted_uuids = extra_data['whitelisted_uuids']
+             if 'active_areas' in extra_data and isinstance(extra_data['active_areas'], list):
+                 config.active_areas = extra_data['active_areas']
         
         # If config already existed but had empty defaults from prior db state, populate them:
         if not config.target_enchant_sets:

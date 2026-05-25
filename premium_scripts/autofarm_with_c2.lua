@@ -1469,10 +1469,14 @@ task.spawn(function()
                 pcall(function() RunService:Set3dRenderingEnabled(render3dActive) end)
                 print("C2 Command: 3D Render forcefully set to", render3dActive)
 
-            elseif data.command == "dropSword" then
+            elseif data.command == "dropSword" or data.command == "dropItem" then
                 local swordUUID = data.payload
+                if type(data.payload) == "table" and data.payload.itemId then
+                    swordUUID = data.payload.itemId
+                end
                 if swordUUID then
-                    DropRemote:FireServer("Drop Sword", swordUUID)
+                    local DropRemoteEvent = game:GetService("ReplicatedStorage"):WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remoteevent")
+                    DropRemoteEvent:FireServer("Drop Sword", swordUUID)
                     print("C2 Command: Dropping sword manually ->", swordUUID)
                 end
                 
@@ -1637,7 +1641,8 @@ task.spawn(function()
                                     snipe_enabled = _G.autoDropEnabled,
                                     ascender_enabled = _G.AutoAscenderEnabled,
                                     ascender_queue = _G.AscenderQueue,
-                                    ascender_criteria = _G.AscenderCriteria
+                                    ascender_criteria = _G.AscenderCriteria,
+                                    active_areas = _G.FarmAreas
                                 }
                             }))
                         end

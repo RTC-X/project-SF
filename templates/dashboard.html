@@ -589,9 +589,9 @@
                                 <div class="flex items-center justify-between pb-2.5 border-b border-white/5">
                                     <div class="flex items-center gap-2">
                                         <i data-lucide="shopping-bag" class="w-4 h-4 text-orange-400"></i>
-                                        <h5 class="text-sm font-bold text-white font-mono tracking-wide uppercase">Backpack</h5>
+                                        <h5 class="text-sm font-bold text-white font-mono tracking-wide uppercase">Inventory & Bank</h5>
                                     </div>
-                                    <span class="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-white/5" x-text="(selectedBot.backpack_items?.length || 0) + ' Items'">0 Items</span>
+                                    <span class="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-white/5" x-text="(selectedBot.backpack_items?.length || 0) + ' Total'">0 Total</span>
                                 </div>
                                 
                                 <!-- Backpack items scroller -->
@@ -603,7 +603,12 @@
                                     <template x-for="item in selectedBot.backpack_items || []" :key="item.id">
                                         <div x-data="{ open: false }" @click.away="open = false" class="p-3 rounded-xl bg-zinc-950/60 border border-white/5 flex items-center justify-between gap-2 hover:border-orange-500/20 transition-all select-none relative">
                                             <div class="space-y-0.5 flex-1 min-w-0">
-                                                <span class="block text-xs font-bold text-white font-mono truncate" x-text="getItemName(item)">Ancient Broadsword</span>
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="block text-xs font-bold text-white font-mono truncate" x-text="getItemName(item)">Ancient Broadsword</span>
+                                                    <template x-if="item.inBank">
+                                                        <span class="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[8px] font-mono rounded uppercase tracking-wider">Bank Slot <span x-text="item.BankSlot"></span></span>
+                                                    </template>
+                                                </div>
                                                 <span class="block text-[9px] font-mono text-zinc-500 truncate" x-text="getItemTraits(item)">Ancient II, Level 10</span>
                                             </div>
                                             
@@ -795,13 +800,71 @@
                 </div>
             </div>
             
-            <div class="flex-1 overflow-y-auto pr-2 space-y-2 min-h-[300px] mb-6 border-t border-white/5 pt-4">
+            <div class="flex-1 overflow-y-auto pr-2 space-y-4 min-h-[300px] mb-6 border-t border-white/5 pt-4">
+                
+                <!-- Target Criteria Configuration -->
+                <div class="bg-zinc-900/50 rounded-xl border border-white/5 p-4 mb-4">
+                    <h3 class="text-[10px] uppercase font-bold text-teal-400 font-mono tracking-widest mb-3">Ascender Target Criteria</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-mono text-zinc-500">Target Level</label>
+                            <input type="number" min="0" max="100" 
+                                   :value="selectedBot.config?.ascender_criteria?.Level || 0"
+                                   @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                   class="w-full bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-mono text-zinc-500">Target Quality</label>
+                            <select :value="selectedBot.config?.ascender_criteria?.Quality || 'None'"
+                                    @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Quality = $event.target.value; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                    class="w-full bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
+                                <option value="None">None</option>
+                                <template x-for="q in ['Standard', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Ascended']"><option :value="q" x-text="q"></option></template>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-mono text-zinc-500">Target Rarity</label>
+                            <select :value="selectedBot.config?.ascender_criteria?.Rarity || 'None'"
+                                    @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Rarity = $event.target.value; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                    class="w-full bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
+                                <option value="None">None</option>
+                                <template x-for="r in ['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary', 'Mythic', 'Divine']"><option :value="r" x-text="r"></option></template>
+                            </select>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-mono text-zinc-500">Target Mold</label>
+                            <select :value="selectedBot.config?.ascender_criteria?.Mold || 'None'"
+                                    @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Mold = $event.target.value; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                    class="w-full bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
+                                <option value="None">None</option>
+                                <template x-for="m in ['Wood', 'Stone', 'Iron', 'Steel', 'Titanium', 'Obsidian', 'Crystal']"><option :value="m" x-text="m"></option></template>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 mb-2">
+                    <select x-model="newAscenderUuid" class="flex-1 w-full min-w-0 bg-zinc-950/60 border border-white/5 text-xs rounded-lg px-3 py-2 text-zinc-400 font-mono focus:outline-none focus:ring-1 focus:ring-amber-400">
+                        <option value="">Select a sword from Bank to queue...</option>
+                        <template x-for="item in (selectedBot.backpack_items || []).filter(i => i.inBank)">
+                            <option :value="item.id" x-text="'[Slot ' + item.BankSlot + '] ' + getItemName(item)"></option>
+                        </template>
+                    </select>
+                    <button @click="
+                        if (newAscenderUuid && !localQueue.includes(newAscenderUuid)) {
+                            localQueue.push(newAscenderUuid);
+                            newAscenderUuid = '';
+                        }
+                    " class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-black font-bold text-xs rounded-lg transition-all font-mono shadow-lg shadow-amber-500/10">Add to Queue</button>
+                </div>
+
                 <template x-if="localQueue.length === 0">
-                    <div class="h-full flex flex-col items-center justify-center text-zinc-600 font-mono text-[11px] uppercase tracking-widest py-10">
-                        Queue is completely empty.<br>Select items from your backpack to add them.
+                    <div class="h-full flex flex-col items-center justify-center text-zinc-600 font-mono text-[11px] uppercase tracking-widest py-10 border border-dashed border-white/5 rounded-xl">
+                        Queue is completely empty.<br>Select items from your Bank to add them.
                     </div>
                 </template>
-                <template x-for="(uuid, idx) in localQueue" :key="idx">
+                <div class="space-y-2">
+                    <template x-for="(uuid, idx) in localQueue" :key="idx">
                     <div class="p-3 rounded-xl bg-zinc-900/40 border border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative overflow-hidden group hover:border-amber-500/20 transition-all">
                         <div class="absolute left-0 top-0 bottom-0 w-1 bg-amber-500/50"></div>
                         <div class="flex items-center gap-3 w-full">
