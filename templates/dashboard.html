@@ -418,7 +418,7 @@
                                 Toggle 3D
                             </button>
                             
-                            <button @click="showAscenderQueueModal = true" class="px-4 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold text-xs rounded-xl transition-all font-mono flex items-center gap-1.5 hover:bg-amber-500/20">
+                            <button @click="showAscenderQueueModal = true; localQueue = [...(selectedBot.config?.ascender_queue || [])]" class="px-4 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold text-xs rounded-xl transition-all font-mono flex items-center gap-1.5 hover:bg-amber-500/20">
                                 Ascender Queue
                             </button>
                             
@@ -778,7 +778,6 @@
                  return this.localQueue.length;
              }
          }" 
-         x-effect="if (showAscenderQueueModal && selectedBot) { localQueue = [...(selectedBot.config?.ascender_queue || [])]; }"
          @click.self="showAscenderQueueModal = false" 
          class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" 
          x-transition 
@@ -855,7 +854,7 @@
                             <label class="text-[10px] font-mono text-zinc-500">Enchant 1 Min Lvl</label>
                             <div class="flex items-center gap-2">
                                 <input type="range" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant1Level || 0"
-                                       @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant1Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                       @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant1Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
                                        class="flex-1 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
                                 <input type="number" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant1Level || 0"
                                        @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant1Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
@@ -866,7 +865,7 @@
                             <label class="text-[10px] font-mono text-zinc-500">Enchant 2 Min Lvl</label>
                             <div class="flex items-center gap-2">
                                 <input type="range" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant2Level || 0"
-                                       @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant2Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                       @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant2Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
                                        class="flex-1 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
                                 <input type="number" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant2Level || 0"
                                        @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant2Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
@@ -877,7 +876,7 @@
                             <label class="text-[10px] font-mono text-zinc-500">Enchant 3 Min Lvl</label>
                             <div class="flex items-center gap-2">
                                 <input type="range" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant3Level || 0"
-                                       @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant3Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                       @change="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant3Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
                                        class="flex-1 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
                                 <input type="number" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant3Level || 0"
                                        @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant3Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
@@ -914,9 +913,18 @@
                         <div class="flex items-center gap-3 w-full">
                             <span class="text-xs font-bold text-zinc-500 font-mono w-6 text-center" x-text="'#' + (idx + 1)"></span>
                             <div class="flex-1 min-w-0 flex flex-col">
-                                <span class="text-xs font-bold text-white font-mono truncate" x-text="uuid">Sword_UUID</span>
-                                <template x-if="selectedBot && selectedBot.backpack_items">
-                                    <span class="text-[10px] font-mono text-teal-400 truncate mt-0.5" x-text="(selectedBot.backpack_items.find(i => i.id === uuid) && selectedBot.backpack_items.find(i => i.id === uuid).inBank) ? 'Currently inside Bank (Slot ' + (selectedBot.backpack_items.find(i => i.id === uuid).BankSlot || '?') + ')' : 'Currently in Backpack'"></span>
+                                <template x-if="selectedBot && selectedBot.backpack_items && selectedBot.backpack_items.find(i => i.id === uuid)">
+                                    <div>
+                                        <span class="block text-xs font-bold text-white font-mono truncate" x-text="getItemName(selectedBot.backpack_items.find(i => i.id === uuid))"></span>
+                                        <span class="block text-[9px] font-mono text-amber-500/70 truncate mt-0.5" x-text="getItemTraits(selectedBot.backpack_items.find(i => i.id === uuid)) || 'No Enchants'"></span>
+                                        <span class="text-[10px] font-mono text-teal-400 truncate block mt-0.5" x-text="selectedBot.backpack_items.find(i => i.id === uuid).inBank ? 'Currently inside Bank (Slot ' + (selectedBot.backpack_items.find(i => i.id === uuid).BankSlot || '?') + ')' : 'Currently in Backpack'"></span>
+                                    </div>
+                                </template>
+                                <template x-if="!(selectedBot && selectedBot.backpack_items && selectedBot.backpack_items.find(i => i.id === uuid))">
+                                    <div>
+                                        <span class="text-xs font-bold text-zinc-400 font-mono truncate">Unknown Sword (Not in inventory)</span>
+                                        <span class="text-[9px] font-mono text-zinc-600 block" x-text="uuid"></span>
+                                    </div>
                                 </template>
                             </div>
                             <button @click="localQueue.splice(idx, 1)" class="p-1.5 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-all flex-shrink-0">
