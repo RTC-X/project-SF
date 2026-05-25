@@ -778,21 +778,59 @@ local function GetMaxBankSlots()
     return BankCapacityPerLevel[lvl] or (lvl > 15 and 36 or 6)
 end
 
+local function getIdFromName(statType, targetName)
+    if not targetName or targetName == "None" or targetName == "0" then return 0 end
+    local m = SwordModules[statType]
+    if not m then return 0 end
+    for id, data in pairs(m) do
+        if type(data) == "table" and data.Name == targetName then
+            return tonumber(id) or 0
+        elseif type(data) == "string" and data == targetName then
+            return tonumber(id) or 0
+        end
+    end
+    return 0
+end
+
 local function swordMeetsCriteria(swordFolder)
-    -- If no criteria is set, we assume it's NOT done (will keep ascending based on mode).
-    -- For now, if the user wants it to swap, they rely on a max level or something.
-    -- Assuming Ascender Criteria is checked here. If it meets criteria, return true.
     if not _G.AscenderCriteria then return false end
-    -- Basic logic: if sword is max level, it's done. 
-    -- Or if it matches target Quality/Rarity from criteria.
+    
     local currentLvl = tonumber(swordFolder:GetAttribute("Level")) or 0
     if currentLvl >= 100 then return true end -- Max level fallback
-    
-    if _G.AscenderCriteria.Level and currentLvl >= _G.AscenderCriteria.Level then
-        return true
+
+    local hasAnyCriteria = false
+    local allCriteriaMet = true 
+
+    if _G.AscenderCriteria.Level and tonumber(_G.AscenderCriteria.Level) and tonumber(_G.AscenderCriteria.Level) > 1 then
+        hasAnyCriteria = true
+        if currentLvl < tonumber(_G.AscenderCriteria.Level) then 
+            allCriteriaMet = false 
+        end
     end
     
-    -- If no target criteria matched/failed, assume it's NOT done.
+    local function checkStat(attrName, criteriaVal, moduleName)
+        if criteriaVal and criteriaVal ~= "None" and criteriaVal ~= "0" then
+            hasAnyCriteria = true
+            local targetId = getIdFromName(moduleName or attrName, criteriaVal)
+            local currentId = tonumber(swordFolder:GetAttribute(attrName)) or 0
+            if targetId > 0 and currentId < targetId then
+                allCriteriaMet = false
+            end
+        end
+    end
+
+    checkStat("Quality", _G.AscenderCriteria.Quality)
+    checkStat("Rarity", _G.AscenderCriteria.Rarity)
+    checkStat("Mold", _G.AscenderCriteria.Mold)
+    checkStat("Class", _G.AscenderCriteria.Class)
+    checkStat("Enchant1", _G.AscenderCriteria.Enchant1)
+    checkStat("Enchant2", _G.AscenderCriteria.Enchant2, "Enchant1")
+    checkStat("Enchant3", _G.AscenderCriteria.Enchant3, "Enchant1")
+    
+    if hasAnyCriteria and allCriteriaMet then
+        return true
+    end
+
     return false
 end
 
@@ -883,20 +921,29 @@ local function ExecuteAscenderAction(actionDetails)
             -- Insert next sword from Queue
             if #_G.AscenderQueue > 0 then
                 local nextUUID = _G.AscenderQueue[1]
-                local physicalSword = workspace.Swords:FindFirstChild(nextUUID)
-                if physicalSword and physicalSword:GetAttribute("BankSlot") then
-                    local pickedUp = PickupPhysicalSword(nextUUID)
-                    if pickedUp then
-                        pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
-                        task.wait(0.2) 
-                        AscenderEvent:FireServer("Drop Sword", nextUUID)
-                        table.remove(_G.AscenderQueue, 1)
-                        task.wait(0.5)
+                local inInventory = PlayerStats.Swords:FindFirstChild(nextUUID)
+                local inCharacter = character and character:FindFirstChild(nextUUID)
+                local readyToDrop = false
+                
+                if inInventory or inCharacter then
+                    readyToDrop = true
+                else
+                    local physicalSword = workspace.Swords:FindFirstChild(nextUUID)
+                    if physicalSword and physicalSword:GetAttribute("BankSlot") then
+                        readyToDrop = PickupPhysicalSword(nextUUID)
                     else
+                        warn("[Ascender] 🚨 Sword UUID " .. tostring(nextUUID) .. " not found in Inventory or Bank! Removing from queue.")
                         table.remove(_G.AscenderQueue, 1)
                     end
-                else
+                end
+                
+                if readyToDrop then
+                    pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
+                    task.wait(0.2) 
+                    AscenderEvent:FireServer("Drop Sword", nextUUID)
+                    print("[Ascender] ⚔️ Added next sword to Ascender: " .. tostring(nextUUID))
                     table.remove(_G.AscenderQueue, 1)
+                    task.wait(0.5)
                 end
                 
                 -- Sync updated queue to server
@@ -914,20 +961,29 @@ local function ExecuteAscenderAction(actionDetails)
             
         elseif actionDetails.type == "StartNext" then
             local nextUUID = _G.AscenderQueue[1]
-            local physicalSword = workspace.Swords:FindFirstChild(nextUUID)
-            if physicalSword and physicalSword:GetAttribute("BankSlot") then
-                local pickedUp = PickupPhysicalSword(nextUUID)
-                if pickedUp then
-                    pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
-                    task.wait(0.2) 
-                    AscenderEvent:FireServer("Drop Sword", nextUUID)
-                    table.remove(_G.AscenderQueue, 1)
-                    task.wait(0.5)
+            local inInventory = PlayerStats.Swords:FindFirstChild(nextUUID)
+            local inCharacter = character and character:FindFirstChild(nextUUID)
+            local readyToDrop = false
+            
+            if inInventory or inCharacter then
+                readyToDrop = true
+            else
+                local physicalSword = workspace.Swords:FindFirstChild(nextUUID)
+                if physicalSword and physicalSword:GetAttribute("BankSlot") then
+                    readyToDrop = PickupPhysicalSword(nextUUID)
                 else
+                    warn("[Ascender] 🚨 Sword UUID " .. tostring(nextUUID) .. " not found in Inventory or Bank! Removing from queue.")
                     table.remove(_G.AscenderQueue, 1)
                 end
-            else
+            end
+            
+            if readyToDrop then
+                pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
+                task.wait(0.2) 
+                AscenderEvent:FireServer("Drop Sword", nextUUID)
+                print("[Ascender] ⚔️ Added first sword to Ascender: " .. tostring(nextUUID))
                 table.remove(_G.AscenderQueue, 1)
+                task.wait(0.5)
             end
             
             if _G.C2_WS then
