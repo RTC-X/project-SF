@@ -937,13 +937,7 @@
                 <button @click="showAscenderQueueModal = false" class="px-5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all border border-white/10 font-mono">Cancel</button>
                 <button @click="
                     selectedBot.config.ascender_queue = localQueue;
-                    let cleanedCriteria = {};
-                    for (let key in localCriteria) {
-                        if (localCriteria[key] !== 'None' && localCriteria[key] !== 0 && localCriteria[key] !== '') {
-                            cleanedCriteria[key] = localCriteria[key];
-                        }
-                    }
-                    selectedBot.config.ascender_criteria = cleanedCriteria;
+                    selectedBot.config.ascender_criteria = localCriteria;
                     sendCommand(selectedBot.id, 'syncConfig', selectedBot.config);
                     showAscenderQueueModal = false;
                 " class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-black text-xs font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 font-mono">Deploy Queue</button>
