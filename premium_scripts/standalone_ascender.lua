@@ -1,5 +1,8 @@
-if _G.StandaloneAscenderRunning then return end
-_G.StandaloneAscenderRunning = true
+if getgenv().StandaloneAscenderRunning then
+    getgenv().StandaloneAscenderRunning = false
+    task.wait(1.5) -- Wait for old loop to shut down safely
+end
+getgenv().StandaloneAscenderRunning = true
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -45,12 +48,12 @@ local function getNames(statType)
     return names
 end
 
-_G.AscenderCriteria = {
+local AscenderCriteria = {
     Quality = "None", Rarity = "None", Mold = "None", Class = "None",
     Enchant1 = "None", Enchant2 = "None", Enchant3 = "None", Level = 0
 }
-_G.AscenderQueue = {}
-_G.AutoAscendEnabled = false
+local AscenderQueue = {}
+local AutoAscendEnabled = false
 
 local function getIdFromName(statType, targetName)
     if not targetName or targetName == "None" or targetName == "0" then return 0 end
@@ -67,7 +70,7 @@ local function getIdFromName(statType, targetName)
 end
 
 local function swordMeetsCriteria(swordFolder)
-    if not _G.AscenderCriteria then return false end
+    if not AscenderCriteria then return false end
     
     local currentLvl = tonumber(swordFolder:GetAttribute("Level")) or 0
     if currentLvl >= 100 then return true end
@@ -75,9 +78,9 @@ local function swordMeetsCriteria(swordFolder)
     local hasAnyCriteria = false
     local allCriteriaMet = true 
 
-    if _G.AscenderCriteria.Level and tonumber(_G.AscenderCriteria.Level) and tonumber(_G.AscenderCriteria.Level) > 1 then
+    if AscenderCriteria.Level and tonumber(AscenderCriteria.Level) and tonumber(AscenderCriteria.Level) > 1 then
         hasAnyCriteria = true
-        if currentLvl < tonumber(_G.AscenderCriteria.Level) then 
+        if currentLvl < tonumber(AscenderCriteria.Level) then 
             allCriteriaMet = false 
         end
     end
@@ -93,13 +96,13 @@ local function swordMeetsCriteria(swordFolder)
         end
     end
 
-    checkStat("Quality", _G.AscenderCriteria.Quality)
-    checkStat("Rarity", _G.AscenderCriteria.Rarity)
-    checkStat("Mold", _G.AscenderCriteria.Mold)
-    checkStat("Class", _G.AscenderCriteria.Class)
-    checkStat("Enchant1", _G.AscenderCriteria.Enchant1)
-    checkStat("Enchant2", _G.AscenderCriteria.Enchant2, "Enchant1")
-    checkStat("Enchant3", _G.AscenderCriteria.Enchant3, "Enchant1")
+    checkStat("Quality", AscenderCriteria.Quality)
+    checkStat("Rarity", AscenderCriteria.Rarity)
+    checkStat("Mold", AscenderCriteria.Mold)
+    checkStat("Class", AscenderCriteria.Class)
+    checkStat("Enchant1", AscenderCriteria.Enchant1)
+    checkStat("Enchant2", AscenderCriteria.Enchant2, "Enchant1")
+    checkStat("Enchant3", AscenderCriteria.Enchant3, "Enchant1")
     
     if hasAnyCriteria and allCriteriaMet then
         return true
@@ -114,7 +117,7 @@ local function CheckAscenderNeedsAction()
         if swordMeetsCriteria(currentSword) then
             return { type = "FinishAndSwap", uuid = currentSword:GetAttribute("UUID") }
         end
-    elseif not currentSword and #_G.AscenderQueue > 0 then
+    elseif not currentSword and #AscenderQueue > 0 then
         return { type = "StartNext" }
     end
     return nil
@@ -174,8 +177,8 @@ local function ExecuteAscenderAction(actionDetails)
                 print("[Ascender] ✅ Deposit successful!")
             end
             
-            if #_G.AscenderQueue > 0 then
-                local nextUUID = _G.AscenderQueue[1]
+            if #AscenderQueue > 0 then
+                local nextUUID = AscenderQueue[1]
                 local nextInv = PlayerStats.Swords:FindFirstChild(nextUUID)
                 local nextChar = character and character:FindFirstChild(nextUUID)
                 local readyToDrop = false
@@ -188,7 +191,7 @@ local function ExecuteAscenderAction(actionDetails)
                         readyToDrop = PickupPhysicalSword(nextUUID)
                     else
                         warn("[Ascender] 🚨 Sword UUID " .. tostring(nextUUID) .. " not found! Removing from queue.")
-                        table.remove(_G.AscenderQueue, 1)
+                        table.remove(AscenderQueue, 1)
                     end
                 end
                 
@@ -197,13 +200,13 @@ local function ExecuteAscenderAction(actionDetails)
                     task.wait(0.2) 
                     AscenderEvent:FireServer("Drop Sword", nextUUID)
                     print("[Ascender] ⚔️ Added next sword to Ascender: " .. tostring(nextUUID))
-                    table.remove(_G.AscenderQueue, 1)
+                    table.remove(AscenderQueue, 1)
                     task.wait(0.5)
                 end
             end
             
         elseif actionDetails.type == "StartNext" then
-            local nextUUID = _G.AscenderQueue[1]
+            local nextUUID = AscenderQueue[1]
             local nextInv = PlayerStats.Swords:FindFirstChild(nextUUID)
             local nextChar = character and character:FindFirstChild(nextUUID)
             local readyToDrop = false
@@ -216,7 +219,7 @@ local function ExecuteAscenderAction(actionDetails)
                     readyToDrop = PickupPhysicalSword(nextUUID)
                 else
                     warn("[Ascender] 🚨 Sword UUID " .. tostring(nextUUID) .. " not found! Removing from queue.")
-                    table.remove(_G.AscenderQueue, 1)
+                    table.remove(AscenderQueue, 1)
                 end
             end
             
@@ -225,7 +228,7 @@ local function ExecuteAscenderAction(actionDetails)
                 task.wait(0.2) 
                 AscenderEvent:FireServer("Drop Sword", nextUUID)
                 print("[Ascender] ⚔️ Added first sword to Ascender: " .. tostring(nextUUID))
-                table.remove(_G.AscenderQueue, 1)
+                table.remove(AscenderQueue, 1)
                 task.wait(0.5)
             end
         end
@@ -234,8 +237,8 @@ local function ExecuteAscenderAction(actionDetails)
 end
 
 task.spawn(function()
-    while _G.StandaloneAscenderRunning do
-        if _G.AutoAscendEnabled then
+    while getgenv().StandaloneAscenderRunning do
+        if AutoAscendEnabled then
             local actionDetails = CheckAscenderNeedsAction()
             if actionDetails then
                 ExecuteAscenderAction(actionDetails)
@@ -267,7 +270,7 @@ Tab:CreateToggle({
     CurrentValue = false,
     Flag = "ToggleAutoAscend",
     Callback = function(Value)
-        _G.AutoAscendEnabled = Value
+        AutoAscendEnabled = Value
     end
 })
 
@@ -282,7 +285,7 @@ local function createDropdown(name, statType)
         MultipleOptions = false,
         Flag = "Target" .. statType,
         Callback = function(Options)
-            _G.AscenderCriteria[statType] = Options[1]
+            AscenderCriteria[statType] = Options[1]
         end
     })
 end
@@ -300,7 +303,7 @@ Tab:CreateInput({
     PlaceholderText = "Minimum Level",
     RemoveTextAfterFocusLost = false,
     Callback = function(Text)
-        _G.AscenderCriteria.Level = tonumber(Text) or 0
+        AscenderCriteria.Level = tonumber(Text) or 0
     end
 })
 
@@ -318,8 +321,10 @@ local function RefreshAvailableSwords()
         table.insert(availableSwords, {uuid = uuid, label = "Lvl " .. lvl .. " - " .. uuid:sub(1,6)})
         table.insert(swordOptions, "Lvl " .. lvl .. " - " .. uuid:sub(1,6))
     end
-    for _, f in pairs(workspace.Swords:GetChildren()) do
-        if f:GetAttribute("BankSlot") then
+    
+    local bankFolder = PlayerStats:FindFirstChild("Bank")
+    if bankFolder then
+        for _, f in pairs(bankFolder:GetChildren()) do
             local lvl = f:GetAttribute("Level") or 0
             local uuid = f.Name
             table.insert(availableSwords, {uuid = uuid, label = "[Bank] Lvl " .. lvl .. " - " .. uuid:sub(1,6)})
@@ -331,10 +336,10 @@ end
 RefreshAvailableSwords()
 
 local QueueDropdown = QueueTab:CreateDropdown({
-    Name = "Select Sword to Queue",
+    Name = "Select Swords to Queue",
     Options = swordOptions,
     CurrentOption = {},
-    MultipleOptions = false,
+    MultipleOptions = true,
     Callback = function() end
 })
 
@@ -342,29 +347,32 @@ QueueTab:CreateButton({
     Name = "Refresh Swords List",
     Callback = function()
         RefreshAvailableSwords()
-        QueueDropdown:Refresh(swordOptions)
+        QueueDropdown:Refresh(swordOptions, true)
     end
 })
 
-local selectedSwordUUID = nil
+local selectedSwordLabels = {}
 QueueDropdown.Callback = function(Options)
-    local selectedLabel = Options[1]
-    for _, data in ipairs(availableSwords) do
-        if data.label == selectedLabel then
-            selectedSwordUUID = data.uuid
-            break
-        end
-    end
+    selectedSwordLabels = Options
 end
 
 QueueTab:CreateButton({
     Name = "Add to Queue",
     Callback = function()
-        if selectedSwordUUID then
-            table.insert(_G.AscenderQueue, selectedSwordUUID)
-            Rayfield:Notify({Title = "Queued", Content = "Sword added to queue!", Duration = 2})
+        if #selectedSwordLabels > 0 then
+            local count = 0
+            for _, selectedLabel in ipairs(selectedSwordLabels) do
+                for _, data in ipairs(availableSwords) do
+                    if data.label == selectedLabel then
+                        table.insert(AscenderQueue, data.uuid)
+                        count = count + 1
+                        break
+                    end
+                end
+            end
+            Rayfield:Notify({Title = "Queued", Content = "Added " .. count .. " swords to queue!", Duration = 2})
         else
-            Rayfield:Notify({Title = "Error", Content = "Select a sword first!", Duration = 2})
+            Rayfield:Notify({Title = "Error", Content = "Select at least one sword first!", Duration = 2})
         end
     end
 })
@@ -372,7 +380,7 @@ QueueTab:CreateButton({
 QueueTab:CreateButton({
     Name = "Clear Queue",
     Callback = function()
-        _G.AscenderQueue = {}
+        AscenderQueue = {}
         Rayfield:Notify({Title = "Cleared", Content = "Queue cleared!", Duration = 2})
     end
 })
