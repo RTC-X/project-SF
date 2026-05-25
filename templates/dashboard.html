@@ -189,11 +189,17 @@
                     <h3 class="text-xl font-bold tracking-tight text-white">Live Node Telemetry</h3>
                 </div>
                 
-                <!-- Multi Config Button -->
-                <button @click="showMultiConfigModal = true; multiConfigStep = 1; multiConfigSelectedIds = [];" class="flex items-center gap-1.5 text-xs font-semibold font-mono text-teal-400 hover:text-white py-2 px-4 rounded-2xl bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 hover:border-teal-500/30 transition-all">
-                    <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
-                    Multi Config
-                </button>
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-2">
+                    <button @click="ws.send(JSON.stringify({action: 'reset_fleet'}))" class="flex items-center gap-1.5 text-xs font-semibold font-mono text-amber-400 hover:text-white py-2 px-4 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/30 transition-all" title="Clears stuck nodes from the dashboard. Active nodes will reconnect automatically.">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        Reset Fleet State
+                    </button>
+                    <button @click="showMultiConfigModal = true; multiConfigStep = 1; multiConfigSelectedIds = [];" class="flex items-center gap-1.5 text-xs font-semibold font-mono text-teal-400 hover:text-white py-2 px-4 rounded-2xl bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 hover:border-teal-500/30 transition-all">
+                        <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+                        Multi Config
+                    </button>
+                </div>
             </div>
             
             <!-- Dynamic Fleet Grid -->

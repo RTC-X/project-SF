@@ -208,6 +208,13 @@ class C2Consumer(AsyncWebsocketConsumer):
                     await self.clear_offline_bots(owner_user)
                     await self.broadcast_fleet_update_for_user(owner_user)
                 
+            elif action == 'reset_fleet':
+                # Force all bots to offline status (clears ghosts/stuck idle nodes)
+                owner_user = self.scope.get('user')
+                if owner_user and owner_user.is_authenticated:
+                    await self.reset_fleet_status(owner_user)
+                    await self.broadcast_fleet_update_for_user(owner_user)
+                
             elif action == 'command':
                 # Relaying UI commands from control panels out to individual Roblox bots
                 target_id = data.get('target_id')
@@ -719,3 +726,9 @@ class C2Consumer(AsyncWebsocketConsumer):
         from .models import BotAccount
         BotAccount.objects.filter(owner=user, status='Offline').delete()
 
+    @database_sync_to_async
+    def reset_fleet_status(self, user):
+        from .models import BotAccount
+        # Set all bots for the user to Offline.
+        # Any actively connected bots will auto-reconnect and update their status to Idle/Farming within seconds.
+        BotAccount.objects.filter(owner=user).update(status='Offline')
