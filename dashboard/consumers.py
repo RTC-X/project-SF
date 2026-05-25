@@ -166,9 +166,25 @@ class C2Consumer(AsyncWebsocketConsumer):
                     self.channel_name
                 )
                 
+                # Fetch saved DB configuration and sync to bot instantly
+                bot_config = await self.get_bot_config(bot_id)
+                if bot_config:
+                    await self.send(text_data=json.dumps({
+                        'type': 'command',
+                        'command': 'syncConfig',
+                        'payload': bot_config
+                    }))
+                
                 # Broadcast updated fleet status to the bot's owner
                 owner_user = await self.get_bot_owner(bot_id)
                 if owner_user:
+                    await self.broadcast_fleet_update_for_user(owner_user)
+                
+            elif action == 'clear_offline':
+                # Remove all offline bots for this user
+                owner_user = self.scope.get('user')
+                if owner_user and owner_user.is_authenticated:
+                    await self.clear_offline_bots(owner_user)
                     await self.broadcast_fleet_update_for_user(owner_user)
                 
             elif action == 'command':
@@ -325,6 +341,12 @@ class C2Consumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'type': 'fleet_update',
             'bots': event['bots']
+        }))
+
+    async def new_log(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'new_log',
+            'log': event['log']
         }))
 
     async def broadcast_log(self, event):
@@ -644,4 +666,29 @@ class C2Consumer(AsyncWebsocketConsumer):
             bot.save()
         except Exception as e:
             print("Error persisting bot configuration:", e)
+
+    @database_sync_to_async
+    def get_bot_config(self, username):
+        from .models import BotAccount, BotConfiguration
+        try:
+            bot = BotAccount.objects.get(username=username)
+            config, _ = BotConfiguration.objects.get_or_create(bot=bot)
+            return {
+                'farm_enabled': config.farm_enabled,
+                'snipe_enabled': config.snipe_enabled,
+                'activate_panel': config.activate_panel,
+                'active_areas': config.active_areas,
+                'target_enchant_sets': config.target_enchant_sets,
+                'whitelisted_uuids': config.whitelisted_uuids,
+                'ascender_enabled': config.ascender_enabled,
+                'ascender_queue': config.ascender_queue,
+                'ascender_criteria': config.ascender_criteria
+            }
+        except BotAccount.DoesNotExist:
+            return None
+
+    @database_sync_to_async
+    def clear_offline_bots(self, user):
+        from .models import BotAccount
+        BotAccount.objects.filter(owner=user, status='Offline').delete()
 

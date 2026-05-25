@@ -1272,7 +1272,7 @@ task.spawn(function()
         local moduleCat = category
         if string.find(category, "Enchant") then moduleCat = "Enchant1" end
         
-        local categoryData = SwordModules[moduleCat]
+        local categoryData = populateData[moduleCat]
         if not categoryData then return tostring(id) end
         return categoryData[id] and categoryData[id].Name or tostring(id)
     end
