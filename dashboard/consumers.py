@@ -283,6 +283,8 @@ class C2Consumer(AsyncWebsocketConsumer):
                         await self.broadcast_fleet_update_for_user(owner_user)
  
             elif action == 'update_status':
+                import time
+                self.last_heartbeat = time.time()
                 # Sanitize and validate incoming live stats
                 bot_id = data.get('username')
                 payload = data.get('payload', {})

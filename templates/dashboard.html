@@ -834,36 +834,36 @@
                             </select>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-mono text-zinc-500">Enchant 1 (Name & Lvl)</label>
-                            <div class="flex gap-1">
-                                <input type="text" placeholder="Name" :value="selectedBot.config?.ascender_criteria?.Enchant1 || ''"
-                                       @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant1 = $event.target.value; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
-                                       class="w-2/3 bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
-                                <input type="number" placeholder="Lvl" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant1Level || 0"
+                            <label class="text-[10px] font-mono text-zinc-500">Enchant 1 Min Lvl</label>
+                            <div class="flex items-center gap-2">
+                                <input type="range" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant1Level || 0"
                                        @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant1Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
-                                       class="w-1/3 bg-zinc-950 border border-white/10 rounded-lg px-1 py-1.5 text-xs text-white font-mono">
+                                       class="flex-1 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
+                                <input type="number" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant1Level || 0"
+                                       @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant1Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                       class="w-12 bg-zinc-950 border border-white/10 rounded-lg px-1 py-1 text-xs text-center text-white font-mono">
                             </div>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-mono text-zinc-500">Enchant 2 (Name & Lvl)</label>
-                            <div class="flex gap-1">
-                                <input type="text" placeholder="Name" :value="selectedBot.config?.ascender_criteria?.Enchant2 || ''"
-                                       @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant2 = $event.target.value; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
-                                       class="w-2/3 bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
-                                <input type="number" placeholder="Lvl" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant2Level || 0"
+                            <label class="text-[10px] font-mono text-zinc-500">Enchant 2 Min Lvl</label>
+                            <div class="flex items-center gap-2">
+                                <input type="range" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant2Level || 0"
                                        @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant2Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
-                                       class="w-1/3 bg-zinc-950 border border-white/10 rounded-lg px-1 py-1.5 text-xs text-white font-mono">
+                                       class="flex-1 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
+                                <input type="number" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant2Level || 0"
+                                       @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant2Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                       class="w-12 bg-zinc-950 border border-white/10 rounded-lg px-1 py-1 text-xs text-center text-white font-mono">
                             </div>
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[10px] font-mono text-zinc-500">Enchant 3 (Name & Lvl)</label>
-                            <div class="flex gap-1">
-                                <input type="text" placeholder="Name" :value="selectedBot.config?.ascender_criteria?.Enchant3 || ''"
-                                       @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant3 = $event.target.value; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
-                                       class="w-2/3 bg-zinc-950 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono">
-                                <input type="number" placeholder="Lvl" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant3Level || 0"
+                            <label class="text-[10px] font-mono text-zinc-500">Enchant 3 Min Lvl</label>
+                            <div class="flex items-center gap-2">
+                                <input type="range" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant3Level || 0"
                                        @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant3Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
-                                       class="w-1/3 bg-zinc-950 border border-white/10 rounded-lg px-1 py-1.5 text-xs text-white font-mono">
+                                       class="flex-1 h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-teal-500">
+                                <input type="number" min="0" max="100" :value="selectedBot.config?.ascender_criteria?.Enchant3Level || 0"
+                                       @input="if(!selectedBot.config.ascender_criteria) selectedBot.config.ascender_criteria = {}; selectedBot.config.ascender_criteria.Enchant3Level = Number($event.target.value); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)"
+                                       class="w-12 bg-zinc-950 border border-white/10 rounded-lg px-1 py-1 text-xs text-center text-white font-mono">
                             </div>
                         </div>
                     </div>
