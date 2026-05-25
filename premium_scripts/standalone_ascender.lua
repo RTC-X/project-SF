@@ -52,6 +52,7 @@ local AscenderCriteria = {
     Quality = "None", Rarity = "None", Mold = "None", Class = "None",
     Enchant1 = "None", Enchant2 = "None", Enchant3 = "None", Level = 0
 }
+local AscenderMode = "None"
 local AscenderQueue = {}
 local AutoAscendEnabled = false
 
@@ -199,6 +200,9 @@ local function ExecuteAscenderAction(actionDetails)
                     pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
                     task.wait(0.2) 
                     AscenderEvent:FireServer("Drop Sword", nextUUID)
+                    if AscenderMode ~= "None" then
+                        AscenderEvent:FireServer("Set Ascender Mode", AscenderMode)
+                    end
                     print("[Ascender] ⚔️ Added next sword to Ascender: " .. tostring(nextUUID))
                     table.remove(AscenderQueue, 1)
                     task.wait(0.5)
@@ -227,6 +231,9 @@ local function ExecuteAscenderAction(actionDetails)
                 pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
                 task.wait(0.2) 
                 AscenderEvent:FireServer("Drop Sword", nextUUID)
+                if AscenderMode ~= "None" then
+                    AscenderEvent:FireServer("Set Ascender Mode", AscenderMode)
+                end
                 print("[Ascender] ⚔️ Added first sword to Ascender: " .. tostring(nextUUID))
                 table.remove(AscenderQueue, 1)
                 task.wait(0.5)
@@ -275,6 +282,21 @@ Tab:CreateToggle({
 })
 
 local Section = Tab:CreateSection("Target Metrics")
+
+Tab:CreateDropdown({
+    Name = "Mode to Ascend (Required)",
+    Options = {"None", "Quality", "Rarity", "Mold", "Class", "Enchant1", "Enchant2", "Enchant3"},
+    CurrentOption = {"None"},
+    MultipleOptions = false,
+    Flag = "CurrentAscenderMode",
+    Callback = function(Options)
+        AscenderMode = Options[1]
+        if AscenderMode ~= "None" then
+            AscenderEvent:FireServer("Set Ascender Mode", AscenderMode)
+            print("[Ascender] Set mode to:", AscenderMode)
+        end
+    end
+})
 
 local function createDropdown(name, statType)
     local options = getNames(statType)
