@@ -373,6 +373,49 @@
                     </div>
                 </div>
 
+                <!-- Ascender Target Criteria -->
+                <div class="col-span-1 md:col-span-2 pt-4 border-t border-white/5 flex flex-col gap-3">
+                    <label class="font-sans text-xs font-bold text-orange-400 uppercase tracking-wider flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-orange-400"></i> Auto-Ascender Targets
+                    </label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-1">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="font-mono text-[9px] text-zinc-500">Target Quality</label>
+                            <select id="cfg-asc-quality" class="h-9 px-2 rounded-xl border border-white/5 bg-zinc-900/60 text-xs font-mono text-zinc-300 focus:border-orange-500/40"></select>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="font-mono text-[9px] text-zinc-500">Target Rarity</label>
+                            <select id="cfg-asc-rarity" class="h-9 px-2 rounded-xl border border-white/5 bg-zinc-900/60 text-xs font-mono text-zinc-300 focus:border-orange-500/40"></select>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="font-mono text-[9px] text-zinc-500">Target Mold</label>
+                            <select id="cfg-asc-mold" class="h-9 px-2 rounded-xl border border-white/5 bg-zinc-900/60 text-xs font-mono text-zinc-300 focus:border-orange-500/40"></select>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="font-mono text-[9px] text-zinc-500">Min Sword Lvl</label>
+                            <input type="number" id="cfg-asc-level" class="h-9 px-3 rounded-xl border border-white/5 bg-zinc-900/60 text-xs font-mono text-zinc-300 focus:border-orange-500/40" placeholder="0">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                        <div class="flex flex-col gap-1.5 p-3 rounded-xl border border-white/5 bg-zinc-900/20">
+                            <label class="font-mono text-[9px] text-orange-400/80">Enchant Slot 1</label>
+                            <select id="cfg-asc-e1-name" class="h-9 px-2 rounded-lg border border-white/5 bg-zinc-900/80 text-xs font-mono text-zinc-300 focus:border-orange-500/40 mb-1"></select>
+                            <input type="number" id="cfg-asc-e1-lvl" class="h-9 px-3 rounded-lg border border-white/5 bg-zinc-900/80 text-xs font-mono text-zinc-300 focus:border-orange-500/40" placeholder="Min Level (e.g. 5)">
+                        </div>
+                        <div class="flex flex-col gap-1.5 p-3 rounded-xl border border-white/5 bg-zinc-900/20">
+                            <label class="font-mono text-[9px] text-orange-400/80">Enchant Slot 2</label>
+                            <select id="cfg-asc-e2-name" class="h-9 px-2 rounded-lg border border-white/5 bg-zinc-900/80 text-xs font-mono text-zinc-300 focus:border-orange-500/40 mb-1"></select>
+                            <input type="number" id="cfg-asc-e2-lvl" class="h-9 px-3 rounded-lg border border-white/5 bg-zinc-900/80 text-xs font-mono text-zinc-300 focus:border-orange-500/40" placeholder="Min Level (e.g. 5)">
+                        </div>
+                        <div class="flex flex-col gap-1.5 p-3 rounded-xl border border-white/5 bg-zinc-900/20">
+                            <label class="font-mono text-[9px] text-orange-400/80">Enchant Slot 3</label>
+                            <select id="cfg-asc-e3-name" class="h-9 px-2 rounded-lg border border-white/5 bg-zinc-900/80 text-xs font-mono text-zinc-300 focus:border-orange-500/40 mb-1"></select>
+                            <input type="number" id="cfg-asc-e3-lvl" class="h-9 px-3 rounded-lg border border-white/5 bg-zinc-900/80 text-xs font-mono text-zinc-300 focus:border-orange-500/40" placeholder="Min Level (e.g. 5)">
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <div class="flex gap-3 border-t border-white/5 pt-4">
@@ -563,6 +606,34 @@
                   }
             });
             
+            // Populate Ascender Criteria
+            const ascCriteria = config.AscenderCriteria || {};
+            
+            function populateSelect(selectId, metaType, currentValue) {
+                const select = document.getElementById(selectId);
+                select.innerHTML = '<option value="None">None</option>';
+                const meta = window.GlobalMetaTable?.[metaType] || [];
+                meta.forEach(item => {
+                    if(!item) return;
+                    let itemName = typeof item === 'object' ? item.Name : item;
+                    let selected = itemName === currentValue ? 'selected' : '';
+                    select.innerHTML += `<option value="${itemName}" ${selected}>${itemName}</option>`;
+                });
+            }
+
+            populateSelect('cfg-asc-quality', 'Quality', ascCriteria.Quality);
+            populateSelect('cfg-asc-rarity', 'Rarity', ascCriteria.Rarity);
+            populateSelect('cfg-asc-mold', 'Mold', ascCriteria.Mold);
+            
+            populateSelect('cfg-asc-e1-name', 'Enchant', ascCriteria.Enchant1Name);
+            populateSelect('cfg-asc-e2-name', 'Enchant', ascCriteria.Enchant2Name);
+            populateSelect('cfg-asc-e3-name', 'Enchant', ascCriteria.Enchant3Name);
+            
+            document.getElementById('cfg-asc-level').value = ascCriteria.Level || 0;
+            document.getElementById('cfg-asc-e1-lvl').value = ascCriteria.Enchant1Level || 0;
+            document.getElementById('cfg-asc-e2-lvl').value = ascCriteria.Enchant2Level || 0;
+            document.getElementById('cfg-asc-e3-lvl').value = ascCriteria.Enchant3Level || 0;
+
             document.getElementById('config-modal').style.display = 'flex';
         }
 
@@ -583,6 +654,19 @@
             
             const checkboxes = document.querySelectorAll('.area-checkbox:checked');
             config.FarmAreas = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+            config.AscenderCriteria = {
+                Quality: document.getElementById('cfg-asc-quality').value,
+                Rarity: document.getElementById('cfg-asc-rarity').value,
+                Mold: document.getElementById('cfg-asc-mold').value,
+                Level: parseInt(document.getElementById('cfg-asc-level').value) || 0,
+                Enchant1Name: document.getElementById('cfg-asc-e1-name').value,
+                Enchant1Level: parseInt(document.getElementById('cfg-asc-e1-lvl').value) || 0,
+                Enchant2Name: document.getElementById('cfg-asc-e2-name').value,
+                Enchant2Level: parseInt(document.getElementById('cfg-asc-e2-lvl').value) || 0,
+                Enchant3Name: document.getElementById('cfg-asc-e3-name').value,
+                Enchant3Level: parseInt(document.getElementById('cfg-asc-e3-lvl').value) || 0,
+            };
             
             sendCommand(activeModalClient, 'syncConfig', config);
             closeModals();

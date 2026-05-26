@@ -798,60 +798,79 @@ local function getIdFromName(statType, targetName)
     return 0
 end
 
-local function swordMeetsCriteria(swordFolder)
-    if not _G.AscenderCriteria then return false end
+local function getNames(statType)
+    local m = SwordModules[statType]
+    local names = {"None"}
+    if not m then return names end
     
-    local currentLvl = tonumber(swordFolder:GetAttribute("Level")) or 0
-    if currentLvl >= 100 then return true end -- Max level fallback
-
-    local hasAnyCriteria = false
-    local allCriteriaMet = true 
-
-    if _G.AscenderCriteria.Level and tonumber(_G.AscenderCriteria.Level) and tonumber(_G.AscenderCriteria.Level) > 1 then
-        hasAnyCriteria = true
-        if currentLvl < tonumber(_G.AscenderCriteria.Level) then 
-            allCriteriaMet = false 
+    local sortedIds = {}
+    for id, _ in pairs(m) do table.insert(sortedIds, tonumber(id)) end
+    table.sort(sortedIds, function(a, b) return a < b end)
+    
+    for _, id in ipairs(sortedIds) do
+        local data = m[id] or m[tostring(id)]
+        if type(data) == "table" and data.Name then
+            table.insert(names, data.Name)
+        elseif type(data) == "string" then
+            table.insert(names, data)
         end
     end
-    
-    local function checkStat(attrName, criteriaVal, moduleName)
-        if criteriaVal and criteriaVal ~= "None" and criteriaVal ~= "0" then
-            hasAnyCriteria = true
-            local targetId = getIdFromName(moduleName or attrName, criteriaVal)
+    return names
+end
+
+local function isStatUnmet(swordFolder, attrName, targetVal, moduleName)
+    if targetVal and targetVal ~= "None" and targetVal ~= 0 then
+        if type(targetVal) == "number" then
+            local currentVal = tonumber(swordFolder:GetAttribute(attrName)) or 0
+            if currentVal < targetVal then return true end
+        else
+            local targetId = getIdFromName(moduleName or attrName, targetVal)
             local currentId = tonumber(swordFolder:GetAttribute(attrName)) or 0
-            if targetId > 0 and currentId < targetId then
-                allCriteriaMet = false
-            end
+            if targetId > 0 and currentId < targetId then return true end
         end
     end
-
-    checkStat("Quality", _G.AscenderCriteria.Quality)
-    checkStat("Rarity", _G.AscenderCriteria.Rarity)
-    checkStat("Mold", _G.AscenderCriteria.Mold)
-    checkStat("Class", _G.AscenderCriteria.Class)
-    checkStat("Enchant1", _G.AscenderCriteria.Enchant1)
-    checkStat("Enchant2", _G.AscenderCriteria.Enchant2, "Enchant1")
-    checkStat("Enchant3", _G.AscenderCriteria.Enchant3, "Enchant1")
-    
-    if hasAnyCriteria and allCriteriaMet then
-        return true
-    end
-
     return false
+end
+
+local function getTargetMode(swordFolder)
+    local t = _G.AscenderCriteria
+    if not t then return "None" end
+    
+    if isStatUnmet(swordFolder, "Quality", t.Quality) then return "Quality" end
+    if isStatUnmet(swordFolder, "Rarity", t.Rarity) then return "Rarity" end
+    if isStatUnmet(swordFolder, "Mold", t.Mold) then return "Mold" end
+    if isStatUnmet(swordFolder, "Class", t.Class) then return "Class" end
+    
+    if isStatUnmet(swordFolder, "Enchant1", t.Enchant1Name, "Enchant") or isStatUnmet(swordFolder, "Enchant1Level", t.Enchant1Level) then return "Enchant1" end
+    if isStatUnmet(swordFolder, "Enchant2", t.Enchant2Name, "Enchant") or isStatUnmet(swordFolder, "Enchant2Level", t.Enchant2Level) then return "Enchant2" end
+    if isStatUnmet(swordFolder, "Enchant3", t.Enchant3Name, "Enchant") or isStatUnmet(swordFolder, "Enchant3Level", t.Enchant3Level) then return "Enchant3" end
+    
+    if isStatUnmet(swordFolder, "Level", t.Level) then return "Level" end
+    
+    return "None"
+end
+
+local function swordMeetsCriteria(swordFolder)
+    return getTargetMode(swordFolder) == "None"
 end
 
 local function PickupPhysicalSword(uuid)
     local physicalSword = workspace.Swords:FindFirstChild(uuid)
     if not physicalSword then return false end
     
-    local maxAttempts = 10
+    local character = player.Character or player.CharacterAdded:Wait()
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    
+    local maxAttempts = 15
     local attempts = 0
     
     while not PlayerStats.Swords:FindFirstChild(uuid) and attempts < maxAttempts do
         if not physicalSword or not physicalSword.Parent then break end
+        
+        -- Float directly above the sword to prevent body-blocking or touching neighboring swords!
         local pivot = physicalSword:GetPivot()
-        local jiggleOffset = Vector3.new(math.random(-10, 10)/10, 0, math.random(-10, 10)/10)
-        hrp.CFrame = pivot * CFrame.new(jiggleOffset)
+        hrp.CFrame = pivot * CFrame.new(0, 15, 0) 
+        
         pcall(function()
             if firetouchinterest then
                 local touchPart = physicalSword:IsA("BasePart") and physicalSword or physicalSword:FindFirstChildWhichIsA("BasePart", true)
@@ -868,6 +887,54 @@ local function PickupPhysicalSword(uuid)
     return PlayerStats.Swords:FindFirstChild(uuid) ~= nil
 end
 
+local function enforceCleanInventory(allowedUUID)
+    if not PlayerStats then return end
+    
+    local extraSwords = {}
+    for _, s in ipairs(PlayerStats.Swords:GetChildren()) do
+        if s.Name ~= allowedUUID then
+            table.insert(extraSwords, s.Name)
+        end
+    end
+    
+    if #extraSwords > 0 then
+        local currentBankCount = PlayerStats.Bank and #PlayerStats.Bank:GetChildren() or 0
+        local dynamicMaxSlots = GetMaxBankSlots()
+        
+        if currentBankCount >= dynamicMaxSlots then
+            print("[AutoAscender] ⚠️ Bank full. Sweeper bypassed to protect inventory items.")
+            return
+        end
+        
+        print("[AutoAscender] 🧹 Found " .. #extraSwords .. " extra/stuck sword(s) in inventory. Strictly depositing to Bank...")
+        local AscenderFunc = ReplicatedStorage:WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remotefunction")
+        local AscenderEvent = ReplicatedStorage:WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remoteevent")
+        pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Bank") end)
+        task.wait(0.6) -- Strict wait to ensure character is on the bank
+        
+        for _, uuid in ipairs(extraSwords) do
+            currentBankCount = PlayerStats.Bank and #PlayerStats.Bank:GetChildren() or 0
+            if currentBankCount >= dynamicMaxSlots then
+                print("[AutoAscender] ⚠️ Bank filled up during sweep! Halting sweeper.")
+                break
+            end
+            AscenderEvent:FireServer("Drop Sword", uuid)
+            task.wait(0.2)
+        end
+        
+        local waitTime = 0
+        while waitTime < 3 do
+            local stillHasExtra = false
+            for _, uuid in ipairs(extraSwords) do
+                if PlayerStats.Swords:FindFirstChild(uuid) then stillHasExtra = true end
+            end
+            if not stillHasExtra then break end
+            task.wait(0.2)
+            waitTime = waitTime + 0.2
+        end
+    end
+end
+
 -- [[ AUTO ASCENDER LOGIC ]]
 local function ExecuteAscenderAction(actionDetails)
     if _G.HandlingAscender then return end
@@ -879,134 +946,151 @@ local function ExecuteAscenderAction(actionDetails)
     local AscenderFunc = PaperRemotes:WaitForChild("__remotefunction")
     local AscenderEvent = PaperRemotes:WaitForChild("__remoteevent")
     
-    -- 1. Teleport to Base
     isTeleporting = true
     task.spawn(function() TeleportSequence(0) end)
     repeat task.wait(0.1) until not isTeleporting
 
-    -- 2. Execute Action
     local success, err = pcall(function()
         if actionDetails.type == "FinishAndSwap" then
-            local finishedUUID = actionDetails.finishedUUID
+            local currentSword = PlayerStats.Ascender:FindFirstChild(actionDetails.finishedUUID)
+            if not currentSword then return end
             
-            -- Pick up the finished sword from the Ascender FIRST
+            print("[AutoAscender] 🎯 Target reached for sword:", currentSword.Name)
+            print("[AutoAscender] Picking up from Ascender...")
+            
             AscenderFunc:InvokeServer("Pickup Ascender")
-            task.wait(0.5) 
             
-            local bankFolder = PlayerStats:FindFirstChild("Bank")
-            local currentBankCount = bankFolder and #bankFolder:GetChildren() or 0
+            local waitTime = 0
+            while not PlayerStats.Swords:FindFirstChild(currentSword.Name) and waitTime < 5 do
+                task.wait(0.2)
+                waitTime = waitTime + 0.2
+            end
+            
+            local currentBankCount = PlayerStats.Bank and #PlayerStats.Bank:GetChildren() or 0
             local dynamicMaxSlots = GetMaxBankSlots()
             
             if currentBankCount >= dynamicMaxSlots then
-                warn("[Ascender] 🚨 BANK IS AT MAXIMUM CAPACITY (" .. currentBankCount .. "/" .. dynamicMaxSlots .. ")!")
-                warn("[Ascender] 🎒 Keeping finished sword in your Inventory and protecting it!")
-                -- Failsafe: Keep in inventory and automatically whitelist it
-                if not table.find(_G.WhitelistedSwords, finishedUUID) then
-                    table.insert(_G.WhitelistedSwords, finishedUUID)
-                    -- Fire WebSocket update to save to Django DB
+                warn("[AutoAscender] 🚨 BANK IS AT MAXIMUM CAPACITY (" .. currentBankCount .. "/" .. dynamicMaxSlots .. ")!")
+                warn("[AutoAscender] 🎒 Keeping finished sword in your Inventory and protecting it!")
+                if not table.find(_G.WhitelistedSwords, currentSword.Name) then
+                    table.insert(_G.WhitelistedSwords, currentSword.Name)
                     if _G.C2_WS then
                         _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
-                            action = "update_status",
-                            username = player.Name,
-                            api_key = C2_API_KEY,
-                            payload = {
-                                whitelisted_uuids = _G.WhitelistedSwords
-                            }
+                            action = "update_status", username = player.Name, api_key = C2_API_KEY,
+                            payload = { whitelisted_uuids = _G.WhitelistedSwords }
                         }))
                     end
                 end
             else
-                -- Safely deposit to Bank
+                print("[AutoAscender] Depositing to Bank...")
                 pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Bank") end)
-                task.wait(0.2)
-                AscenderEvent:FireServer("Drop Sword", finishedUUID)
-                task.wait(0.5)
-                print("[Ascender] ✅ Deposit successful!")
+                task.wait(0.6)
+                AscenderEvent:FireServer("Drop Sword", currentSword.Name)
+                
+                waitTime = 0
+                while PlayerStats.Swords:FindFirstChild(currentSword.Name) and waitTime < 5 do
+                    task.wait(0.2)
+                    waitTime = waitTime + 0.2
+                end
+                
+                enforceCleanInventory(nil)
             end
             
-            -- Insert next sword from Queue
+            -- Try to process next sword if available
             if #_G.AscenderQueue > 0 then
                 local nextUUID = _G.AscenderQueue[1]
-                local inInventory = PlayerStats.Swords:FindFirstChild(nextUUID)
-                local inCharacter = character and character:FindFirstChild(nextUUID)
-                local readyToDrop = false
-                
-                if inInventory or inCharacter then
-                    readyToDrop = true
-                else
-                    local physicalSword = workspace.Swords:FindFirstChild(nextUUID)
-                    if physicalSword and physicalSword:GetAttribute("BankSlot") then
-                        readyToDrop = PickupPhysicalSword(nextUUID)
-                    else
-                        warn("[Ascender] 🚨 Sword UUID " .. tostring(nextUUID) .. " not found in Inventory or Bank! Removing from queue.")
-                        table.remove(_G.AscenderQueue, 1)
-                    end
-                end
+                local readyToDrop = PickupPhysicalSword(nextUUID)
                 
                 if readyToDrop then
+                    enforceCleanInventory(nextUUID)
                     pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
-                    task.wait(0.2) 
+                    task.wait(0.5) 
                     AscenderEvent:FireServer("Drop Sword", nextUUID)
-                    print("[Ascender] ⚔️ Added next sword to Ascender: " .. tostring(nextUUID))
                     table.remove(_G.AscenderQueue, 1)
-                    task.wait(0.5)
+                    
+                    waitTime = 0
+                    while PlayerStats.Swords:FindFirstChild(nextUUID) and waitTime < 5 do
+                        task.wait(0.2)
+                        waitTime = waitTime + 0.2
+                    end
+                    
+                    local swordFolder = PlayerStats.Ascender:FindFirstChild(nextUUID)
+                    if swordFolder then
+                        local mode = getTargetMode(swordFolder)
+                        if mode ~= "None" then
+                            AscenderEvent:FireServer("Set Ascender Mode", mode)
+                            print("[AutoAscender] ⚙️ Set Ascender Mode to:", mode)
+                        end
+                    end
+                    task.wait(1.5)
+                else
+                    warn("[AutoAscender] 🚨 Sword UUID " .. tostring(nextUUID) .. " not found! Removing from queue.")
+                    table.remove(_G.AscenderQueue, 1)
                 end
                 
-                -- Sync updated queue to server
                 if _G.C2_WS then
                     _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
-                        action = "update_status",
-                        username = player.Name,
-                        api_key = C2_API_KEY,
-                        payload = {
-                            ascender_queue = _G.AscenderQueue
-                        }
+                        action = "update_status", username = player.Name, api_key = C2_API_KEY,
+                        payload = { ascender_queue = _G.AscenderQueue }
                     }))
                 end
             end
             
         elseif actionDetails.type == "StartNext" then
             local nextUUID = _G.AscenderQueue[1]
-            local inInventory = PlayerStats.Swords:FindFirstChild(nextUUID)
-            local inCharacter = character and character:FindFirstChild(nextUUID)
-            local readyToDrop = false
-            
-            if inInventory or inCharacter then
-                readyToDrop = true
-            else
-                local physicalSword = workspace.Swords:FindFirstChild(nextUUID)
-                if physicalSword and physicalSword:GetAttribute("BankSlot") then
-                    readyToDrop = PickupPhysicalSword(nextUUID)
-                else
-                    warn("[Ascender] 🚨 Sword UUID " .. tostring(nextUUID) .. " not found in Inventory or Bank! Removing from queue.")
-                    table.remove(_G.AscenderQueue, 1)
-                end
-            end
+            local readyToDrop = PickupPhysicalSword(nextUUID)
             
             if readyToDrop then
+                enforceCleanInventory(nextUUID)
                 pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
-                task.wait(0.2) 
+                task.wait(0.5) 
                 AscenderEvent:FireServer("Drop Sword", nextUUID)
-                print("[Ascender] ⚔️ Added first sword to Ascender: " .. tostring(nextUUID))
                 table.remove(_G.AscenderQueue, 1)
-                task.wait(0.5)
+                
+                local waitTime = 0
+                while PlayerStats.Swords:FindFirstChild(nextUUID) and waitTime < 5 do
+                    task.wait(0.2)
+                    waitTime = waitTime + 0.2
+                end
+                
+                local swordFolder = PlayerStats.Ascender:FindFirstChild(nextUUID)
+                if swordFolder then
+                    local mode = getTargetMode(swordFolder)
+                    if mode ~= "None" then
+                        AscenderEvent:FireServer("Set Ascender Mode", mode)
+                        print("[AutoAscender] ⚙️ Set Ascender Mode to:", mode)
+                    end
+                end
+                task.wait(1.5)
+            else
+                warn("[AutoAscender] 🚨 Sword UUID " .. tostring(nextUUID) .. " not found! Removing from queue.")
+                table.remove(_G.AscenderQueue, 1)
             end
             
             if _G.C2_WS then
                 _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
-                    action = "update_status",
-                    username = player.Name,
-                    api_key = C2_API_KEY,
-                    payload = {
-                        ascender_queue = _G.AscenderQueue
-                    }
+                    action = "update_status", username = player.Name, api_key = C2_API_KEY,
+                    payload = { ascender_queue = _G.AscenderQueue }
                 }))
+            end
+            
+        elseif actionDetails.type == "KeepRolling" then
+            local currentUUID = actionDetails.currentUUID
+            local swordToRoll = PlayerStats.Ascender:FindFirstChild(currentUUID)
+            if swordToRoll then
+                local determinedMode = getTargetMode(swordToRoll)
+                if determinedMode ~= "None" then
+                    pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
+                    task.wait(0.2)
+                    AscenderEvent:FireServer("Set Ascender Mode", determinedMode)
+                    print("[AutoAscender] 🔄 Auto-set mode to:", determinedMode)
+                    task.wait(1.5) 
+                end
             end
         end
     end)
     if not success then warn("[C2 Ascender Error] " .. tostring(err)) end
 
-    -- 3. Teleport back
     if originalArea and originalArea ~= 0 then
         isTeleporting = true
         task.spawn(function() TeleportSequence(originalArea) end)
@@ -1023,8 +1107,12 @@ local function CheckAscenderNeedsAction()
     
     local currentSword = AscenderFolder:FindFirstChildOfClass("Folder")
     
-    if currentSword and swordMeetsCriteria(currentSword) then
-        return { type = "FinishAndSwap", finishedUUID = currentSword.Name }
+    if currentSword then
+        if swordMeetsCriteria(currentSword) then
+            return { type = "FinishAndSwap", finishedUUID = currentSword.Name }
+        else
+            return { type = "KeepRolling", currentUUID = currentSword.Name }
+        end
     elseif not currentSword and #_G.AscenderQueue > 0 then
         return { type = "StartNext" }
     end
