@@ -1479,19 +1479,11 @@ task.spawn(function()
                 task.spawn(function()
                     pcall(function() hrp.CFrame = CFrame.new(hrp.Position.X, hrp.Position.Y + 500, hrp.Position.Z) end)
                     task.wait(0.5)
-                    local targetStr = "Return"
-                    local pStats = ReplicatedStorage:FindFirstChild("Stats")
-                    if pStats then
-                        local myStats = pStats:FindFirstChild(tostring(player.Name))
-                        if myStats and myStats:FindFirstChild("CurrentArea") then
-                            if tostring(myStats.CurrentArea.Value) == "0" then
-                                targetStr = "Home"
-                            end
-                        end
-                    end
-                    local args = { [1] = "Teleport In Base", [2] = targetStr }
                     pcall(function()
-                        game:GetService("ReplicatedStorage"):WaitForChild("Paper", 9e9):WaitForChild("Remotes", 9e9):WaitForChild("__remotefunction", 9e9):InvokeServer(unpack(args))
+                        local remote = game:GetService("ReplicatedStorage"):WaitForChild("Paper", 9e9):WaitForChild("Remotes", 9e9):WaitForChild("__remotefunction", 9e9)
+                        -- Try both arguments! The server will accept the correct one and safely reject the wrong one.
+                        remote:InvokeServer("Teleport In Base", "Return")
+                        remote:InvokeServer("Teleport In Base", "Home")
                     end)
                 end)
 
