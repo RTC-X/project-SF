@@ -1073,20 +1073,6 @@ local function ExecuteAscenderAction(actionDetails)
                     payload = { ascender_queue = _G.AscenderQueue }
                 }))
             end
-            
-        elseif actionDetails.type == "KeepRolling" then
-            local currentUUID = actionDetails.currentUUID
-            local swordToRoll = PlayerStats.Ascender:FindFirstChild(currentUUID)
-            if swordToRoll then
-                local determinedMode = getTargetMode(swordToRoll)
-                if determinedMode ~= "None" then
-                    pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
-                    task.wait(0.2)
-                    AscenderEvent:FireServer("Set Ascender Mode", determinedMode)
-                    print("[AutoAscender] 🔄 Auto-set mode to:", determinedMode)
-                    task.wait(1.5) 
-                end
-            end
         end
     end)
     if not success then warn("[C2 Ascender Error] " .. tostring(err)) end
@@ -1100,6 +1086,7 @@ local function ExecuteAscenderAction(actionDetails)
     _G.HandlingAscender = false
 end
 
+local lastModeSet = 0
 local function CheckAscenderNeedsAction()
     if not PlayerStats then return false end
     local AscenderFolder = PlayerStats:FindFirstChild("Ascender")
@@ -1111,7 +1098,16 @@ local function CheckAscenderNeedsAction()
         if swordMeetsCriteria(currentSword) then
             return { type = "FinishAndSwap", finishedUUID = currentSword.Name }
         else
-            return { type = "KeepRolling", currentUUID = currentSword.Name }
+            if os.time() - lastModeSet >= 2 then
+                lastModeSet = os.time()
+                local targetMode = getTargetMode(currentSword)
+                if targetMode ~= "None" then
+                    pcall(function()
+                        game:GetService("ReplicatedStorage"):WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remoteevent"):FireServer("Set Ascender Mode", targetMode)
+                    end)
+                end
+            end
+            return false
         end
     elseif not currentSword and #_G.AscenderQueue > 0 then
         return { type = "StartNext" }
