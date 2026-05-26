@@ -114,14 +114,16 @@ wss.on('connection', (ws, req) => {
                     console.log(`\x1b[32m[+] Game client registered: ${clientId}\x1b[0m`);
                 } else if (clientType === 'dashboard') {
                     clients.set(ws, { type: 'dashboard' });
+                    ws.send(JSON.stringify({ type: 'metadata', data: GlobalMetaTable }));
                     sendClientsToDashboard(ws);
                     console.log('\x1b[35m[+] Dashboard connected\x1b[0m');
                 }
             } else if (data.type === 'update_status') {
                 if (clients.has(ws)) {
                     const clientData = clients.get(ws);
-                    clientData.status = { ...clientData.status, ...data.status };
-                    broadcastToDashboards();
+                    const incomingStatus = data.status || data.payload || {};
+                    clientData.status = { ...clientData.status, ...incomingStatus };
+                    // We don't broadcast here anymore to save bandwidth, a global interval handles it
                 }
             } else if (data.type === 'save_config_to_server') {
                 if (clientType === 'game' && clientId) {
@@ -322,7 +324,6 @@ function getActiveGameClients() {
             if (globalConfigs[clientData.id]) {
                 statusWithConfig.fullConfig = globalConfigs[clientData.id];
             }
-            statusWithConfig.metadata = GlobalMetaTable;
             
             gameClients.push({
                 id: clientData.id,
@@ -343,6 +344,9 @@ function sendClientsToDashboard(dashboardWs) {
         }));
     }
 }
+
+// Global broadcast interval to batch all updates into 1 per second
+setInterval(broadcastToDashboards, 1000);
 
 function broadcastToDashboards() {
     const gameClients = getActiveGameClients();

@@ -425,7 +425,11 @@
         ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
-                if (data.type === 'client_list') {
+                
+                if (data.type === 'metadata') {
+                    window.GlobalMetaTable = data.data;
+                    console.log("Synced live metadata from server!");
+                } else if (data.type === 'client_list') {
                     clientDataStore = {};
                     data.clients.forEach(c => clientDataStore[c.id] = c);
                     
@@ -533,7 +537,7 @@
             document.getElementById('cfg-target-priority').value = config.TargetPriority || 'Closest';
             
             const areasContainer = document.getElementById('cfg-areas-container');
-            let availableAreas = client.status.metadata?.Areas || [];
+            let availableAreas = window.GlobalMetaTable?.Areas || [];
             const currentAreas = config.FarmAreas || [];
             
             areasContainer.innerHTML = '';
