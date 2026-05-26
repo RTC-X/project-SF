@@ -1586,22 +1586,16 @@ task.spawn(function()
                 pcall(function()
                     local parsedData = data.payload
                     if parsedData then
-                        if parsedData.target_enchant_sets then 
-                            local parsedSets = {}
-                            for _, setStr in ipairs(parsedData.target_enchant_sets) do
-                                local currentSet = {}
-                                for enchant in string.gmatch(setStr, "([^%+]+)") do
-                                    local trimmed = enchant:match("^%s*(.-)%s*$")
-                                    if trimmed and trimmed ~= "" then
-                                        table.insert(currentSet, trimmed)
-                                    end
-                                end
-                                table.insert(parsedSets, currentSet)
-                            end
-                            _G.ActiveTargetSets = parsedSets
-                        end
-                        if parsedData.whitelisted_uuids then _G.WhitelistedSwords = parsedData.whitelisted_uuids end
-                        if parsedData.active_areas then _G.FarmAreas = parsedData.active_areas end
+                        if parsedData.TargetSets then _G.ActiveTargetSets = parsedData.TargetSets end
+                        if parsedData.WhitelistedSwords then _G.WhitelistedSwords = parsedData.WhitelistedSwords end
+                        if parsedData.FarmAreas then _G.FarmAreas = parsedData.FarmAreas end
+                        if parsedData.SpecialOverrides then _G.SpecialOverrides = parsedData.SpecialOverrides end
+                        if parsedData.WebhookURL then _G.WebhookURL = parsedData.WebhookURL end
+                        if parsedData.WebhookEnabled ~= nil then _G.WebhookEnabled = parsedData.WebhookEnabled end
+                        if parsedData.TargetPriority then _G.TargetPriority = parsedData.TargetPriority end
+                        if parsedData.Settings then for k,v in pairs(parsedData.Settings) do SETTINGS[k] = v end end
+                        
+                        -- Toggle logic (if dashboard sends these specifically inside syncConfig)
                         if parsedData.farm_enabled ~= nil then 
                             if _G.on ~= parsedData.farm_enabled then
                                 _G.on = parsedData.farm_enabled
@@ -1628,15 +1622,6 @@ task.spawn(function()
                         if parsedData.ascender_enabled ~= nil then _G.AutoAscenderEnabled = parsedData.ascender_enabled end
                         if parsedData.ascender_queue then _G.AscenderQueue = parsedData.ascender_queue end
                         if parsedData.ascender_criteria then _G.AscenderCriteria = parsedData.ascender_criteria end
-                        
-                        if parsedData.TargetSets then _G.ActiveTargetSets = parsedData.TargetSets end
-                        if parsedData.WhitelistedSwords then _G.WhitelistedSwords = parsedData.WhitelistedSwords end
-                        if parsedData.SpecialOverrides then _G.SpecialOverrides = parsedData.SpecialOverrides end
-                        if parsedData.WebhookURL then _G.WebhookURL = parsedData.WebhookURL end
-                        if parsedData.WebhookEnabled ~= nil then _G.WebhookEnabled = parsedData.WebhookEnabled end
-                        if parsedData.FarmAreas then _G.FarmAreas = parsedData.FarmAreas end
-                        if parsedData.TargetPriority then _G.TargetPriority = parsedData.TargetPriority end
-                        if parsedData.Settings then for k,v in pairs(parsedData.Settings) do SETTINGS[k] = v end end
                         SaveLocalConfig()
                         print("C2 Command: Configuration Synced remotely from Website!")
                     end
