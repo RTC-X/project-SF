@@ -52,7 +52,6 @@ local AscenderCriteria = {
     Quality = "None", Rarity = "None", Mold = "None", Class = "None",
     Enchant1 = "None", Enchant2 = "None", Enchant3 = "None", Level = 0
 }
-local AscenderMode = "None"
 local AscenderQueue = {}
 local AutoAscendEnabled = false
 
@@ -110,6 +109,43 @@ local function swordMeetsCriteria(swordFolder)
     end
 
     return false
+end
+
+local function determineModeForSword(uuid)
+    if not AscenderCriteria then return "None" end
+    local swordFolder = PlayerStats.Swords:FindFirstChild(uuid) 
+    if not swordFolder then
+        local bankFolder = PlayerStats:FindFirstChild("Bank")
+        if bankFolder then swordFolder = bankFolder:FindFirstChild(uuid) end
+    end
+    if not swordFolder then swordFolder = workspace.Swords:FindFirstChild(uuid) end
+    if not swordFolder then return "None" end
+    
+    local function isStatUnmet(attrName, criteriaVal, moduleName)
+        if criteriaVal and criteriaVal ~= "None" and criteriaVal ~= "0" then
+            local targetId = getIdFromName(moduleName or attrName, criteriaVal)
+            local currentId = tonumber(swordFolder:GetAttribute(attrName)) or 0
+            if targetId > 0 and currentId < targetId then return true end
+        end
+        return false
+    end
+
+    if isStatUnmet("Quality", AscenderCriteria.Quality) then return "Quality" end
+    if isStatUnmet("Rarity", AscenderCriteria.Rarity) then return "Rarity" end
+    if isStatUnmet("Mold", AscenderCriteria.Mold) then return "Mold" end
+    if isStatUnmet("Class", AscenderCriteria.Class) then return "Class" end
+    if isStatUnmet("Enchant1", AscenderCriteria.Enchant1) then return "Enchant1" end
+    if isStatUnmet("Enchant2", AscenderCriteria.Enchant2, "Enchant1") then return "Enchant2" end
+    if isStatUnmet("Enchant3", AscenderCriteria.Enchant3, "Enchant1") then return "Enchant3" end
+    
+    local currentLvl = tonumber(swordFolder:GetAttribute("Level")) or 0
+    if AscenderCriteria.Level and tonumber(AscenderCriteria.Level) and tonumber(AscenderCriteria.Level) > 1 then
+        if currentLvl < tonumber(AscenderCriteria.Level) then 
+            return "Level"
+        end
+    end
+    
+    return "None"
 end
 
 local function CheckAscenderNeedsAction()
@@ -200,8 +236,10 @@ local function ExecuteAscenderAction(actionDetails)
                     pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
                     task.wait(0.2) 
                     AscenderEvent:FireServer("Drop Sword", nextUUID)
-                    if AscenderMode ~= "None" then
-                        AscenderEvent:FireServer("Set Ascender Mode", AscenderMode)
+                    local determinedMode = determineModeForSword(nextUUID)
+                    if determinedMode ~= "None" then
+                        AscenderEvent:FireServer("Set Ascender Mode", determinedMode)
+                        print("[Ascender] ⚙️ Auto-set mode to:", determinedMode)
                     end
                     print("[Ascender] ⚔️ Added next sword to Ascender: " .. tostring(nextUUID))
                     table.remove(AscenderQueue, 1)
@@ -231,8 +269,10 @@ local function ExecuteAscenderAction(actionDetails)
                 pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
                 task.wait(0.2) 
                 AscenderEvent:FireServer("Drop Sword", nextUUID)
-                if AscenderMode ~= "None" then
-                    AscenderEvent:FireServer("Set Ascender Mode", AscenderMode)
+                local determinedMode = determineModeForSword(nextUUID)
+                if determinedMode ~= "None" then
+                    AscenderEvent:FireServer("Set Ascender Mode", determinedMode)
+                    print("[Ascender] ⚙️ Auto-set mode to:", determinedMode)
                 end
                 print("[Ascender] ⚔️ Added first sword to Ascender: " .. tostring(nextUUID))
                 table.remove(AscenderQueue, 1)
@@ -282,21 +322,6 @@ Tab:CreateToggle({
 })
 
 local Section = Tab:CreateSection("Target Metrics")
-
-Tab:CreateDropdown({
-    Name = "Mode to Ascend (Required)",
-    Options = {"None", "Quality", "Rarity", "Mold", "Class", "Enchant1", "Enchant2", "Enchant3"},
-    CurrentOption = {"None"},
-    MultipleOptions = false,
-    Flag = "CurrentAscenderMode",
-    Callback = function(Options)
-        AscenderMode = Options[1]
-        if AscenderMode ~= "None" then
-            AscenderEvent:FireServer("Set Ascender Mode", AscenderMode)
-            print("[Ascender] Set mode to:", AscenderMode)
-        end
-    end
-})
 
 local function createDropdown(name, statType)
     local options = getNames(statType)
