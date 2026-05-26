@@ -50,7 +50,7 @@ end
 
 local AscenderCriteria = {
     Quality = "None", Rarity = "None", Mold = "None", Class = "None",
-    Enchant1 = "None", Enchant2 = "None", Enchant3 = "None", Level = 0
+    Enchant1Level = 0, Enchant2Level = 0, Enchant3Level = 0, Level = 0
 }
 local AscenderQueue = {}
 local AutoAscendEnabled = false
@@ -100,9 +100,19 @@ local function swordMeetsCriteria(swordFolder)
     checkStat("Rarity", AscenderCriteria.Rarity)
     checkStat("Mold", AscenderCriteria.Mold)
     checkStat("Class", AscenderCriteria.Class)
-    checkStat("Enchant1", AscenderCriteria.Enchant1)
-    checkStat("Enchant2", AscenderCriteria.Enchant2, "Enchant1")
-    checkStat("Enchant3", AscenderCriteria.Enchant3, "Enchant1")
+    
+    if AscenderCriteria.Enchant1Level and AscenderCriteria.Enchant1Level > 0 then
+        hasAnyCriteria = true
+        if (tonumber(swordFolder:GetAttribute("Enchant1Level")) or 0) < AscenderCriteria.Enchant1Level then allCriteriaMet = false end
+    end
+    if AscenderCriteria.Enchant2Level and AscenderCriteria.Enchant2Level > 0 then
+        hasAnyCriteria = true
+        if (tonumber(swordFolder:GetAttribute("Enchant2Level")) or 0) < AscenderCriteria.Enchant2Level then allCriteriaMet = false end
+    end
+    if AscenderCriteria.Enchant3Level and AscenderCriteria.Enchant3Level > 0 then
+        hasAnyCriteria = true
+        if (tonumber(swordFolder:GetAttribute("Enchant3Level")) or 0) < AscenderCriteria.Enchant3Level then allCriteriaMet = false end
+    end
     
     if hasAnyCriteria and allCriteriaMet then
         return true
@@ -134,9 +144,16 @@ local function determineModeForSword(uuid)
     if isStatUnmet("Rarity", AscenderCriteria.Rarity) then return "Rarity" end
     if isStatUnmet("Mold", AscenderCriteria.Mold) then return "Mold" end
     if isStatUnmet("Class", AscenderCriteria.Class) then return "Class" end
-    if isStatUnmet("Enchant1", AscenderCriteria.Enchant1) then return "Enchant1" end
-    if isStatUnmet("Enchant2", AscenderCriteria.Enchant2, "Enchant1") then return "Enchant2" end
-    if isStatUnmet("Enchant3", AscenderCriteria.Enchant3, "Enchant1") then return "Enchant3" end
+    
+    if AscenderCriteria.Enchant1Level and AscenderCriteria.Enchant1Level > 0 then
+        if (tonumber(swordFolder:GetAttribute("Enchant1Level")) or 0) < AscenderCriteria.Enchant1Level then return "Enchant1" end
+    end
+    if AscenderCriteria.Enchant2Level and AscenderCriteria.Enchant2Level > 0 then
+        if (tonumber(swordFolder:GetAttribute("Enchant2Level")) or 0) < AscenderCriteria.Enchant2Level then return "Enchant2" end
+    end
+    if AscenderCriteria.Enchant3Level and AscenderCriteria.Enchant3Level > 0 then
+        if (tonumber(swordFolder:GetAttribute("Enchant3Level")) or 0) < AscenderCriteria.Enchant3Level then return "Enchant3" end
+    end
     
     local currentLvl = tonumber(swordFolder:GetAttribute("Level")) or 0
     if AscenderCriteria.Level and tonumber(AscenderCriteria.Level) and tonumber(AscenderCriteria.Level) > 1 then
@@ -149,10 +166,12 @@ local function determineModeForSword(uuid)
 end
 
 local function CheckAscenderNeedsAction()
-    local currentSword = workspace.Swords:FindFirstChild("Ascender_Sword")
+    local AscenderFolder = PlayerStats:FindFirstChild("Ascender")
+    local currentSword = AscenderFolder and AscenderFolder:FindFirstChildOfClass("Folder")
+    
     if currentSword then
         if swordMeetsCriteria(currentSword) then
-            return { type = "FinishAndSwap", uuid = currentSword:GetAttribute("UUID") }
+            return { type = "FinishAndSwap", uuid = currentSword.Name }
         end
     elseif not currentSword and #AscenderQueue > 0 then
         return { type = "StartNext" }
@@ -341,12 +360,36 @@ createDropdown("Target Quality", "Quality")
 createDropdown("Target Rarity", "Rarity")
 createDropdown("Target Mold", "Mold")
 createDropdown("Target Class", "Class")
-createDropdown("Target Enchant 1", "Enchant1")
-createDropdown("Target Enchant 2", "Enchant2")
-createDropdown("Target Enchant 3", "Enchant3")
 
 Tab:CreateInput({
-    Name = "Target Level",
+    Name = "Target Enchant 1 Level",
+    PlaceholderText = "Minimum Lvl (e.g. 5)",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(Text)
+        AscenderCriteria.Enchant1Level = tonumber(Text) or 0
+    end
+})
+
+Tab:CreateInput({
+    Name = "Target Enchant 2 Level",
+    PlaceholderText = "Minimum Lvl (e.g. 5)",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(Text)
+        AscenderCriteria.Enchant2Level = tonumber(Text) or 0
+    end
+})
+
+Tab:CreateInput({
+    Name = "Target Enchant 3 Level",
+    PlaceholderText = "Minimum Lvl (e.g. 5)",
+    RemoveTextAfterFocusLost = false,
+    Callback = function(Text)
+        AscenderCriteria.Enchant3Level = tonumber(Text) or 0
+    end
+})
+
+Tab:CreateInput({
+    Name = "Target Sword Level",
     PlaceholderText = "Minimum Level",
     RemoveTextAfterFocusLost = false,
     Callback = function(Text)
