@@ -45,6 +45,17 @@ if (fs.existsSync(CONFIG_FILE)) {
     }
 }
 
+let GlobalMetaTable = {};
+fetch('https://c2scripts.xyz/api/metadata/?api_key=c2_usr_5d6a6bf84ca9edf3')
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            GlobalMetaTable = data.data;
+            console.log('\x1b[36m[+] Fetched GlobalMetaTable from API\x1b[0m');
+        }
+    })
+    .catch(err => console.error("Failed to fetch GlobalMetaTable:", err.message));
+
 function saveGlobalConfigs() {
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(globalConfigs, null, 4));
 }
@@ -306,9 +317,16 @@ function getActiveGameClients() {
     const gameClients = [];
     for (const [clientWs, clientData] of clients.entries()) {
         if (clientData.type === 'game') {
+            // Inject global config from server state so dashboard has persistent data
+            const statusWithConfig = { ...clientData.status };
+            if (globalConfigs[clientData.id]) {
+                statusWithConfig.fullConfig = globalConfigs[clientData.id];
+            }
+            statusWithConfig.metadata = GlobalMetaTable;
+            
             gameClients.push({
                 id: clientData.id,
-                status: clientData.status
+                status: statusWithConfig
             });
         }
     }

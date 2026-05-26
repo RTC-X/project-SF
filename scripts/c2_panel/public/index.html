@@ -842,9 +842,11 @@
                 const bpDataForWl = client.status.backpackData || [];
                 if(bpDataForWl.length > 0) {
                     bpDataForWl.forEach(item => {
-                        let name = `[Lvl ${item.Level}] ${item.Rarity} ${item.Quality}`;
-                        if(item.Equipped) name = `[EQ] ` + name;
-                        wlOptions += `<option value="${item.id}" class="bg-zinc-950 text-zinc-300 text-[9px]">${name}</option>`;
+                        if (!item.inBank) {
+                            let name = `[Lvl ${item.Level}] ${item.Rarity} ${item.Quality}`;
+                            if(item.Equipped) name = `[EQ] ` + name;
+                            wlOptions += `<option value="${item.id}" class="bg-zinc-950 text-zinc-300 text-[9px]">${name}</option>`;
+                        }
                     });
                 }
                 whitelistHtml += `
