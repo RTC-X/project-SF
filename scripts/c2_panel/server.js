@@ -143,7 +143,7 @@ wss.on('connection', (ws, req) => {
 
                     for (const [clientWs, clientData] of clients.entries()) {
                         if (clientData.type === 'game' && clientData.id === data.targetId) {
-                            clientWs.send(JSON.stringify({ action: data.action, payload: data.payload }));
+                            clientWs.send(JSON.stringify({ command: data.action, payload: data.payload }));
                             console.log(`\x1b[33m[>] Sent command '${data.action}' to ${data.targetId}\x1b[0m`);
                             break;
                         }
