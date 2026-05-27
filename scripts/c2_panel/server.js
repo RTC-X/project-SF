@@ -143,6 +143,7 @@ wss.on('connection', (ws, req) => {
 
                     for (const [clientWs, clientData] of clients.entries()) {
                         if (clientData.type === 'game' && clientData.id === data.targetId) {
+                            console.log(`\x1b[36m[DEBUG] Forwarding command '${data.action}' to client ${data.targetId}. Payload: ${JSON.stringify(data.payload)}\x1b[0m`);
                             clientWs.send(JSON.stringify({ command: data.action, payload: data.payload }));
                             console.log(`\x1b[33m[>] Sent command '${data.action}' to ${data.targetId}\x1b[0m`);
                             break;
@@ -323,6 +324,8 @@ function getActiveGameClients() {
             const statusWithConfig = { ...clientData.status };
             if (globalConfigs[clientData.id]) {
                 statusWithConfig.fullConfig = globalConfigs[clientData.id];
+                // Only log if the client is actively connected and being broadcasted
+                // console.log(`\x1b[36m[DEBUG-SYNC] ${new Date().toISOString()} | Merged GlobalConfig for ${clientData.id}. FarmAreas: ${JSON.stringify(globalConfigs[clientData.id].FarmAreas)}\x1b[0m`);
             }
             
             gameClients.push({
