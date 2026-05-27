@@ -1097,17 +1097,6 @@ local function CheckAscenderNeedsAction()
     if currentSword then
         if swordMeetsCriteria(currentSword) then
             return { type = "FinishAndSwap", finishedUUID = currentSword.Name }
-        else
-            if os.time() - lastModeSet >= 2 then
-                lastModeSet = os.time()
-                local targetMode = getTargetMode(currentSword)
-                if targetMode ~= "None" then
-                    pcall(function()
-                        game:GetService("ReplicatedStorage"):WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remoteevent"):FireServer("Set Ascender Mode", targetMode)
-                    end)
-                end
-            end
-            return false
         end
     elseif not currentSword and #_G.AscenderQueue > 0 then
         return { type = "StartNext" }
@@ -1118,9 +1107,34 @@ end
 
 -- 🧠 FSM Brain: Determines absolute priority
 local DetermineState = LPH_NO_VIRTUALIZE(function()
+    -- Independent Background Logic: Auto-Set Ascender Mode
+    pcall(function()
+        local stats = game:GetService("ReplicatedStorage"):FindFirstChild("Stats")
+        local myStats = stats and stats:FindFirstChild(tostring(game.Players.LocalPlayer.Name))
+        local ascenderFolder = myStats and myStats:FindFirstChild("Ascender")
+        local sword = ascenderFolder and ascenderFolder:FindFirstChildOfClass("Folder")
+        if sword and os.time() - lastModeSet >= 2 then
+            lastModeSet = os.time()
+            local targetMode = getTargetMode(sword)
+            if targetMode ~= "None" then
+                game:GetService("ReplicatedStorage"):WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remoteevent"):FireServer("Set Ascender Mode", targetMode)
+            end
+        end
+    end)
+
     if not character or not character.Parent or not humanoid or humanoid.Health <= 0 then return "Dead" end
     if _G.fetchingGodRoll then return "Sniping" end
     if _G.HandlingAscender then return "Ascending" end
+    
+    -- Priority 1.5: Auto Ascender Check (Elevated above Disabled check so it works independently)
+    if _G.AutoAscenderEnabled and not _G.HandlingAscender then
+        local actionNeeded = CheckAscenderNeedsAction()
+        if actionNeeded then
+            task.spawn(function() ExecuteAscenderAction(actionNeeded) end)
+            return "Ascending"
+        end
+    end
+
     if not _G.on then return "Disabled" end
     if isTeleporting then return "Teleporting" end
 
@@ -1145,15 +1159,6 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
         isTeleporting = true
         task.spawn(function() TeleportSequence(wantedNum) end)
         return "Teleporting"
-    end
-
-    -- Priority 1.5: Auto Ascender Check
-    if _G.AutoAscenderEnabled and not _G.HandlingAscender then
-        local actionNeeded = CheckAscenderNeedsAction()
-        if actionNeeded then
-            task.spawn(function() ExecuteAscenderAction(actionNeeded) end)
-            return "Ascending"
-        end
     end
 
     -- Priority 2: Mass Recovery Check
