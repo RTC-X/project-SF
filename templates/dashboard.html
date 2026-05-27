@@ -589,7 +589,7 @@
                                 <div class="flex items-center gap-1.5 pt-1">
                                     <select x-model="newUuid" class="flex-1 w-full min-w-0 truncate bg-zinc-950/60 border border-white/5 text-[10px] rounded-lg px-2 py-1.5 text-zinc-400 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
                                         <option value="">Backpack empty...</option>
-                                        <template x-for="item in selectedBot.backpack_items || []">
+                                        <template x-for="item in (selectedBot.backpack_items || []).filter(i => !i.inBank)">
                                             <option :value="item.id" x-text="getItemName(item)"></option>
                                         </template>
                                     </select>

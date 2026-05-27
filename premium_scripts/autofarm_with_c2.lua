@@ -89,33 +89,6 @@ local activeAreaRotationIds = {}
 
 local StagedEnchant1, StagedEnchant2, StagedEnchant3 = "None", "None", "None"
 local ManualWhitelistInput = ""
-local SaveFileName = "UltimateFarm_" .. player.Name .. "_" .. player.UserId .. ".json"
-
-local function SaveLocalConfig()
-    pcall(function()
-        if writefile then
-            local saveData = {TargetSets = _G.ActiveTargetSets, WhitelistedSwords = _G.WhitelistedSwords, SpecialOverrides = _G.SpecialOverrides, WebhookURL = _G.WebhookURL, WebhookEnabled = _G.WebhookEnabled, FarmAreas = _G.FarmAreas, Settings = SETTINGS}
-            writefile(SaveFileName, HttpService:JSONEncode(saveData))
-        end
-    end)
-end
-
-pcall(function()
-    if isfile and isfile(SaveFileName) and readfile then
-        local s2, parsedData = pcall(function() return HttpService:JSONDecode(readfile(SaveFileName)) end)
-        if s2 and parsedData then
-            _G.ActiveTargetSets = parsedData.TargetSets or _G.ActiveTargetSets
-            _G.WhitelistedSwords = parsedData.WhitelistedSwords or _G.WhitelistedSwords
-            _G.SpecialOverrides = parsedData.SpecialOverrides or _G.SpecialOverrides
-            _G.WebhookURL = parsedData.WebhookURL or _G.WebhookURL
-            _G.WebhookEnabled = parsedData.WebhookEnabled or _G.WebhookEnabled
-            if parsedData.Settings then
-                for k, v in pairs(parsedData.Settings) do SETTINGS[k] = v end
-            end
-        end
-    end
-end)
-
 local currentArea = 0
 local isTeleporting = false
 local lastTeleportEnd = 0 
@@ -966,21 +939,22 @@ local function ExecuteAscenderAction(actionDetails)
                 waitTime = waitTime + 0.2
             end
             
+            if not table.find(_G.WhitelistedSwords, currentSword.Name) then
+                table.insert(_G.WhitelistedSwords, currentSword.Name)
+                if _G.C2_WS then
+                    _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
+                        action = "update_status", username = player.Name, api_key = C2_API_KEY,
+                        payload = { whitelisted_uuids = _G.WhitelistedSwords }
+                    }))
+                end
+            end
+            
             local currentBankCount = PlayerStats.Bank and #PlayerStats.Bank:GetChildren() or 0
             local dynamicMaxSlots = GetMaxBankSlots()
             
             if currentBankCount >= dynamicMaxSlots then
-                warn("[AutoAscender] 🚨 BANK IS AT MAXIMUM CAPACITY (" .. currentBankCount .. "/" .. dynamicMaxSlots .. ")!")
-                warn("[AutoAscender] 🎒 Keeping finished sword in your Inventory and protecting it!")
-                if not table.find(_G.WhitelistedSwords, currentSword.Name) then
-                    table.insert(_G.WhitelistedSwords, currentSword.Name)
-                    if _G.C2_WS then
-                        _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
-                            action = "update_status", username = player.Name, api_key = C2_API_KEY,
-                            payload = { whitelisted_uuids = _G.WhitelistedSwords }
-                        }))
-                    end
-                end
+                warn("[AutoAscender] ⚠️ BANK IS AT MAXIMUM CAPACITY (" .. currentBankCount .. "/" .. dynamicMaxSlots .. ")!")
+                warn("[AutoAscender] 🛡️ Keeping finished sword in your Inventory and protecting it!")
             else
                 print("[AutoAscender] Depositing to Bank...")
                 pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Bank") end)
@@ -1147,7 +1121,8 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
         if internalArea then actualArea = internalArea.Value end
     end
     
-    local actualNum, wantedNum = tonumber(actualArea), tonumber(currentArea)
+    if tostring(actualArea) == "Base" or tostring(actualArea) == "Spawn" then actualArea = 0 end
+    local actualNum, wantedNum = tonumber(actualArea) or 0, tonumber(currentArea)
     if (not wantedNum or wantedNum == 0) and #_G.FarmAreas > 0 then 
         wantedNum = _G.FarmAreas[1]
         currentArea = wantedNum
@@ -1656,34 +1631,6 @@ task.spawn(function()
                     end)
                 end
                 
-            elseif data.command == "saveConfig" then
-                pcall(function()
-                    if writefile then
-                        local saveData = {TargetSets = _G.ActiveTargetSets, WhitelistedSwords = _G.WhitelistedSwords, SpecialOverrides = _G.SpecialOverrides, WebhookURL = _G.WebhookURL, WebhookEnabled = _G.WebhookEnabled, FarmAreas = _G.FarmAreas, Settings = SETTINGS}
-                        writefile(SaveFileName, HttpService:JSONEncode(saveData))
-                        print("C2 Command: Configuration Saved locally to " .. SaveFileName)
-                    end
-                end)
-
-            elseif data.command == "loadConfig" then
-                pcall(function()
-                    if isfile and isfile(SaveFileName) and readfile then
-                        local s2, parsedData = pcall(function() return HttpService:JSONDecode(readfile(SaveFileName)) end)
-                        if s2 and parsedData then
-                            _G.ActiveTargetSets = parsedData.TargetSets or { {"Ancient", "Fortune", "Insight"} }
-                            _G.WhitelistedSwords = parsedData.WhitelistedSwords or {}
-                            _G.SpecialOverrides = parsedData.SpecialOverrides or {Enchant={}, Mold={}, Quality={}, Rarity={}, Class={}}
-                            _G.WebhookURL = parsedData.WebhookURL or ""
-                            _G.WebhookEnabled = parsedData.WebhookEnabled or false
-                            _G.FarmAreas = parsedData.FarmAreas or {}
-                            if parsedData.Settings then for k,v in pairs(parsedData.Settings) do SETTINGS[k] = v end end
-                            print("C2 Command: Configuration Loaded locally from " .. SaveFileName)
-                        end
-                    else
-                        warn("C2 Command: No config file found to load.")
-                    end
-                end)
-            
             elseif data.command == "syncConfig" then
                 pcall(function()
                     local parsedData = data.payload
@@ -1724,7 +1671,6 @@ task.spawn(function()
                         if parsedData.ascender_enabled ~= nil then _G.AutoAscenderEnabled = parsedData.ascender_enabled end
                         if parsedData.ascender_queue then _G.AscenderQueue = parsedData.ascender_queue end
                         if parsedData.ascender_criteria then _G.AscenderCriteria = parsedData.ascender_criteria end
-                        SaveLocalConfig()
                         print("C2 Command: Configuration Synced remotely from Website!")
                     end
                 end)

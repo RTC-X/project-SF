@@ -515,7 +515,6 @@ class C2Consumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def update_bot_status(self, username, status, extra_data=None):
         from .models import BotAccount, BotConfiguration
-        print(f"[C2 Server] [Auth Engine] Authenticating credentials for bot '{username}'...")
         
         is_valid_key = False
         owner_user = None
@@ -535,8 +534,6 @@ class C2Consumer(AsyncWebsocketConsumer):
             print(f"[C2 Server] [Auth Engine] [API Key Failed] Provided API Key '{extra_data.get('api_key') if extra_data else 'None'}' is invalid or missing.")
             return False
             
-        print(f"[C2 Server] [Auth Engine] [API Key Success] API Key resolved to Dashboard User: '{owner_user.username}' (ID: {owner_user.id})")
-        
         # Luarmor License Validation (Bypassed by User request - Only API key is needed to authenticate)
         is_license_valid = True
             
