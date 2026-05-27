@@ -1403,6 +1403,19 @@ task.spawn(function()
                                 _G.C2_WS = nil
                             end)
                         end
+                        
+                        -- Clean up websocket to prevent ghost clients on Dashboard
+                        game.Players.PlayerRemoving:Connect(function(plr)
+                            if plr == game.Players.LocalPlayer then
+                                if _G.C2_WS then pcall(function() _G.C2_WS:Close() end) end
+                            end
+                        end)
+                        
+                        if game.Players.LocalPlayer.OnTeleport then
+                            game.Players.LocalPlayer.OnTeleport:Connect(function()
+                                if _G.C2_WS then pcall(function() _G.C2_WS:Close() end) end
+                            end)
+                        end
                     end)
                 else
                     warn("⚠️ WebSocket C2 Server unreachable. Retrying in 10s...")

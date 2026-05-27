@@ -69,6 +69,23 @@ class BotConfiguration(models.Model):
     webhook_url = models.URLField(max_length=500, blank=True)
     webhook_enabled = models.BooleanField(default=False)
 
+    @property
+    def full_config(self):
+        return {
+            'farm_enabled': self.farm_enabled,
+            'snipe_enabled': self.snipe_enabled,
+            'activate_panel': self.activate_panel,
+            'FarmAreas': self.active_areas,
+            'TargetSets': self.target_enchant_sets,
+            'WhitelistedSwords': self.whitelisted_uuids,
+            'TargetPriority': self.target_priority,
+            'ascender_enabled': self.ascender_enabled,
+            'ascender_queue': self.ascender_queue,
+            'AscenderCriteria': self.ascender_criteria,
+            'WebhookURL': self.webhook_url,
+            'WebhookEnabled': self.webhook_enabled,
+        }
+
     def __str__(self):
         return f"Config for {self.bot.username}"
 

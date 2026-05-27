@@ -720,7 +720,7 @@
     <!-- Map Options Modal -->
     <div x-show="showMapOptions" 
          x-data="{ localActiveAreas: [] }" 
-         x-effect="if (showMapOptions && selectedBot) { localActiveAreas = [...(selectedBot.config?.active_areas || [])].map(Number); }"
+         x-init="$watch('showMapOptions', value => { if(value) localActiveAreas = [...(selectedBot.config?.active_areas || [])].map(Number); })"
          @click.self="showMapOptions = false" 
          class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" 
          x-transition 

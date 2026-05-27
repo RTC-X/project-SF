@@ -648,6 +648,7 @@ class C2Consumer(AsyncWebsocketConsumer):
         return True
 
 
+    @database_sync_to_async
     def set_bot_offline(self, username):
         from .models import BotAccount
         try:
@@ -691,20 +692,24 @@ class C2Consumer(AsyncWebsocketConsumer):
                 config.snipe_enabled = payload['snipe_enabled']
             if 'activate_panel' in payload:
                 config.activate_panel = payload['activate_panel']
-            if 'active_areas' in payload:
-                config.active_areas = payload['active_areas']
-            if 'target_enchant_sets' in payload:
-                config.target_enchant_sets = payload['target_enchant_sets']
-            if 'whitelisted_uuids' in payload:
-                config.whitelisted_uuids = payload['whitelisted_uuids']
-            if 'target_priority' in payload:
-                config.target_priority = payload['target_priority']
+            if 'FarmAreas' in payload:
+                config.active_areas = payload['FarmAreas']
+            if 'TargetSets' in payload:
+                config.target_enchant_sets = payload['TargetSets']
+            if 'WhitelistedSwords' in payload:
+                config.whitelisted_uuids = payload['WhitelistedSwords']
+            if 'TargetPriority' in payload:
+                config.target_priority = payload['TargetPriority']
             if 'ascender_enabled' in payload:
                 config.ascender_enabled = payload['ascender_enabled']
             if 'ascender_queue' in payload:
                 config.ascender_queue = payload['ascender_queue']
-            if 'ascender_criteria' in payload:
-                config.ascender_criteria = payload['ascender_criteria']
+            if 'AscenderCriteria' in payload:
+                config.ascender_criteria = payload['AscenderCriteria']
+            if 'WebhookURL' in payload:
+                config.webhook_url = payload['WebhookURL']
+            if 'WebhookEnabled' in payload:
+                config.webhook_enabled = payload['WebhookEnabled']
             config.save()
             
             if 'bot_class' in payload and payload['bot_class']:
