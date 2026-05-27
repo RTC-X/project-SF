@@ -5,6 +5,7 @@
 - **Coolify Integration:** This repository is connected to GitHub. Every push and pull operation reflects directly onto the production VPS server automatically via Coolify. All changes made to `server.js` or `index.html` must be pushed to GitHub to take effect on the live server.
 
 ## 2. C2 Dashboard & Server Synchronization
+- **Strict PascalCase Standard:** ALL JSON payloads, websocket commands, and Frontend Alpine.js objects MUST exclusively use \PascalCase\ (e.g., \FarmAreas\, \WhitelistedSwords\, \FarmEnabled\). The Django Database (\models.py\) remains \snake_case\, but the server's Websocket layer (\consumers.py\) MUST actively translate them to \PascalCase\.
 - **API Metadata:** The C2 Dashboard must fetch its live metadata (Areas, Molds, Enchants, etc.) from `https://c2scripts.xyz/api/metadata/?api_key=c2_usr_5d6a6bf84ca9edf3`. It should NOT rely on the game client to provide this data in telemetry.
 - **WebSocket Protocol:**
   - Game clients send telemetry to the C2 server using `action = "update_status"`. Ensure the NodeJS server handles both `type` and `action` gracefully.
