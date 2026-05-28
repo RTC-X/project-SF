@@ -498,16 +498,16 @@ class C2Consumer(AsyncWebsocketConsumer):
                 'Money': float(bot.money),
                 'BankLevel': bot.bank_level,
                 'SessionTime': bot.session_time,
-                'bot_class': bot.bot_class,
+                'BotClass': bot.bot_class,
                 'AscenderLevel': bot.ascender_level,
-                'quality': bot.quality,
-                'rarity': bot.rarity,
-                'mold': bot.mold,
-                'ascender_enchant1': bot.ascender_enchant1,
-                'ascender_enchant2': bot.ascender_enchant2,
-                'ascender_enchant3': bot.ascender_enchant3,
-                'ascender_mode': bot.ascender_mode,
-                'backpack_items': bot.backpack_items,
+                'Quality': bot.quality,
+                'Rarity': bot.rarity,
+                'Mold': bot.mold,
+                'AscenderEnchant1': bot.ascender_enchant1,
+                'AscenderEnchant2': bot.ascender_enchant2,
+                'AscenderEnchant3': bot.ascender_enchant3,
+                'AscenderMode': bot.ascender_mode,
+                'BackpackItems': bot.backpack_items,
                 'config': config_data
             })
         return serialized
@@ -558,14 +558,14 @@ class C2Consumer(AsyncWebsocketConsumer):
                             bot.money = money_val
                     except ValueError:
                         pass
-                if 'bot_class' in extra_data and extra_data['bot_class']:
-                    bot.bot_class = str(extra_data['bot_class'])[:50]
-                if 'quality' in extra_data and extra_data['quality']:
-                    bot.quality = str(extra_data['quality'])[:50]
-                if 'rarity' in extra_data and extra_data['rarity']:
-                    bot.rarity = str(extra_data['rarity'])[:50]
-                if 'mold' in extra_data and extra_data['mold']:
-                    bot.mold = str(extra_data['mold'])[:100]
+                if 'BotClass' in extra_data and extra_data['BotClass']:
+                    bot.bot_class = str(extra_data['BotClass'])[:50]
+                if 'Quality' in extra_data and extra_data['Quality']:
+                    bot.quality = str(extra_data['Quality'])[:50]
+                if 'Rarity' in extra_data and extra_data['Rarity']:
+                    bot.rarity = str(extra_data['Rarity'])[:50]
+                if 'Mold' in extra_data and extra_data['Mold']:
+                    bot.mold = str(extra_data['Mold'])[:100]
                 
                 # Defensively write newly added columns (protect against delayed VPS migrations)
                 try:
@@ -581,21 +581,21 @@ class C2Consumer(AsyncWebsocketConsumer):
                     print(f"[C2 Server] [DB Defend] Failed to set ascender_level (unmigrated?): {e}")
 
                 try:
-                    if 'ascender_enchant1' in extra_data and extra_data['ascender_enchant1']:
-                        bot.ascender_enchant1 = str(extra_data['ascender_enchant1'])[:100]
-                    if 'ascender_enchant2' in extra_data and extra_data['ascender_enchant2']:
-                        bot.ascender_enchant2 = str(extra_data['ascender_enchant2'])[:100]
-                    if 'ascender_enchant3' in extra_data and extra_data['ascender_enchant3']:
-                        bot.ascender_enchant3 = str(extra_data['ascender_enchant3'])[:100]
-                    if 'ascender_mode' in extra_data and extra_data['ascender_mode']:
-                        bot.ascender_mode = str(extra_data['ascender_mode'])[:100]
+                    if 'AscenderEnchant1' in extra_data and extra_data['AscenderEnchant1']:
+                        bot.ascender_enchant1 = str(extra_data['AscenderEnchant1'])[:100]
+                    if 'AscenderEnchant2' in extra_data and extra_data['AscenderEnchant2']:
+                        bot.ascender_enchant2 = str(extra_data['AscenderEnchant2'])[:100]
+                    if 'AscenderEnchant3' in extra_data and extra_data['AscenderEnchant3']:
+                        bot.ascender_enchant3 = str(extra_data['AscenderEnchant3'])[:100]
+                    if 'AscenderMode' in extra_data and extra_data['AscenderMode']:
+                        bot.ascender_mode = str(extra_data['AscenderMode'])[:100]
                 except Exception as e:
                     print(f"[C2 Server] [DB Defend] Failed to set ascender details (unmigrated?): {e}")
                 
                 # Prevent Status Poisoning memory flood
-                if 'backpack_items' in extra_data and isinstance(extra_data['backpack_items'], list):
+                if 'BackpackItems' in extra_data and isinstance(extra_data['BackpackItems'], list):
                     # Cap the list to 500 items max
-                    safe_list = extra_data['backpack_items'][:500]
+                    safe_list = extra_data['BackpackItems'][:500]
                     bot.backpack_items = safe_list
             
             bot.save()
@@ -757,6 +757,8 @@ class C2Consumer(AsyncWebsocketConsumer):
         # Set all bots for the user to Offline.
         # Any actively connected bots will auto-reconnect and update their status to Idle/Farming within seconds.
         BotAccount.objects.filter(owner=user).update(status='Offline')
+
+
 
 
 
