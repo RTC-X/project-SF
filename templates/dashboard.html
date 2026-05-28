@@ -155,7 +155,7 @@
                 <i data-lucide="dollar-sign" class="w-8 h-8"></i>
             </div>
             <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Total Accumulated Wealth</p>
-            <p class="text-3xl font-extrabold text-emerald-400 mt-2 font-mono">$<span x-text="formatWealth(bots.reduce((acc, b) => acc + parseFloat(b.money), 0))">0</span></p>
+            <p class="text-3xl font-extrabold text-emerald-400 mt-2 font-mono">$<span x-text="formatWealth(bots.reduce((acc, b) => acc + parseFloat(b.Money), 0))">0</span></p>
         </div>
         <div class="glass-panel p-6 rounded-3xl relative overflow-hidden" x-data="{ copied: false }">
             <div class="absolute right-4 top-4 text-teal-400/20">
