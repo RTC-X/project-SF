@@ -67,6 +67,7 @@ _G.TargetPriority = "Closest"
 -- Sniper, Drop & Mass Recovery States
 _G.autoDropEnabled = false
 _G.fetchingGodRoll = false 
+_G.C2_PanelActive = false
 _G.ActiveTargetSets = { {"Ancient", "Fortune", "Insight"} } 
 _G.WhitelistedSwords = {} 
 _G.KeptSwords = {} -- The Live Ledger for Mass Recovery
@@ -296,6 +297,7 @@ local function evaluateInventorySword(swordFolder)
     
     local keep = false
     if table.find(_G.WhitelistedSwords, swordFolder.Name) then keep = true end
+    if _G.AscenderQueue and table.find(_G.AscenderQueue, swordFolder.Name) then keep = true end
     if swordFolder:GetAttribute("Equipped") == true then keep = true end
     if character and character:FindFirstChild(swordFolder.Name) then keep = true end
     if _G.SavedSwordName and swordFolder.Name == _G.SavedSwordName then keep = true end
@@ -939,22 +941,21 @@ local function ExecuteAscenderAction(actionDetails)
                 waitTime = waitTime + 0.2
             end
             
-            if not table.find(_G.WhitelistedSwords, currentSword.Name) then
-                table.insert(_G.WhitelistedSwords, currentSword.Name)
-                if _G.C2_WS then
-                    _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
-                        action = "update_status", username = player.Name, api_key = C2_API_KEY,
-                        payload = { whitelisted_uuids = _G.WhitelistedSwords }
-                    }))
-                end
-            end
-            
             local currentBankCount = PlayerStats.Bank and #PlayerStats.Bank:GetChildren() or 0
             local dynamicMaxSlots = GetMaxBankSlots()
             
             if currentBankCount >= dynamicMaxSlots then
                 warn("[AutoAscender] ⚠️ BANK IS AT MAXIMUM CAPACITY (" .. currentBankCount .. "/" .. dynamicMaxSlots .. ")!")
                 warn("[AutoAscender] 🛡️ Keeping finished sword in your Inventory and protecting it!")
+                if not table.find(_G.WhitelistedSwords, currentSword.Name) then
+                    table.insert(_G.WhitelistedSwords, currentSword.Name)
+                    if _G.C2_WS then
+                        _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
+                            action = "update_status", username = player.Name, api_key = C2_API_KEY,
+                            payload = { WhitelistedSwords = _G.WhitelistedSwords }
+                        }))
+                    end
+                end
             else
                 print("[AutoAscender] Depositing to Bank...")
                 pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Bank") end)
@@ -1663,6 +1664,7 @@ task.spawn(function()
                         if parsedData.Settings then for k,v in pairs(parsedData.Settings) do SETTINGS[k] = v end end
                         
                         -- Toggle logic (if dashboard sends these specifically inside syncConfig)
+                        if parsedData.ActivatePanel ~= nil then _G.C2_PanelActive = parsedData.ActivatePanel end
                         if parsedData.FarmEnabled ~= nil then 
                             if _G.on ~= parsedData.FarmEnabled then
                                 _G.on = parsedData.FarmEnabled
