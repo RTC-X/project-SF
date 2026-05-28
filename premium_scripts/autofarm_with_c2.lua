@@ -1747,6 +1747,7 @@ task.spawn(function()
                                     Quality = ascenderData.stats.Quality or "Standard",
                                     Rarity = ascenderData.stats.Rarity or "Common",
                                     Mold = ascenderData.stats.Mold or "Basic",
+                                    BotClass = ascenderData.stats.Class or "None",
                                     AscenderEnchant1 = ascenderData.stats.Enchant1 or "None",
                                     AscenderEnchant2 = ascenderData.stats.Enchant2 or "None",
                                     AscenderEnchant3 = ascenderData.stats.Enchant3 or "None",
@@ -1819,4 +1820,5 @@ task.spawn(function()
         maintainC2Connection()
     end)
 end)
+
 

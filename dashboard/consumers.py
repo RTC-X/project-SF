@@ -465,29 +465,29 @@ class C2Consumer(AsyncWebsocketConsumer):
             try:
                 config = bot.config
                 config_data = {
-                    'farm_enabled': config.farm_enabled,
-                    'snipe_enabled': config.snipe_enabled,
-                    'activate_panel': config.activate_panel,
-                    'active_areas': config.active_areas,
-                    'target_enchant_sets': config.target_enchant_sets,
-                    'whitelisted_uuids': config.whitelisted_uuids,
-                    'target_priority': config.target_priority,
-                    'ascender_enabled': config.ascender_enabled,
-                    'ascender_queue': config.ascender_queue,
-                    'ascender_criteria': config.ascender_criteria,
+                    'FarmEnabled': config.farm_enabled,
+                    'SnipeEnabled': config.snipe_enabled,
+                    'ActivatePanel': config.activate_panel,
+                    'FarmAreas': config.active_areas,
+                    'TargetSets': config.target_enchant_sets,
+                    'WhitelistedSwords': config.whitelisted_uuids,
+                    'TargetPriority': config.target_priority,
+                    'AscenderEnabled': config.ascender_enabled,
+                    'AscenderQueue': config.ascender_queue,
+                    'AscenderCriteria': config.ascender_criteria,
                 }
             except BotConfiguration.DoesNotExist:
                 config_data = {
-                    'farm_enabled': False,
-                    'snipe_enabled': False,
-                    'activate_panel': False,
-                    'active_areas': [],
-                    'target_enchant_sets': [],
-                    'whitelisted_uuids': [],
-                    'target_priority': 'Closest',
-                    'ascender_enabled': False,
-                    'ascender_queue': [],
-                    'ascender_criteria': [],
+                    'FarmEnabled': False,
+                    'SnipeEnabled': False,
+                    'ActivatePanel': False,
+                    'FarmAreas': [],
+                    'TargetSets': [],
+                    'WhitelistedSwords': [],
+                    'TargetPriority': 'Closest',
+                    'AscenderEnabled': False,
+                    'AscenderQueue': [],
+                    'AscenderCriteria': [],
                 }
             
             serialized.append({
@@ -606,7 +606,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 defaults={
                     'farm_enabled': True,
                     'snipe_enabled': True,
-                    'activate_panel': False,
+                    'ActivatePanel': False,
                     'active_areas': [1, 2, 5, 12],
                     'target_enchant_sets': ["Ancient + Fortune + Insight"],
                     'whitelisted_uuids': ["sword_92k"]
@@ -757,6 +757,7 @@ class C2Consumer(AsyncWebsocketConsumer):
         # Set all bots for the user to Offline.
         # Any actively connected bots will auto-reconnect and update their status to Idle/Farming within seconds.
         BotAccount.objects.filter(owner=user).update(status='Offline')
+
 
 
 
