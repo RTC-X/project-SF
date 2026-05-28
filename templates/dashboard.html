@@ -21,10 +21,10 @@
         FarmEnabled: false,
         SnipeEnabled: false,
         BotClass: '',
-        quality: '',
-        rarity: '',
-        mold: '',
-        level: '',
+        Quality: '',
+        Rarity: '',
+        Mold: '',
+        Level: '',
         TargetSets: [],
         WhitelistedSwords: [],
         TeleportHome: false,
@@ -369,7 +369,7 @@
                                 </div>
                                 <div class="flex items-center gap-4 mt-1.5 text-xs text-zinc-500 font-mono">
                                     <span class="text-teal-400">• <span class="text-zinc-400" x-text="selectedBot.Status">Idle</span></span>
-                                    <span>⏱ <span class="text-zinc-300" x-text="formatTime(selectedbot.SessionTime)">04:07:24</span></span>
+                                    <span>⏱ <span class="text-zinc-300" x-text="formatTime(selectedBot.SessionTime)">04:07:24</span></span>
                                     <span>⭐ <span class="text-zinc-300">+0 Lvls</span></span>
                                     <span>💰 <span class="text-zinc-300">+0 Cash</span></span>
                                 </div>
@@ -589,7 +589,7 @@
                                 <div class="flex items-center gap-1.5 pt-1">
                                     <select x-model="newUuid" class="flex-1 w-full min-w-0 truncate bg-zinc-950/60 border border-white/5 text-[10px] rounded-lg px-2 py-1.5 text-zinc-400 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
                                         <option value="">Backpack empty...</option>
-                                        <template x-for="item in (selectedbot.BackpackItems || []).filter(i => !i.inBank)">
+                                        <template x-for="item in (selectedBot.BackpackItems || []).filter(i => !i.inBank)">
                                             <option :value="item.id" x-text="getItemName(item)"></option>
                                         </template>
                                     </select>
@@ -617,12 +617,12 @@
                                         <i data-lucide="shopping-bag" class="w-4 h-4 text-orange-400"></i>
                                         <h5 class="text-sm font-bold text-white font-mono tracking-wide uppercase">Inventory & Bank</h5>
                                     </div>
-                                    <span class="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-white/5" x-text="(selectedbot.BackpackItems?.length || 0) + ' Total'">0 Total</span>
+                                    <span class="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-white/5" x-text="(selectedBot.BackpackItems?.length || 0) + ' Total'">0 Total</span>
                                 </div>
                                 
                                 <!-- Backpack items scroller -->
                                 <div class="space-y-1.5 pr-1" style="max-height: 400px; overflow-y: auto;">
-                                    <template x-for="item in [...(selectedbot.BackpackItems || [])].sort((a, b) => (a.inBank === b.inBank) ? 0 : a.inBank ? 1 : -1)" :key="item.id">
+                                    <template x-for="item in [...(selectedBot.BackpackItems || [])].sort((a, b) => (a.inBank === b.inBank) ? 0 : a.inBank ? 1 : -1)" :key="item.id">
                                         <div x-data="{ open: false }" @click.away="open = false" class="p-3 rounded-xl bg-zinc-950/60 border border-white/5 flex items-center justify-between gap-2 hover:border-orange-500/20 transition-all select-none relative">
                                             <div class="space-y-0.5 flex-1 min-w-0">
                                                 <div class="flex items-center gap-1.5">
@@ -778,8 +778,8 @@
              localQueue: [],
              localCriteria: {},
              getBankCapacity() {
-                 if (!selectedBot || !selectedbot.BankLevel) return 0;
-                 let lvl = selectedbot.BankLevel;
+                 if (!selectedBot || !selectedBot.BankLevel) return 0;
+                 let lvl = selectedBot.BankLevel;
                  if (lvl === 1) return 6;
                  return Math.min(36, 10 + (lvl - 2) * 2);
              },
@@ -887,7 +887,7 @@
                 <div class="flex items-center gap-2 mb-2">
                     <select x-model="newAscenderUuid" class="flex-1 w-full min-w-0 bg-zinc-950/60 border border-white/5 text-xs rounded-lg px-3 py-2 text-zinc-400 font-mono focus:outline-none focus:ring-1 focus:ring-amber-400">
                         <option value="">Select a sword from Bank to queue...</option>
-                        <template x-for="item in (selectedbot.BackpackItems || []).filter(i => i.inBank)">
+                        <template x-for="item in (selectedBot.BackpackItems || []).filter(i => i.inBank)">
                             <option :value="item.id" x-text="'[Slot ' + item.BankSlot + '] ' + getItemName(item)"></option>
                         </template>
                     </select>
@@ -911,14 +911,14 @@
                         <div class="flex items-center gap-3 w-full">
                             <span class="text-xs font-bold text-zinc-500 font-mono w-6 text-center" x-text="'#' + (idx + 1)"></span>
                             <div class="flex-1 min-w-0 flex flex-col">
-                                <template x-if="selectedBot && selectedbot.BackpackItems && selectedbot.BackpackItems.find(i => i.id === uuid)">
+                                <template x-if="selectedBot && selectedBot.BackpackItems && selectedBot.BackpackItems.find(i => i.id === uuid)">
                                     <div>
-                                        <span class="block text-xs font-bold text-white font-mono truncate" x-text="getItemName(selectedbot.BackpackItems.find(i => i.id === uuid))"></span>
-                                        <span class="block text-[9px] font-mono text-amber-500/70 truncate mt-0.5" x-text="getItemTraits(selectedbot.BackpackItems.find(i => i.id === uuid)) || 'No Enchants'"></span>
-                                        <span class="text-[10px] font-mono text-teal-400 truncate block mt-0.5" x-text="selectedbot.BackpackItems.find(i => i.id === uuid).inBank ? 'Currently inside Bank (Slot ' + (selectedbot.BackpackItems.find(i => i.id === uuid).BankSlot || '?') + ')' : 'Currently in Backpack'"></span>
+                                        <span class="block text-xs font-bold text-white font-mono truncate" x-text="getItemName(selectedBot.BackpackItems.find(i => i.id === uuid))"></span>
+                                        <span class="block text-[9px] font-mono text-amber-500/70 truncate mt-0.5" x-text="getItemTraits(selectedBot.BackpackItems.find(i => i.id === uuid)) || 'No Enchants'"></span>
+                                        <span class="text-[10px] font-mono text-teal-400 truncate block mt-0.5" x-text="selectedBot.BackpackItems.find(i => i.id === uuid).inBank ? 'Currently inside Bank (Slot ' + (selectedBot.BackpackItems.find(i => i.id === uuid).BankSlot || '?') + ')' : 'Currently in Backpack'"></span>
                                     </div>
                                 </template>
-                                <template x-if="!(selectedBot && selectedbot.BackpackItems && selectedbot.BackpackItems.find(i => i.id === uuid))">
+                                <template x-if="!(selectedBot && selectedBot.BackpackItems && selectedBot.BackpackItems.find(i => i.id === uuid))">
                                     <div>
                                         <span class="text-xs font-bold text-zinc-400 font-mono truncate">Unknown Sword (Not in inventory)</span>
                                         <span class="text-[9px] font-mono text-zinc-600 block" x-text="uuid"></span>
@@ -1266,10 +1266,10 @@
                             FarmEnabled: false,
                             SnipeEnabled: false,
                             BotClass: '',
-                            quality: '',
-                            rarity: '',
-                            mold: '',
-                            level: '',
+                            Quality: '',
+                            Rarity: '',
+                            Mold: '',
+                            Level: '',
                             TargetSets: [],
                             WhitelistedSwords: [],
                             TeleportHome: false,
@@ -1285,6 +1285,8 @@
     </div>
 </div>
 {% endblock %}
+
+
 
 
 
