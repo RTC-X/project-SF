@@ -18,15 +18,15 @@
     multiConfigStep: 1,
     multiConfigSearch: '',
     multiConfigData: {
-        FarmEnabled: false,
-        SnipeEnabled: false,
+        farm_enabled: false,
+        snipe_enabled: false,
         BotClass: '',
         Quality: '',
         Rarity: '',
         Mold: '',
         Level: '',
-        TargetSets: [],
-        WhitelistedSwords: [],
+        target_enchant_sets: [],
+        whitelisted_uuids: [],
         TeleportHome: false,
         Toggle3D: false
     },
@@ -251,7 +251,7 @@
                                 </div>
                                 <div>
                                     <span class="text-zinc-500 block text-[10px] uppercase">Active Areas</span>
-                                    <span class="text-teal-400 font-semibold" x-text="bot.config?.FarmAreas.join(', ') || 'None'">None</span>
+                                    <span class="text-teal-400 font-semibold" x-text="bot.config?.active_areas.join(', ') || 'None'">None</span>
                                 </div>
                             </div>
                         </div>
@@ -345,7 +345,7 @@
 
             <!-- If managing live bot (matching game-monitoring console mockup exactly) -->
             <template x-if="selectedBot">
-                <div class="space-y-6 transition-all duration-500" x-data="{ fpsCap: 60 }" :class="selectedBot.config?.ActivatePanel ? 'drop-shadow-[0_0_20px_rgba(45,212,191,0.2)] border border-teal-500/30 rounded-3xl p-4 bg-teal-500/5' : ''">
+                <div class="space-y-6 transition-all duration-500" x-data="{ fpsCap: 60 }" :class="selectedBot.config?.activate_panel ? 'drop-shadow-[0_0_20px_rgba(45,212,191,0.2)] border border-teal-500/30 rounded-3xl p-4 bg-teal-500/5' : ''">
                     
                     <!-- Premium Header Sub-Bar -->
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-zinc-900/40 border border-white/5">
@@ -364,8 +364,8 @@
                                     
                                     <!-- Sniper Badge -->
                                     <span class="text-[9px] font-mono font-semibold px-2.5 py-0.5 rounded-full border"
-                                          :class="selectedBot.config?.SnipeEnabled ? 'bg-teal-500/10 border-teal-500/20 text-teal-400' : 'bg-zinc-800 border-zinc-700 text-zinc-500'"
-                                          x-text="selectedBot.config?.SnipeEnabled ? 'Sniper Active' : 'Sniper Inactive'">Sniper Active</span>
+                                          :class="selectedBot.config?.snipe_enabled ? 'bg-teal-500/10 border-teal-500/20 text-teal-400' : 'bg-zinc-800 border-zinc-700 text-zinc-500'"
+                                          x-text="selectedBot.config?.snipe_enabled ? 'Sniper Active' : 'Sniper Inactive'">Sniper Active</span>
                                 </div>
                                 <div class="flex items-center gap-4 mt-1.5 text-xs text-zinc-500 font-mono">
                                     <span class="text-teal-400">• <span class="text-zinc-400" x-text="selectedBot.Status">Idle</span></span>
@@ -380,33 +380,33 @@
                         <div class="flex items-center flex-wrap gap-2.5">
                             <label class="flex items-center gap-3 px-3 py-1.5 rounded-xl bg-zinc-900/60 border border-white/5 hover:border-white/10 transition-all cursor-pointer select-none">
                                 <span class="text-xs text-zinc-300 font-medium font-mono">Activate</span>
-                                <button @click="selectedBot.config.ActivatePanel = !selectedBot.config.ActivatePanel; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config); if(selectedBot.config.ActivatePanel) { sendCommand(selectedBot.id, 'set3d', true); fpsCap = 60; sendCommand(selectedBot.id, 'setFPS', 60); } else { sendCommand(selectedBot.id, 'set3d', false); }" 
+                                <button @click="selectedBot.config.activate_panel = !selectedBot.config.activate_panel; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config); if(selectedBot.config.activate_panel) { sendCommand(selectedBot.id, 'set3d', true); fpsCap = 60; sendCommand(selectedBot.id, 'setFPS', 60); } else { sendCommand(selectedBot.id, 'set3d', false); }" 
                                         type="button"
                                         class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none"
-                                        :class="selectedBot.config?.ActivatePanel ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_10px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
+                                        :class="selectedBot.config?.activate_panel ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_10px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
                                     <span class="pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full shadow transition-all duration-300 ease-in-out"
-                                          :class="selectedBot.config?.ActivatePanel ? 'translate-x-4 bg-teal-400 shadow-[0_0_6px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
+                                          :class="selectedBot.config?.activate_panel ? 'translate-x-4 bg-teal-400 shadow-[0_0_6px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
                                 </button>
                             </label>
                             
-                            <button @click="selectedBot.config.FarmEnabled = !selectedBot.config.FarmEnabled; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
+                            <button @click="selectedBot.config.farm_enabled = !selectedBot.config.farm_enabled; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
                                     class="px-4 py-1.5 bg-zinc-900/80 border text-xs font-semibold rounded-xl transition-all duration-300 font-mono flex items-center gap-1.5 select-none"
-                                    :class="selectedBot.config.FarmEnabled ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5 shadow-[0_0_15px_rgba(52,211,153,0.1)] hover:bg-emerald-500/10' : 'border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'">
-                                <span class="h-1.5 w-1.5 rounded-full transition-all duration-300" :class="selectedBot.config.FarmEnabled ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] animate-pulse' : 'bg-zinc-600'"></span>
+                                    :class="selectedBot.config.farm_enabled ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5 shadow-[0_0_15px_rgba(52,211,153,0.1)] hover:bg-emerald-500/10' : 'border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'">
+                                <span class="h-1.5 w-1.5 rounded-full transition-all duration-300" :class="selectedBot.config.farm_enabled ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] animate-pulse' : 'bg-zinc-600'"></span>
                                 <span>Toggle Farm</span>
                             </button>
                             
-                            <button @click="selectedBot.config.SnipeEnabled = !selectedBot.config.SnipeEnabled; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
+                            <button @click="selectedBot.config.snipe_enabled = !selectedBot.config.snipe_enabled; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
                                     class="px-4 py-1.5 bg-zinc-900/80 border text-xs font-semibold rounded-xl transition-all duration-300 font-mono flex items-center gap-1.5 select-none"
-                                    :class="selectedBot.config.SnipeEnabled ? 'border-orange-500/30 text-orange-400 bg-orange-500/5 shadow-[0_0_15px_rgba(249,115,22,0.1)] hover:bg-orange-500/10' : 'border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'">
-                                <span class="h-1.5 w-1.5 rounded-full transition-all duration-300" :class="selectedBot.config.SnipeEnabled ? 'bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.8)] animate-pulse' : 'bg-zinc-600'"></span>
+                                    :class="selectedBot.config.snipe_enabled ? 'border-orange-500/30 text-orange-400 bg-orange-500/5 shadow-[0_0_15px_rgba(249,115,22,0.1)] hover:bg-orange-500/10' : 'border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'">
+                                <span class="h-1.5 w-1.5 rounded-full transition-all duration-300" :class="selectedBot.config.snipe_enabled ? 'bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.8)] animate-pulse' : 'bg-zinc-600'"></span>
                                 <span>Toggle Sniper</span>
                             </button>
                             
-                            <button @click="selectedBot.config.AscenderEnabled = !selectedBot.config.AscenderEnabled; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
+                            <button @click="selectedBot.config.ascender_enabled = !selectedBot.config.ascender_enabled; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
                                     class="px-4 py-1.5 bg-zinc-900/80 border text-xs font-semibold rounded-xl transition-all duration-300 font-mono flex items-center gap-1.5 select-none"
-                                    :class="selectedBot.config.AscenderEnabled ? 'border-amber-500/30 text-amber-400 bg-amber-500/5 shadow-[0_0_15px_rgba(245,158,11,0.1)] hover:bg-amber-500/10' : 'border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'">
-                                <span class="h-1.5 w-1.5 rounded-full transition-all duration-300" :class="selectedBot.config.AscenderEnabled ? 'bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.8)] animate-pulse' : 'bg-zinc-600'"></span>
+                                    :class="selectedBot.config.ascender_enabled ? 'border-amber-500/30 text-amber-400 bg-amber-500/5 shadow-[0_0_15px_rgba(245,158,11,0.1)] hover:bg-amber-500/10' : 'border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'">
+                                <span class="h-1.5 w-1.5 rounded-full transition-all duration-300" :class="selectedBot.config.ascender_enabled ? 'bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.8)] animate-pulse' : 'bg-zinc-600'"></span>
                                 <span>Auto Ascender</span>
                             </button>
                             
@@ -420,8 +420,8 @@
                             
                             <button @click="
                                 showAscenderQueueModal = true; 
-                                localQueue = [...(selectedBot.config?.AscenderQueue || [])];
-                                let _crit = selectedBot.config?.AscenderCriteria;
+                                localQueue = [...(selectedBot.config?.ascender_queue || [])];
+                                let _crit = selectedBot.config?.ascender_criteria;
                                 localCriteria = Object.assign({
                                     Level: 0, Class: 'None', Quality: 'None', Rarity: 'None', Mold: 'None',
                                     Enchant1Level: 0, Enchant2Level: 0, Enchant3Level: 0
@@ -508,14 +508,14 @@
                             <div class="pt-4 mt-4 border-t border-white/5">
                                 <span class="block text-[10px] font-bold text-teal-400 font-mono tracking-wider uppercase mb-2">Target Priority</span>
                                 <div class="grid grid-cols-3 gap-1.5">
-                                    <button @click="selectedBot.config.TargetPriority = 'Closest'; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
-                                    :class="(selectedBot.config?.TargetPriority || 'Closest') === 'Closest' ? 'bg-teal-500/20 border-teal-500/30 text-teal-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Closest</button>
+                                    <button @click="selectedBot.config.target_priority = 'Closest'; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
+                                    :class="(selectedBot.config?.target_priority || 'Closest') === 'Closest' ? 'bg-teal-500/20 border-teal-500/30 text-teal-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Closest</button>
                                     
-                                    <button @click="selectedBot.config.TargetPriority = 'Highest XP'; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
-                                    :class="selectedBot.config?.TargetPriority === 'Highest XP' ? 'bg-teal-500/20 border-teal-500/30 text-teal-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Most XP</button>
+                                    <button @click="selectedBot.config.target_priority = 'Highest XP'; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
+                                    :class="selectedBot.config?.target_priority === 'Highest XP' ? 'bg-teal-500/20 border-teal-500/30 text-teal-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Most XP</button>
                                     
-                                    <button @click="selectedBot.config.TargetPriority = 'Highest Money'; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
-                                    :class="selectedBot.config?.TargetPriority === 'Highest Money' ? 'bg-teal-500/20 border-teal-500/30 text-teal-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Most $$$</button>
+                                    <button @click="selectedBot.config.target_priority = 'Highest Money'; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
+                                    :class="selectedBot.config?.target_priority === 'Highest Money' ? 'bg-teal-500/20 border-teal-500/30 text-teal-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Most $$$</button>
                                 </div>
                             </div>
                         </div>
@@ -532,13 +532,13 @@
                                 <span class="block text-[10px] font-bold text-teal-400 font-mono tracking-wider uppercase">Target Sets</span>
                                 
                                 <div class="space-y-1.5 max-h-[85px] overflow-y-auto">
-                                    <template x-if="!selectedBot.config?.TargetSets || selectedBot.config.TargetSets.length === 0">
+                                    <template x-if="!selectedBot.config?.target_enchant_sets || selectedBot.config.target_enchant_sets.length === 0">
                                         <div class="text-[10px] text-zinc-500 font-mono italic">No enchant sets in sniper wishlist.</div>
                                     </template>
-                                    <template x-for="(set, idx) in selectedBot.config?.TargetSets || []" :key="idx">
+                                    <template x-for="(set, idx) in selectedBot.config?.target_enchant_sets || []" :key="idx">
                                         <div class="flex items-center justify-between p-2 rounded-xl bg-zinc-950/60 border border-white/5">
                                             <span class="text-[10px] text-zinc-300 font-mono font-semibold" x-text="set">Ancient + Fortune</span>
-                                            <button @click="selectedBot.config.TargetSets.splice(idx, 1); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
+                                            <button @click="selectedBot.config.target_enchant_sets.splice(idx, 1); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
                                                     class="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded-md font-mono hover:bg-red-500/30 transition-all">Rem</button>
                                         </div>
                                     </template>
@@ -558,8 +558,8 @@
                                         if (enchant2) combined.push(enchant2);
                                         if (enchant3) combined.push(enchant3);
                                         if (combined.length > 0) {
-                                            if (!selectedBot.config.TargetSets) selectedBot.config.TargetSets = [];
-                                            selectedBot.config.TargetSets.push(combined.join(' + '));
+                                            if (!selectedBot.config.target_enchant_sets) selectedBot.config.target_enchant_sets = [];
+                                            selectedBot.config.target_enchant_sets.push(combined.join(' + '));
                                             enchant1 = ''; enchant2 = ''; enchant3 = '';
                                             sendCommand(selectedBot.id, 'syncConfig', selectedBot.config);
                                         }
@@ -574,13 +574,13 @@
                                 <span class="block text-[10px] font-bold text-teal-400 font-mono tracking-wider uppercase">Protected UUIDs</span>
                                 
                                 <div class="max-h-[60px] overflow-y-auto space-y-1.5">
-                                    <template x-if="!selectedBot.config?.WhitelistedSwords || selectedBot.config.WhitelistedSwords.length === 0">
+                                    <template x-if="!selectedBot.config?.whitelisted_uuids || selectedBot.config.whitelisted_uuids.length === 0">
                                         <div class="text-[10px] text-zinc-500 font-mono italic">Whitelist is empty</div>
                                     </template>
-                                    <template x-for="(uuid, idx) in selectedBot.config?.WhitelistedSwords || []" :key="idx">
+                                    <template x-for="(uuid, idx) in selectedBot.config?.whitelisted_uuids || []" :key="idx">
                                         <div class="flex items-center justify-between p-1.5 rounded-lg bg-zinc-950/60 border border-white/5">
                                             <span class="text-[10px] text-zinc-400 font-mono truncate mr-2" x-text="uuid">Sword_1</span>
-                                            <button @click="selectedBot.config.WhitelistedSwords.splice(idx, 1); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
+                                            <button @click="selectedBot.config.whitelisted_uuids.splice(idx, 1); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
                                                     class="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1 py-0.5 rounded font-mono hover:bg-red-500/30 transition-all">Rem</button>
                                         </div>
                                     </template>
@@ -595,8 +595,8 @@
                                     </select>
                                     <button @click="
                                         if (newUuid) {
-                                            if (!selectedBot.config.WhitelistedSwords) selectedBot.config.WhitelistedSwords = [];
-                                            selectedBot.config.WhitelistedSwords.push(newUuid);
+                                            if (!selectedBot.config.whitelisted_uuids) selectedBot.config.whitelisted_uuids = [];
+                                            selectedBot.config.whitelisted_uuids.push(newUuid);
                                             newUuid = '';
                                             sendCommand(selectedBot.id, 'syncConfig', selectedBot.config);
                                         }
@@ -657,31 +657,31 @@
                                                     
                                                     <!-- Toggle Whitelist -->
                                                     <button @click.stop="
-                                                                if (!selectedBot.config.WhitelistedSwords) selectedBot.config.WhitelistedSwords = [];
-                                                                if (selectedBot.config.WhitelistedSwords.includes(item.id)) {
-                                                                    selectedBot.config.WhitelistedSwords = selectedBot.config.WhitelistedSwords.filter(id => id !== item.id);
+                                                                if (!selectedBot.config.whitelisted_uuids) selectedBot.config.whitelisted_uuids = [];
+                                                                if (selectedBot.config.whitelisted_uuids.includes(item.id)) {
+                                                                    selectedBot.config.whitelisted_uuids = selectedBot.config.whitelisted_uuids.filter(id => id !== item.id);
                                                                 } else {
-                                                                    selectedBot.config.WhitelistedSwords.push(item.id);
+                                                                    selectedBot.config.whitelisted_uuids.push(item.id);
                                                                 }
                                                                 sendCommand(selectedBot.id, 'syncConfig', selectedBot.config);
                                                                 open = false;
                                                             " 
                                                             class="w-full text-left px-3 py-1.5 text-[10px] font-mono font-semibold hover:bg-white/5 transition-colors flex items-center gap-2 cursor-pointer"
-                                                            :class="selectedBot.config?.WhitelistedSwords?.includes(item.id) ? 'text-amber-400' : 'text-zinc-300'">
+                                                            :class="selectedBot.config?.whitelisted_uuids?.includes(item.id) ? 'text-amber-400' : 'text-zinc-300'">
                                                         <!-- Lock/Unlock SVG -->
-                                                        <template x-if="selectedBot.config?.WhitelistedSwords?.includes(item.id)">
+                                                        <template x-if="selectedBot.config?.whitelisted_uuids?.includes(item.id)">
                                                             <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                                                                 <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
                                                             </svg>
                                                         </template>
-                                                        <template x-if="!selectedBot.config?.WhitelistedSwords?.includes(item.id)">
+                                                        <template x-if="!selectedBot.config?.whitelisted_uuids?.includes(item.id)">
                                                             <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                                                                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                                                             </svg>
                                                         </template>
-                                                        <span x-text="selectedBot.config?.WhitelistedSwords?.includes(item.id) ? 'Unprotect' : 'Protect'">Protect</span>
+                                                        <span x-text="selectedBot.config?.whitelisted_uuids?.includes(item.id) ? 'Unprotect' : 'Protect'">Protect</span>
                                                     </button>
                                                     
 
@@ -720,7 +720,7 @@
     <!-- Map Options Modal -->
     <div x-show="showMapOptions" 
          x-data="{ localActiveAreas: [] }" 
-         x-init="$watch('showMapOptions', value => { if(value) localActiveAreas = [...(selectedBot.config?.FarmAreas || [])].map(Number); })"
+         x-init="$watch('showMapOptions', value => { if(value) localActiveAreas = [...(selectedBot.config?.active_areas || [])].map(Number); })"
          @click.self="showMapOptions = false" 
          class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" 
          x-transition 
@@ -764,7 +764,7 @@
             <div class="flex justify-end gap-3">
                 <button @click="showMapOptions = false" class="px-4 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all border border-white/10">Cancel</button>
                 <button @click="
-                    selectedBot.config.FarmAreas = localActiveAreas;
+                    selectedBot.config.active_areas = localActiveAreas;
                     sendCommand(selectedBot.id, 'syncConfig', selectedBot.config);
                     showMapOptions = false;
                 " class="px-4 py-2 bg-teal-500 hover:bg-teal-400 text-black text-xs font-bold rounded-xl transition-all shadow-lg shadow-teal-500/20">Save Areas</button>
@@ -936,8 +936,8 @@
             <div class="flex justify-end gap-3 border-t border-white/5 pt-4">
                 <button @click="showAscenderQueueModal = false" class="px-5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl transition-all border border-white/10 font-mono">Cancel</button>
                 <button @click="
-                    selectedBot.config.AscenderQueue = localQueue;
-                    selectedBot.config.AscenderCriteria = localCriteria;
+                    selectedBot.config.ascender_queue = localQueue;
+                    selectedBot.config.ascender_criteria = localCriteria;
                     sendCommand(selectedBot.id, 'syncConfig', selectedBot.config);
                     showAscenderQueueModal = false;
                 " class="px-5 py-2 bg-amber-500 hover:bg-amber-600 text-black text-xs font-bold rounded-xl transition-all shadow-lg shadow-amber-500/20 font-mono">Deploy Queue</button>
@@ -982,12 +982,12 @@
                             <span class="block text-xs font-bold text-white font-mono">Sniper Mode</span>
                             <span class="block text-[10px] text-zinc-500 font-mono">Automated god-roll sniping</span>
                         </div>
-                        <button @click="multiConfigData.SnipeEnabled = !multiConfigData.SnipeEnabled" 
+                        <button @click="multiConfigData.snipe_enabled = !multiConfigData.snipe_enabled" 
                                 type="button"
                                 class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]"
-                                :class="multiConfigData.SnipeEnabled ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
+                                :class="multiConfigData.snipe_enabled ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
                             <span class="pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full shadow transition-all duration-300 ease-in-out"
-                                  :class="multiConfigData.SnipeEnabled ? 'translate-x-5 bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
+                                  :class="multiConfigData.snipe_enabled ? 'translate-x-5 bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
                         </button>
                     </div>
 
@@ -997,12 +997,12 @@
                             <span class="block text-xs font-bold text-white font-mono">Farming Mode</span>
                             <span class="block text-[10px] text-zinc-500 font-mono">Automated target level farming</span>
                         </div>
-                        <button @click="multiConfigData.FarmEnabled = !multiConfigData.FarmEnabled" 
+                        <button @click="multiConfigData.farm_enabled = !multiConfigData.farm_enabled" 
                                 type="button"
                                 class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]"
-                                :class="multiConfigData.FarmEnabled ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
+                                :class="multiConfigData.farm_enabled ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
                             <span class="pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full shadow transition-all duration-300 ease-in-out"
-                                  :class="multiConfigData.FarmEnabled ? 'translate-x-5 bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
+                                  :class="multiConfigData.farm_enabled ? 'translate-x-5 bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
                         </button>
                     </div>
 
@@ -1074,17 +1074,17 @@
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="block text-xs font-bold text-teal-400 font-mono tracking-wider uppercase">Sniper Wishlist Sets</span>
-                            <span class="text-[9px] font-mono text-zinc-500" x-text="multiConfigData.TargetSets.length + ' Sets'">0 Sets</span>
+                            <span class="text-[9px] font-mono text-zinc-500" x-text="multiConfigData.target_enchant_sets.length + ' Sets'">0 Sets</span>
                         </div>
                         
                         <div class="space-y-1.5 max-h-[100px] overflow-y-auto">
-                            <template x-if="multiConfigData.TargetSets.length === 0">
+                            <template x-if="multiConfigData.target_enchant_sets.length === 0">
                                 <div class="text-[10px] text-zinc-600 font-mono italic py-4">No custom enchant targets added yet...</div>
                             </template>
-                            <template x-for="(set, idx) in multiConfigData.TargetSets" :key="idx">
+                            <template x-for="(set, idx) in multiConfigData.target_enchant_sets" :key="idx">
                                 <div class="flex items-center justify-between p-2 rounded-xl bg-zinc-900 border border-white/5">
                                     <span class="text-[10px] text-zinc-300 font-mono font-semibold" x-text="set"></span>
-                                    <button @click="multiConfigData.TargetSets.splice(idx, 1)" type="button" class="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded-md font-mono hover:bg-red-500/30">Rem</button>
+                                    <button @click="multiConfigData.target_enchant_sets.splice(idx, 1)" type="button" class="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded-md font-mono hover:bg-red-500/30">Rem</button>
                                 </div>
                             </template>
                         </div>
@@ -1101,7 +1101,7 @@
                                 if (multiEnchant2) combined.push(multiEnchant2);
                                 if (multiEnchant3) combined.push(multiEnchant3);
                                 if (combined.length > 0) {
-                                    multiConfigData.TargetSets.push(combined.join(' + '));
+                                    multiConfigData.target_enchant_sets.push(combined.join(' + '));
                                     multiEnchant1 = ''; multiEnchant2 = ''; multiEnchant3 = '';
                                 }
                             " type="button" class="w-full py-1.5 bg-zinc-900 hover:bg-zinc-800 text-[10px] text-white border border-white/10 font-bold rounded-xl transition-all font-mono uppercase tracking-wider">
@@ -1114,17 +1114,17 @@
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="block text-xs font-bold text-teal-400 font-mono tracking-wider uppercase">Protected UUID List</span>
-                            <span class="text-[9px] font-mono text-zinc-500" x-text="multiConfigData.WhitelistedSwords.length + ' UUIDs'">0 UUIDs</span>
+                            <span class="text-[9px] font-mono text-zinc-500" x-text="multiConfigData.whitelisted_uuids.length + ' UUIDs'">0 UUIDs</span>
                         </div>
 
                         <div class="space-y-1.5 max-h-[100px] overflow-y-auto">
-                            <template x-if="multiConfigData.WhitelistedSwords.length === 0">
+                            <template x-if="multiConfigData.whitelisted_uuids.length === 0">
                                 <div class="text-[10px] text-zinc-600 font-mono italic py-4">No whitelisted UUIDs added...</div>
                             </template>
-                            <template x-for="(uuid, idx) in multiConfigData.WhitelistedSwords" :key="idx">
+                            <template x-for="(uuid, idx) in multiConfigData.whitelisted_uuids" :key="idx">
                                 <div class="flex items-center justify-between p-2 rounded-xl bg-zinc-900 border border-white/5">
                                     <span class="text-[10px] text-zinc-300 font-mono" x-text="uuid"></span>
-                                    <button @click="multiConfigData.WhitelistedSwords.splice(idx, 1)" type="button" class="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded font-mono hover:bg-red-500/30">Rem</button>
+                                    <button @click="multiConfigData.whitelisted_uuids.splice(idx, 1)" type="button" class="text-[8px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded font-mono hover:bg-red-500/30">Rem</button>
                                 </div>
                             </template>
                         </div>
@@ -1133,7 +1133,7 @@
                             <input type="text" x-model="multiUuid" placeholder="e.g. sword_92k" class="flex-1 bg-zinc-900 border border-white/10 text-xs rounded-lg px-2 py-2 text-white placeholder-zinc-500 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
                             <button @click="
                                 if (multiUuid) {
-                                    multiConfigData.WhitelistedSwords.push(multiUuid);
+                                    multiConfigData.whitelisted_uuids.push(multiUuid);
                                     multiUuid = '';
                                 }
                             " type="button" class="px-3 py-1.5 bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-[10px] font-bold text-white rounded-lg transition-all font-mono">
@@ -1241,15 +1241,15 @@
                         multiConfigSelectedIds.forEach(id => {
                             // 1. Sync config settings
                             sendCommand(id, 'syncConfig', {
-                                FarmEnabled: multiConfigData.FarmEnabled,
-                                SnipeEnabled: multiConfigData.SnipeEnabled,
+                                farm_enabled: multiConfigData.farm_enabled,
+                                snipe_enabled: multiConfigData.snipe_enabled,
                                 BotClass: multiConfigData.BotClass || 'Unbeatable',
                                 Quality: multiConfigData.Quality || 'Spectacular',
                                 Rarity: multiConfigData.Rarity || 'Heavenly++',
                                 Mold: multiConfigData.Mold || 'Crystal',
                                 Level: parseInt(multiConfigData.Level) || 490,
-                                TargetSets: multiConfigData.TargetSets,
-                                WhitelistedSwords: multiConfigData.WhitelistedSwords
+                                target_enchant_sets: multiConfigData.target_enchant_sets,
+                                whitelisted_uuids: multiConfigData.whitelisted_uuids
                             });
                             // 2. Dispatch teleport Home or Toggle 3D rendering if enabled
                             if (multiConfigData.TeleportHome) {
@@ -1263,15 +1263,15 @@
                         multiConfigStep = 1;
                         multiConfigSelectedIds = [];
                         multiConfigData = {
-                            FarmEnabled: false,
-                            SnipeEnabled: false,
+                            farm_enabled: false,
+                            snipe_enabled: false,
                             BotClass: '',
                             Quality: '',
                             Rarity: '',
                             Mold: '',
                             Level: '',
-                            TargetSets: [],
-                            WhitelistedSwords: [],
+                            target_enchant_sets: [],
+                            whitelisted_uuids: [],
                             TeleportHome: false,
                             Toggle3D: false
                         };

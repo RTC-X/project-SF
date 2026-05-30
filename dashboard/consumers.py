@@ -465,16 +465,16 @@ class C2Consumer(AsyncWebsocketConsumer):
             try:
                 config = bot.config
                 config_data = {
-                    'FarmEnabled': config.farm_enabled,
-                    'SnipeEnabled': config.snipe_enabled,
-                    'ActivatePanel': config.activate_panel,
-                    'FarmAreas': config.active_areas,
-                    'TargetSets': config.target_enchant_sets,
-                    'WhitelistedSwords': config.whitelisted_uuids,
-                    'TargetPriority': config.target_priority,
-                    'AscenderEnabled': config.ascender_enabled,
-                    'AscenderQueue': config.ascender_queue,
-                    'AscenderCriteria': config.ascender_criteria,
+                    'farm_enabled': config.farm_enabled,
+                    'snipe_enabled': config.snipe_enabled,
+                    'activate_panel': config.activate_panel,
+                    'active_areas': config.active_areas,
+                    'target_enchant_sets': config.target_enchant_sets,
+                    'whitelisted_uuids': config.whitelisted_uuids,
+                    'target_priority': config.target_priority,
+                    'ascender_enabled': config.ascender_enabled,
+                    'ascender_queue': config.ascender_queue,
+                    'ascender_criteria': config.ascender_criteria,
                 }
             except BotConfiguration.DoesNotExist:
                 config_data = {
@@ -604,9 +604,9 @@ class C2Consumer(AsyncWebsocketConsumer):
             config, config_created = BotConfiguration.objects.get_or_create(
                 bot=bot,
                 defaults={
-                    'farm_enabled': True,
-                    'snipe_enabled': True,
-                    'ActivatePanel': False,
+                    'farm_enabled': False,
+                    'snipe_enabled': False,
+                    'activate_panel': False,
                     'active_areas': [1, 2, 5, 12],
                     'target_enchant_sets': ["Ancient + Fortune + Insight"],
                     'whitelisted_uuids': ["sword_92k"]
@@ -615,22 +615,22 @@ class C2Consumer(AsyncWebsocketConsumer):
             
             # Sync live state from Roblox telemetry
             if extra_data:
-                 if 'FarmEnabled' in extra_data:
-                     config.farm_enabled = bool(extra_data['FarmEnabled'])
-                 if 'SnipeEnabled' in extra_data:
-                     config.snipe_enabled = bool(extra_data['SnipeEnabled'])
-                 if 'ActivatePanel' in extra_data:
-                     config.activate_panel = bool(extra_data['ActivatePanel'])
-                 if 'AscenderEnabled' in extra_data:
-                     config.ascender_enabled = bool(extra_data['AscenderEnabled'])
-                 if 'AscenderQueue' in extra_data and isinstance(extra_data['AscenderQueue'], list):
-                     config.ascender_queue = extra_data['AscenderQueue']
-                 if 'TargetSets' in extra_data and extra_data['TargetSets']:
-                     config.target_enchant_sets = extra_data['TargetSets']
-                 if 'WhitelistedSwords' in extra_data:
-                     config.whitelisted_uuids = extra_data['WhitelistedSwords']
-                 if 'FarmAreas' in extra_data and isinstance(extra_data['FarmAreas'], list):
-                     config.active_areas = extra_data['FarmAreas']
+                 if 'farm_enabled' in extra_data:
+                     config.farm_enabled = bool(extra_data['farm_enabled'])
+                 if 'snipe_enabled' in extra_data:
+                     config.snipe_enabled = bool(extra_data['snipe_enabled'])
+                 if 'activate_panel' in extra_data:
+                     config.activate_panel = bool(extra_data['activate_panel'])
+                 if 'ascender_enabled' in extra_data:
+                     config.ascender_enabled = bool(extra_data['ascender_enabled'])
+                 if 'ascender_queue' in extra_data and isinstance(extra_data['ascender_queue'], list):
+                     config.ascender_queue = extra_data['ascender_queue']
+                 if 'target_enchant_sets' in extra_data and extra_data['target_enchant_sets']:
+                     config.target_enchant_sets = extra_data['target_enchant_sets']
+                 if 'whitelisted_uuids' in extra_data:
+                     config.whitelisted_uuids = extra_data['whitelisted_uuids']
+                 if 'active_areas' in extra_data and isinstance(extra_data['active_areas'], list):
+                     config.active_areas = extra_data['active_areas']
             
             # If config already existed but had empty defaults from prior db state, populate them:
             if not config.target_enchant_sets:
@@ -683,30 +683,30 @@ class C2Consumer(AsyncWebsocketConsumer):
         try:
             bot = BotAccount.objects.get(id=bot_id)
             config, _ = BotConfiguration.objects.get_or_create(bot=bot)
-            if 'FarmEnabled' in payload:
-                config.farm_enabled = payload['FarmEnabled']
-            if 'SnipeEnabled' in payload:
-                config.snipe_enabled = payload['SnipeEnabled']
-            if 'ActivatePanel' in payload:
-                config.activate_panel = payload['ActivatePanel']
-            if 'FarmAreas' in payload:
-                config.active_areas = payload['FarmAreas']
-            if 'TargetSets' in payload:
-                config.target_enchant_sets = payload['TargetSets']
-            if 'WhitelistedSwords' in payload:
-                config.whitelisted_uuids = payload['WhitelistedSwords']
-            if 'TargetPriority' in payload:
-                config.target_priority = payload['TargetPriority']
-            if 'AscenderEnabled' in payload:
-                config.ascender_enabled = payload['AscenderEnabled']
-            if 'AscenderQueue' in payload:
-                config.ascender_queue = payload['AscenderQueue']
-            if 'AscenderCriteria' in payload:
-                config.ascender_criteria = payload['AscenderCriteria']
-            if 'WebhookURL' in payload:
-                config.webhook_url = payload['WebhookURL']
-            if 'WebhookEnabled' in payload:
-                config.webhook_enabled = payload['WebhookEnabled']
+            if 'farm_enabled' in payload:
+                config.farm_enabled = payload['farm_enabled']
+            if 'snipe_enabled' in payload:
+                config.snipe_enabled = payload['snipe_enabled']
+            if 'activate_panel' in payload:
+                config.activate_panel = payload['activate_panel']
+            if 'active_areas' in payload:
+                config.active_areas = payload['active_areas']
+            if 'target_enchant_sets' in payload:
+                config.target_enchant_sets = payload['target_enchant_sets']
+            if 'whitelisted_uuids' in payload:
+                config.whitelisted_uuids = payload['whitelisted_uuids']
+            if 'target_priority' in payload:
+                config.target_priority = payload['target_priority']
+            if 'ascender_enabled' in payload:
+                config.ascender_enabled = payload['ascender_enabled']
+            if 'ascender_queue' in payload:
+                config.ascender_queue = payload['ascender_queue']
+            if 'ascender_criteria' in payload:
+                config.ascender_criteria = payload['ascender_criteria']
+            if 'webhook_url' in payload:
+                config.webhook_url = payload['webhook_url']
+            if 'webhook_enabled' in payload:
+                config.webhook_enabled = payload['webhook_enabled']
             config.save()
             
             if 'bot_class' in payload and payload['bot_class']:
@@ -730,18 +730,18 @@ class C2Consumer(AsyncWebsocketConsumer):
             bot = BotAccount.objects.get(username=username)
             config, _ = BotConfiguration.objects.get_or_create(bot=bot)
             return {
-                'FarmEnabled': config.farm_enabled,
-                'SnipeEnabled': config.snipe_enabled,
-                'ActivatePanel': config.activate_panel,
-                'FarmAreas': config.active_areas,
-                'TargetSets': config.target_enchant_sets,
-                'WhitelistedSwords': config.whitelisted_uuids,
-                'TargetPriority': config.target_priority,
-                'AscenderEnabled': config.ascender_enabled,
-                'AscenderQueue': config.ascender_queue,
-                'AscenderCriteria': config.ascender_criteria,
-                'WebhookURL': config.webhook_url,
-                'WebhookEnabled': config.webhook_enabled
+                'farm_enabled': config.farm_enabled,
+                'snipe_enabled': config.snipe_enabled,
+                'activate_panel': config.activate_panel,
+                'active_areas': config.active_areas,
+                'target_enchant_sets': config.target_enchant_sets,
+                'whitelisted_uuids': config.whitelisted_uuids,
+                'target_priority': config.target_priority,
+                'ascender_enabled': config.ascender_enabled,
+                'ascender_queue': config.ascender_queue,
+                'ascender_criteria': config.ascender_criteria,
+                'webhook_url': config.webhook_url,
+                'webhook_enabled': config.webhook_enabled
             }
         except BotAccount.DoesNotExist:
             return None

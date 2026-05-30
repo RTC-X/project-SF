@@ -62,30 +62,30 @@ local PlayerBackPackSwords = PlayerStats:WaitForChild("Swords")
 _G.on = false 
 _G.SavedSwordName = nil 
 _G.CurrentState = "Idle"
-_G.TargetPriority = "Closest"
+_G.target_priority = "Closest"
 
 -- Sniper, Drop & Mass Recovery States
 _G.autoDropEnabled = false
 _G.fetchingGodRoll = false 
-_G.C2_PanelActive = false
-_G.ActiveTargetSets = { {"Ancient", "Fortune", "Insight"} } 
-_G.WhitelistedSwords = {} 
+_G.activate_panel = false
+_G.target_enchant_sets = { {"Ancient", "Fortune", "Insight"} } 
+_G.whitelisted_uuids = {} 
 _G.KeptSwords = {} -- The Live Ledger for Mass Recovery
 _G.SpecialOverrides = {Enchant = {}, Mold = {}, Quality = {}, Rarity = {}, Class = {}}
-_G.WebhookURL = ""
-_G.WebhookEnabled = false
+_G.webhook_url = ""
+_G.webhook_enabled = false
 
 -- Ascender Configuration
-_G.AutoAscenderEnabled = false
-_G.AscenderQueue = {}
-_G.AscenderCriteria = {}
+_G.ascender_enabled = false
+_G.ascender_queue = {}
+_G.ascender_criteria = {}
 _G.HandlingAscender = false
 
 -- C2 Server Configuration
 _G.C2_SERVER_URL = "wss://c2scripts.xyz/ws/c2/"
 
 -- Area Rotation States
-_G.FarmAreas = {} 
+_G.active_areas = {} 
 local activeAreaRotationIds = {}
 
 local StagedEnchant1, StagedEnchant2, StagedEnchant3 = "None", "None", "None"
@@ -216,11 +216,11 @@ local sessionStartTime = tick()
 
 -- [[ 6. SNIPER & AUTO-DROP LOGIC ]]
 local function SendWebhook(title, description, color, fields)
-    if not _G.WebhookEnabled or _G.WebhookURL == "" or _G.WebhookURL == "Paste URL Here" then return end
+    if not _G.webhook_enabled or _G.webhook_url == "" or _G.webhook_url == "Paste URL Here" then return end
     local req = request or http_request or (syn and syn.request)
     if not req then return end
     local data = {["embeds"] = {{["title"] = title, ["description"] = description, ["color"] = color, ["fields"] = fields, ["timestamp"] = DateTime.now():ToIsoDate()}}}
-    pcall(function() req({Url = _G.WebhookURL, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(data)}) end)
+    pcall(function() req({Url = _G.webhook_url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(data)}) end)
 end
 
 local function getActualStats(statType, statId)
@@ -250,8 +250,8 @@ local function getSwordDetails(instance)
 end
 
 local function hasMatchingCombo(swordEnchants)
-    if #_G.ActiveTargetSets == 0 then return false end 
-    for _, targetSet in ipairs(_G.ActiveTargetSets) do
+    if #_G.target_enchant_sets == 0 then return false end 
+    for _, targetSet in ipairs(_G.target_enchant_sets) do
         local tLeft = {}
         for _, enc in ipairs(targetSet) do table.insert(tLeft, enc) end
         for _, myEnc in ipairs(swordEnchants) do
@@ -296,8 +296,8 @@ local function evaluateInventorySword(swordFolder)
     if not swordFolder or not swordFolder.Parent then return end
     
     local keep = false
-    if table.find(_G.WhitelistedSwords, swordFolder.Name) then keep = true end
-    if _G.AscenderQueue and table.find(_G.AscenderQueue, swordFolder.Name) then keep = true end
+    if table.find(_G.whitelisted_uuids, swordFolder.Name) then keep = true end
+    if _G.ascender_queue and table.find(_G.ascender_queue, swordFolder.Name) then keep = true end
     if swordFolder:GetAttribute("Equipped") == true then keep = true end
     if character and character:FindFirstChild(swordFolder.Name) then keep = true end
     if _G.SavedSwordName and swordFolder.Name == _G.SavedSwordName then keep = true end
@@ -507,7 +507,7 @@ local GetBestTarget = LPH_NO_VIRTUALIZE(function()
                 validNpcCount = validNpcCount + 1
                 local dist = (hrp.Position - npcRoot.Position).Magnitude
                 
-                if _G.TargetPriority == "Closest" then
+                if _G.target_priority == "Closest" then
                     if dist < shortestDist then 
                         bestTarget = v
                         shortestDist = dist 
@@ -526,9 +526,9 @@ local GetBestTarget = LPH_NO_VIRTUALIZE(function()
                         if string.find(attrName, "MobTrait") then
                             local traitData = SwordModules.MobTrait[attrValue]
                             if traitData and traitData.Boosts then
-                                if _G.TargetPriority == "Highest XP" and traitData.Boosts.XP then
+                                if _G.target_priority == "Highest XP" and traitData.Boosts.XP then
                                     score = score * traitData.Boosts.XP
-                                elseif _G.TargetPriority == "Highest Money" and traitData.Boosts.Money then
+                                elseif _G.target_priority == "Highest Money" and traitData.Boosts.Money then
                                     score = score * traitData.Boosts.Money
                                 end
                             end
@@ -568,7 +568,7 @@ _G.InventorySweeperConnection = task.spawn(function()
                     if invFolder then
                         for _, swordFolder in pairs(invFolder:GetChildren()) do
                             local keep = false
-                            if table.find(_G.WhitelistedSwords, swordFolder.Name) then keep = true end
+                            if table.find(_G.whitelisted_uuids, swordFolder.Name) then keep = true end
                             if swordFolder:GetAttribute("Equipped") == true then keep = true end
                             if character and character:FindFirstChild(swordFolder.Name) then keep = true end
                             if _G.SavedSwordName and swordFolder.Name == _G.SavedSwordName then keep = true end
@@ -684,7 +684,7 @@ _G.CharRespawnConnection = player.CharacterAdded:Connect(function(newCharacter)
         warn("💀 Respawn detected! Hopping zones to unlock interactions...")
         if not isTeleporting then
             isTeleporting = true
-            local targetArea = (#_G.FarmAreas > 0 and _G.FarmAreas[1]) or currentArea
+            local targetArea = (#_G.active_areas > 0 and _G.active_areas[1]) or currentArea
             task.spawn(function() TeleportSequence(targetArea) end)
         end
     end
@@ -808,7 +808,7 @@ local function isStatUnmet(swordFolder, attrName, targetVal, moduleName)
 end
 
 local function getTargetMode(swordFolder)
-    local t = _G.AscenderCriteria
+    local t = _G.ascender_criteria
     if not t then return "None" end
     
     if isStatUnmet(swordFolder, "Quality", t.Quality) then return "Quality" end
@@ -867,7 +867,8 @@ local function enforceCleanInventory(allowedUUID)
     
     local extraSwords = {}
     for _, s in ipairs(PlayerStats.Swords:GetChildren()) do
-        if s.Name ~= allowedUUID then
+        local isWhitelisted = _G.whitelisted_uuids and table.find(_G.whitelisted_uuids, s.Name)
+        if s.Name ~= allowedUUID and not isWhitelisted then
             table.insert(extraSwords, s.Name)
         end
     end
@@ -947,12 +948,12 @@ local function ExecuteAscenderAction(actionDetails)
             if currentBankCount >= dynamicMaxSlots then
                 warn("[AutoAscender] ⚠️ BANK IS AT MAXIMUM CAPACITY (" .. currentBankCount .. "/" .. dynamicMaxSlots .. ")!")
                 warn("[AutoAscender] 🛡️ Keeping finished sword in your Inventory and protecting it!")
-                if not table.find(_G.WhitelistedSwords, currentSword.Name) then
-                    table.insert(_G.WhitelistedSwords, currentSword.Name)
+                if not table.find(_G.whitelisted_uuids, currentSword.Name) then
+                    table.insert(_G.whitelisted_uuids, currentSword.Name)
                     if _G.C2_WS then
                         _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
                             action = "update_status", username = player.Name, api_key = C2_API_KEY,
-                            payload = { WhitelistedSwords = _G.WhitelistedSwords }
+                            payload = { whitelisted_uuids = _G.whitelisted_uuids }
                         }))
                     end
                 end
@@ -972,8 +973,8 @@ local function ExecuteAscenderAction(actionDetails)
             end
             
             -- Try to process next sword if available
-            if #_G.AscenderQueue > 0 then
-                local nextUUID = _G.AscenderQueue[1]
+            if #_G.ascender_queue > 0 then
+                local nextUUID = _G.ascender_queue[1]
                 local readyToDrop = PickupPhysicalSword(nextUUID)
                 
                 if readyToDrop then
@@ -981,7 +982,7 @@ local function ExecuteAscenderAction(actionDetails)
                     pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
                     task.wait(0.5) 
                     AscenderEvent:FireServer("Drop Sword", nextUUID)
-                    table.remove(_G.AscenderQueue, 1)
+                    table.remove(_G.ascender_queue, 1)
                     
                     waitTime = 0
                     while PlayerStats.Swords:FindFirstChild(nextUUID) and waitTime < 5 do
@@ -1000,19 +1001,19 @@ local function ExecuteAscenderAction(actionDetails)
                     task.wait(1.5)
                 else
                     warn("[AutoAscender] 🚨 Sword UUID " .. tostring(nextUUID) .. " not found! Removing from queue.")
-                    table.remove(_G.AscenderQueue, 1)
+                    table.remove(_G.ascender_queue, 1)
                 end
                 
                 if _G.C2_WS then
                     _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
                         action = "update_status", username = player.Name, api_key = C2_API_KEY,
-                        payload = { AscenderQueue = _G.AscenderQueue }
+                        payload = { ascender_queue = _G.ascender_queue }
                     }))
                 end
             end
             
         elseif actionDetails.type == "StartNext" then
-            local nextUUID = _G.AscenderQueue[1]
+            local nextUUID = _G.ascender_queue[1]
             local readyToDrop = PickupPhysicalSword(nextUUID)
             
             if readyToDrop then
@@ -1020,7 +1021,7 @@ local function ExecuteAscenderAction(actionDetails)
                 pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
                 task.wait(0.5) 
                 AscenderEvent:FireServer("Drop Sword", nextUUID)
-                table.remove(_G.AscenderQueue, 1)
+                table.remove(_G.ascender_queue, 1)
                 
                 local waitTime = 0
                 while PlayerStats.Swords:FindFirstChild(nextUUID) and waitTime < 5 do
@@ -1039,13 +1040,13 @@ local function ExecuteAscenderAction(actionDetails)
                 task.wait(1.5)
             else
                 warn("[AutoAscender] 🚨 Sword UUID " .. tostring(nextUUID) .. " not found! Removing from queue.")
-                table.remove(_G.AscenderQueue, 1)
+                table.remove(_G.ascender_queue, 1)
             end
             
             if _G.C2_WS then
                 _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
                     action = "update_status", username = player.Name, api_key = C2_API_KEY,
-                    payload = { AscenderQueue = _G.AscenderQueue }
+                    payload = { ascender_queue = _G.ascender_queue }
                 }))
             end
         end
@@ -1073,7 +1074,7 @@ local function CheckAscenderNeedsAction()
         if swordMeetsCriteria(currentSword) then
             return { type = "FinishAndSwap", finishedUUID = currentSword.Name }
         end
-    elseif not currentSword and #_G.AscenderQueue > 0 then
+    elseif not currentSword and #_G.ascender_queue > 0 then
         return { type = "StartNext" }
     end
     
@@ -1102,7 +1103,7 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
     if _G.HandlingAscender then return "Ascending" end
     
     -- Priority 1.5: Auto Ascender Check (Elevated above Disabled check so it works independently)
-    if _G.AutoAscenderEnabled and not _G.HandlingAscender then
+    if _G.ascender_enabled and not _G.HandlingAscender then
         local actionNeeded = CheckAscenderNeedsAction()
         if actionNeeded then
             task.spawn(function() ExecuteAscenderAction(actionNeeded) end)
@@ -1111,7 +1112,7 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
     end
 
     if not _G.on then return "Disabled" end
-    if _G.on and #_G.FarmAreas == 0 then
+    if _G.on and #_G.active_areas == 0 then
         _G.on = false
         warn("[DEBUG] AutoFarm disabled because no Farm Areas are selected!")
         return "Idle (No Maps Selected)"
@@ -1130,8 +1131,8 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
     
     if tostring(actualArea) == "Base" or tostring(actualArea) == "Spawn" then actualArea = 0 end
     local actualNum, wantedNum = tonumber(actualArea) or 0, tonumber(currentArea)
-    if (not wantedNum or wantedNum == 0) and #_G.FarmAreas > 0 then 
-        wantedNum = _G.FarmAreas[1]
+    if (not wantedNum or wantedNum == 0) and #_G.active_areas > 0 then 
+        wantedNum = _G.active_areas[1]
         currentArea = wantedNum
     elseif (not wantedNum or wantedNum == 0) then 
         wantedNum = 0; currentArea = 0 
@@ -1154,7 +1155,7 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
     -- 1. Check for whitelisted sword in inventory
     if PlayerStats and PlayerStats:FindFirstChild("Swords") then
         for _, sword in pairs(PlayerStats.Swords:GetChildren()) do
-            if sword:IsA("Folder") and table.find(_G.WhitelistedSwords, sword.Name) and not isSwordLockedInAnyMachine(sword.Name) then
+            if sword:IsA("Folder") and table.find(_G.whitelisted_uuids, sword.Name) and not isSwordLockedInAnyMachine(sword.Name) then
                 bestSwordToEquip = sword.Name
                 break
             end
@@ -1176,19 +1177,22 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
             if not table.find(_G.KeptSwords, bestSwordToEquip) then table.insert(_G.KeptSwords, bestSwordToEquip) end
         end
     else
-        -- NO sword found at all! Stop farming and notify.
+        -- NO sword found at all! Hover safely and wait.
         if _G.on then
-            _G.on = false
             _G.CurrentState = "No Valid Sword!"
-            warn("[DEBUG] Smart Equip Failed! No valid sword found. Halting bot.")
+            if hrp and hrp.Position.Y < 300 then
+                pcall(function() hrp.CFrame = hrp.CFrame + Vector3.new(0, 300 - hrp.Position.Y + 50, 0) end)
+            end
+            
             pcall(function()
                 if _G.C2_WS then
                     _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
                         type = "notification",
-                        message = "⚠️ Account " .. player.Name .. " stopped farming: No whitelisted/equipped sword found."
+                        message = "⚠️ Account " .. player.Name .. " hovering safely: No whitelisted/equipped sword found."
                     }))
                 end
             end)
+            return "No Valid Sword!"
         end
         return "Idle"
     end
@@ -1320,14 +1324,14 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
             end
 
             local nextArea = actualArea
-            if #_G.FarmAreas > 0 then
-                local currentIndex = table.find(_G.FarmAreas, actualArea)
+            if #_G.active_areas > 0 then
+                local currentIndex = table.find(_G.active_areas, actualArea)
                 if currentIndex then
                     local nextIndex = currentIndex + 1
-                    if nextIndex > #_G.FarmAreas then nextIndex = 1 end
-                    nextArea = _G.FarmAreas[nextIndex]
+                    if nextIndex > #_G.active_areas then nextIndex = 1 end
+                    nextArea = _G.active_areas[nextIndex]
                 else 
-                    nextArea = _G.FarmAreas[1] 
+                    nextArea = _G.active_areas[1] 
                 end
             end
             
@@ -1531,15 +1535,15 @@ task.spawn(function()
             if not s then return end
 
             if data.command == "toggleAscender" then
-                _G.AutoAscenderEnabled = data.payload
-                print("C2 Command: AutoAscender forcefully set to", _G.AutoAscenderEnabled)
+                _G.ascender_enabled = data.payload
+                print("C2 Command: AutoAscender forcefully set to", _G.ascender_enabled)
                 
             elseif data.command == "setAscenderQueue" then
-                _G.AscenderQueue = data.payload or {}
+                _G.ascender_queue = data.payload or {}
                 print("C2 Command: Updated Ascender Queue")
                 
             elseif data.command == "setAscenderCriteria" then
-                _G.AscenderCriteria = data.payload or {}
+                _G.ascender_criteria = data.payload or {}
                 print("C2 Command: Updated Ascender Criteria")
 
             elseif data.command == "toggleFarm" then
@@ -1547,7 +1551,7 @@ task.spawn(function()
                 print("C2 Command: AutoFarm toggled to", _G.on)
                 
                 if _G.on then
-                   if #_G.FarmAreas > 0 then
+                   if #_G.active_areas > 0 then
                        local actualArea = currentArea
                        local pStats = ReplicatedStorage:FindFirstChild("Stats")
                        if pStats then
@@ -1555,9 +1559,9 @@ task.spawn(function()
                            local internalArea = myStats and myStats:FindFirstChild("CurrentArea")
                            if internalArea then actualArea = internalArea.Value end
                        end
-                       if not table.find(_G.FarmAreas, actualArea) and not isTeleporting then
+                       if not table.find(_G.active_areas, actualArea) and not isTeleporting then
                            isTeleporting = true
-                           task.spawn(function() TeleportSequence(_G.FarmAreas[1]) end)
+                           task.spawn(function() TeleportSequence(_G.active_areas[1]) end)
                        end
                    end
                 else
@@ -1642,36 +1646,36 @@ task.spawn(function()
                 pcall(function()
                     local parsedData = data.payload
                     if parsedData then
-                        local ts = parsedData.TargetSets
-                        if ts then _G.ActiveTargetSets = ts end
+                        local ts = parsedData.target_enchant_sets
+                        if ts then _G.target_enchant_sets = ts end
                         
-                        local wu = parsedData.WhitelistedSwords
-                        if wu then _G.WhitelistedSwords = wu end
+                        local wu = parsedData.whitelisted_uuids
+                        if wu then _G.whitelisted_uuids = wu end
                         
-                        local fa = parsedData.FarmAreas
-                        if fa then _G.FarmAreas = fa end
+                        local fa = parsedData.active_areas
+                        if fa then _G.active_areas = fa end
                         if parsedData.SpecialOverrides then _G.SpecialOverrides = parsedData.SpecialOverrides end
-                        local to = parsedData.TargetPriority
-                        if to then _G.TargetPriority = to end
+                        local to = parsedData.target_priority
+                        if to then _G.target_priority = to end
                         
-                        local wurl = parsedData.WebhookURL
-                        if wurl then _G.WebhookURL = wurl end
+                        local wurl = parsedData.webhook_url
+                        if wurl then _G.webhook_url = wurl end
                         
-                        local wen = parsedData.WebhookEnabled
-                        if wen ~= nil then _G.WebhookEnabled = wen end
+                        local wen = parsedData.webhook_enabled
+                        if wen ~= nil then _G.webhook_enabled = wen end
                         
                         if parsedData.SpecialOverrides then _G.SpecialOverrides = parsedData.SpecialOverrides end
                         if parsedData.Settings then for k,v in pairs(parsedData.Settings) do SETTINGS[k] = v end end
                         
                         -- Toggle logic (if dashboard sends these specifically inside syncConfig)
-                        if parsedData.ActivatePanel ~= nil then _G.C2_PanelActive = parsedData.ActivatePanel end
-                        if parsedData.FarmEnabled ~= nil then 
-                            if _G.on ~= parsedData.FarmEnabled then
-                                _G.on = parsedData.FarmEnabled
+                        if parsedData.activate_panel ~= nil then _G.activate_panel = parsedData.activate_panel end
+                        if parsedData.farm_enabled ~= nil then 
+                            if _G.on ~= parsedData.farm_enabled then
+                                _G.on = parsedData.farm_enabled
                                 if not _G.on then 
                                     ResetPhysics() 
                                 else
-                                    if #_G.FarmAreas > 0 then
+                                    if #_G.active_areas > 0 then
                                        local actualArea = currentArea
                                        local pStats = ReplicatedStorage:FindFirstChild("Stats")
                                        if pStats then
@@ -1679,26 +1683,26 @@ task.spawn(function()
                                            local internalArea = myStats and myStats:FindFirstChild("CurrentArea")
                                            if internalArea then actualArea = internalArea.Value end
                                        end
-                                       if not table.find(_G.FarmAreas, actualArea) and not isTeleporting then
+                                       if not table.find(_G.active_areas, actualArea) and not isTeleporting then
                                            isTeleporting = true
-                                           task.spawn(function() TeleportSequence(_G.FarmAreas[1]) end)
+                                           task.spawn(function() TeleportSequence(_G.active_areas[1]) end)
                                        end
                                     end
                                 end
                             end
                         end
-                        if parsedData.SnipeEnabled ~= nil then _G.autoDropEnabled = parsedData.SnipeEnabled end
-                        if parsedData.AscenderEnabled ~= nil then _G.AutoAscenderEnabled = parsedData.AscenderEnabled end
-                        if parsedData.AscenderQueue then _G.AscenderQueue = parsedData.AscenderQueue end
-                        if parsedData.AscenderCriteria then _G.AscenderCriteria = parsedData.AscenderCriteria end
+                        if parsedData.snipe_enabled ~= nil then _G.autoDropEnabled = parsedData.snipe_enabled end
+                        if parsedData.ascender_enabled ~= nil then _G.ascender_enabled = parsedData.ascender_enabled end
+                        if parsedData.ascender_queue then _G.ascender_queue = parsedData.ascender_queue end
+                        if parsedData.ascender_criteria then _G.ascender_criteria = parsedData.ascender_criteria end
                         print("C2 Command: Configuration Synced remotely from Website!")
                     end
                 end)
                 
             elseif data.command == "updateWishlist" then
                 if typeof(data.payload) == "table" then
-                    _G.ActiveTargetSets = data.payload
-                    print("C2 Command: Wishlist updated. Size: " .. tostring(#_G.ActiveTargetSets))
+                    _G.target_enchant_sets = data.payload
+                    print("C2 Command: Wishlist updated. Size: " .. tostring(#_G.target_enchant_sets))
                 end
 
             elseif data.command == "setAscenderMode" then
@@ -1756,21 +1760,21 @@ task.spawn(function()
                                     AscenderMode = ascenderData.mode or "None",
                                     TargetEnchantSets = (function()
                                         local formattedSets = {}
-                                        local setsToUse = (#_G.ActiveTargetSets > 0 and _G.ActiveTargetSets) or {{"Ancient", "Fortune", "Insight"}}
+                                        local setsToUse = (#_G.target_enchant_sets > 0 and _G.target_enchant_sets) or {{"Ancient", "Fortune", "Insight"}}
                                         for _, set in ipairs(setsToUse) do
                                             table.insert(formattedSets, table.concat(set, " + "))
                                         end
                                         return formattedSets
                                     end)(),
-                                    TargetSets = _G.ActiveTargetSets,
-                                    WhitelistedSwords = _G.WhitelistedSwords or {},
-                                    FarmEnabled = _G.on,
-                                    SnipeEnabled = _G.autoDropEnabled,
-                                    ActivatePanel = _G.C2_PanelActive,
-                                    AscenderEnabled = _G.AutoAscenderEnabled,
-                                    AscenderQueue = _G.AscenderQueue,
-                                    AscenderCriteria = _G.AscenderCriteria,
-                                    FarmAreas = _G.FarmAreas
+                                    target_enchant_sets = _G.target_enchant_sets,
+                                    whitelisted_uuids = _G.whitelisted_uuids or {},
+                                    farm_enabled = _G.on,
+                                    snipe_enabled = _G.autoDropEnabled,
+                                    activate_panel = _G.activate_panel,
+                                    ascender_enabled = _G.ascender_enabled,
+                                    ascender_queue = _G.ascender_queue,
+                                    ascender_criteria = _G.ascender_criteria,
+                                    active_areas = _G.active_areas
                                 }
                             }))
                         end
