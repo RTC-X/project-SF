@@ -9,7 +9,7 @@ class BotAccountAdmin(admin.ModelAdmin):
 
 @admin.register(BotConfiguration)
 class BotConfigurationAdmin(admin.ModelAdmin):
-    list_display = ('bot', 'FarmEnabled', 'SnipeEnabled')
+    list_display = ('bot', 'farm_enabled', 'snipe_enabled')
 
 @admin.register(TelemetryLog)
 class TelemetryLogAdmin(admin.ModelAdmin):
