@@ -141,8 +141,8 @@
                 <i data-lucide="cpu" class="w-8 h-8"></i>
             </div>
             <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Active Accounts</p>
-            <p class="text-3xl font-extrabold text-white mt-2 font-mono" x-text="bots.filter(b => b.Status !== 'Offline').length + '/' + bots.length">0/0</p>
-            <p class="text-[10px] text-zinc-500 mt-1 font-mono">0/3 (Freemium) or 0/16 (Premium)</p>
+            <p class="text-3xl font-extrabold text-white mt-2 font-mono" x-text="bots.filter(b => b.Status !== 'Offline').length">0</p>
+            <p class="text-[10px] text-zinc-500 mt-1 font-mono">/3 (Freemium) or /16 (Premium)</p>
         </div>
         <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
             <div class="absolute right-4 top-4 text-orange-400/20">
@@ -1207,11 +1207,11 @@
                             sendCommand(id, 'syncConfig', {
                                 farm_enabled: multiConfigData.farm_enabled,
                                 snipe_enabled: multiConfigData.snipe_enabled,
-                                BotClass: multiConfigData.BotClass || 'Unbeatable',
-                                Quality: multiConfigData.Quality || 'Spectacular',
-                                Rarity: multiConfigData.Rarity || 'Heavenly++',
-                                Mold: multiConfigData.Mold || 'Crystal',
-                                Level: parseInt(multiConfigData.Level) || 490,
+                                bot_class: multiConfigData.BotClass || 'Unbeatable',
+                                quality: multiConfigData.Quality || 'Spectacular',
+                                rarity: multiConfigData.Rarity || 'Heavenly++',
+                                mold: multiConfigData.Mold || 'Crystal',
+                                level: parseInt(multiConfigData.Level) || 490,
                                 target_enchant_sets: multiConfigData.target_enchant_sets,
                                 whitelisted_uuids: multiConfigData.whitelisted_uuids
                             });
