@@ -135,27 +135,21 @@
     </div>
 
     <!-- Top Dashboard Statistics Bar -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-6" :class="!isConnected ? 'opacity-50 pointer-events-none grayscale transition-all duration-500' : 'transition-all duration-500'">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" :class="!isConnected ? 'opacity-50 pointer-events-none grayscale transition-all duration-500' : 'transition-all duration-500'">
         <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
             <div class="absolute right-4 top-4 text-teal-400/20">
                 <i data-lucide="cpu" class="w-8 h-8"></i>
             </div>
-            <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Active Fleet Size</p>
-            <p class="text-3xl font-extrabold text-white mt-2 font-mono" x-text="bots.filter(b => b.Status !== 'Offline').length + '/' + bots.length">0/0</p>
+            <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Active Accounts</p>
+            <p class="text-3xl font-extrabold text-white mt-2 font-mono" x-text="bots.filter(b => b.Status !== 'Offline').length">0</p>
+            <p class="text-[10px] text-zinc-500 mt-1 font-mono">/3 (Freemium) or /16 (Premium)</p>
         </div>
         <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
             <div class="absolute right-4 top-4 text-orange-400/20">
                 <i data-lucide="swords" class="w-8 h-8"></i>
             </div>
-            <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Farming Target Nodes</p>
+            <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Farming Accounts</p>
             <p class="text-3xl font-extrabold text-white mt-2 font-mono" x-text="bots.filter(b => b.Status === 'Farming').length">0</p>
-        </div>
-        <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
-            <div class="absolute right-4 top-4 text-teal-400/20">
-                <i data-lucide="dollar-sign" class="w-8 h-8"></i>
-            </div>
-            <p class="text-xs font-mono text-zinc-500 uppercase tracking-wider">Total Accumulated Wealth</p>
-            <p class="text-3xl font-extrabold text-emerald-400 mt-2 font-mono">$<span x-text="formatWealth(bots.reduce((acc, b) => acc + parseFloat(b.Money), 0))">0</span></p>
         </div>
         <div class="glass-panel p-6 rounded-3xl relative overflow-hidden" x-data="{ copied: false }">
             <div class="absolute right-4 top-4 text-teal-400/20">
@@ -177,16 +171,16 @@
     </div>
 
     <!-- Layout Columns: Telemetry Grid & Activity Feed -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8" :class="!isConnected ? 'opacity-50 pointer-events-none grayscale transition-all duration-500' : 'transition-all duration-500'">
+    <div class="grid grid-cols-1 gap-8" :class="!isConnected ? 'opacity-50 pointer-events-none grayscale transition-all duration-500' : 'transition-all duration-500'">
         
         <!-- Live Telemetry Area -->
-        <div class="lg:col-span-2 space-y-6">
+        <div class="w-full space-y-6">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="h-8 w-8 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center">
                         <i data-lucide="network" class="w-4 h-4 text-teal-400"></i>
                     </div>
-                    <h3 class="text-xl font-bold tracking-tight text-white">Live Node Telemetry</h3>
+                    <h3 class="text-xl font-bold tracking-tight text-white">Live Accounts</h3>
                 </div>
                 
                 <!-- Action Buttons -->
@@ -273,36 +267,6 @@
                                 </div>
                             </template>
                         </div>
-                    </div>
-                </template>
-            </div>
-        </div>
-
-        <!-- Right Side Real-time logs panel -->
-        <div class="space-y-6">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="h-8 w-8 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                        <i data-lucide="activity" class="w-4 h-4 text-orange-400"></i>
-                    </div>
-                    <h3 class="text-xl font-bold tracking-tight text-white">System Feed</h3>
-                </div>
-            </div>
-            
-            <div class="glass-panel p-6 rounded-3xl h-[480px] overflow-y-auto space-y-4 font-mono text-xs">
-                <template x-if="logs.length === 0">
-                    <div class="h-full flex flex-col items-center justify-center text-zinc-600 uppercase tracking-widest text-[10px] py-32">
-                        <i data-lucide="terminal" class="w-8 h-8 text-zinc-700 mb-2"></i>
-                        Feed Quiet
-                    </div>
-                </template>
-                <template x-for="log in logs" :key="log.id">
-                    <div class="border-b border-white/5 pb-2.5 space-y-1">
-                        <div class="flex items-center justify-between">
-                            <span class="text-teal-400 font-semibold" x-text="log.username">RoboFarmer</span>
-                            <span class="text-[10px] text-zinc-500" x-text="log.time">10:52:12</span>
-                        </div>
-                        <p class="text-zinc-400" x-text="log.message">Dispatched node to Area 12 successfully.</p>
                     </div>
                 </template>
             </div>
@@ -1243,11 +1207,11 @@
                             sendCommand(id, 'syncConfig', {
                                 farm_enabled: multiConfigData.farm_enabled,
                                 snipe_enabled: multiConfigData.snipe_enabled,
-                                BotClass: multiConfigData.BotClass || 'Unbeatable',
-                                Quality: multiConfigData.Quality || 'Spectacular',
-                                Rarity: multiConfigData.Rarity || 'Heavenly++',
-                                Mold: multiConfigData.Mold || 'Crystal',
-                                Level: parseInt(multiConfigData.Level) || 490,
+                                bot_class: multiConfigData.BotClass || 'Unbeatable',
+                                quality: multiConfigData.Quality || 'Spectacular',
+                                rarity: multiConfigData.Rarity || 'Heavenly++',
+                                mold: multiConfigData.Mold || 'Crystal',
+                                level: parseInt(multiConfigData.Level) || 490,
                                 target_enchant_sets: multiConfigData.target_enchant_sets,
                                 whitelisted_uuids: multiConfigData.whitelisted_uuids
                             });
