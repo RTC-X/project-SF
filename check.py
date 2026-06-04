@@ -17,8 +17,11 @@ nesting = 0
 for i, line in enumerate(lines):
     words = re.findall(r'\b[a-zA-Z_]\w*\b', line)
     for w in words:
-        if w in ['if', 'function']: nesting += 1
-        elif w == 'do': nesting += 1
-        elif w == 'end': nesting -= 1
+        if w in ['if', 'function']:
+            nesting += 1
+        elif w == 'do':
+            nesting += 1
+        elif w == 'end':
+            nesting -= 1
     if i > len(lines) - 20:
         print(f'{i+1}: nesting={nesting} | {lines_orig[i].strip()}')
