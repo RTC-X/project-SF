@@ -1785,42 +1785,35 @@ task.spawn(function()
     end)
     
     _G.PeriodicLogTask = task.spawn(function()
-        local lastMoney = -1
         local lastLevel = -1
         while task.wait(60) do
             if _G.C2_WS then
                 local pStats = ReplicatedStorage:FindFirstChild("Stats")
                 local myStats = pStats and pStats:FindFirstChild(tostring(player.Name))
                 if myStats then
-                    local currentMoney = myStats:FindFirstChild("Money") and myStats.Money.Value or 0
                     local currentLevel = myStats:FindFirstChild("Level") and myStats.Level.Value or 0
                     
-                    if lastMoney ~= -1 and lastLevel ~= -1 then
-                        local moneyDiff = currentMoney - lastMoney
+                    if lastLevel ~= -1 then
                         local levelDiff = currentLevel - lastLevel
                         
-                        if moneyDiff > 0 or levelDiff > 0 then
-                            local msgParts = {}
-                            if levelDiff > 0 then table.insert(msgParts, "Leveled up " .. levelDiff .. " times (Now Lvl " .. currentLevel .. ")") end
-                            if moneyDiff > 0 then table.insert(msgParts, "Earned " .. moneyDiff .. " Coins") end
-                            
-                            local messageStr = table.concat(msgParts, " | ")
+                        if levelDiff > 0 then
+                            local messageStr = "Leveled up " .. levelDiff .. " times (Now Lvl " .. currentLevel .. ")"
                             pcall(function()
                                 _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
                                     action = "log",
                                     username = player.Name,
-                                    event_type = "Farming",
+                                    event_type = "Leveling",
                                     message = "dY> " .. messageStr
                                 }))
                             end)
                         end
                     end
-                    lastMoney = currentMoney
                     lastLevel = currentLevel
                 end
             end
         end
     end)
+
     
     _G.C2ConnectionTask = task.spawn(function()
         maintainC2Connection()
