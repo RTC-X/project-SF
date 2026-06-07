@@ -475,6 +475,8 @@ class C2Consumer(AsyncWebsocketConsumer):
                     'ascender_enabled': config.ascender_enabled,
                     'ascender_queue': config.ascender_queue,
                     'ascender_criteria': config.ascender_criteria,
+                    'offset_height': config.offset_height,
+                    'wait_altitude': config.wait_altitude,
                 }
             except BotConfiguration.DoesNotExist:
                 config_data = {
@@ -488,6 +490,8 @@ class C2Consumer(AsyncWebsocketConsumer):
                     'AscenderEnabled': False,
                     'AscenderQueue': [],
                     'AscenderCriteria': [],
+                    'offset_height': 7,
+                    'wait_altitude': 15,
                 }
             
             serialized.append({
@@ -686,6 +690,10 @@ class C2Consumer(AsyncWebsocketConsumer):
                 config.ascender_queue = payload['ascender_queue']
             if 'ascender_criteria' in payload:
                 config.ascender_criteria = payload['ascender_criteria']
+            if 'offset_height' in payload:
+                config.offset_height = payload['offset_height']
+            if 'wait_altitude' in payload:
+                config.wait_altitude = payload['wait_altitude']
             if 'webhook_url' in payload:
                 config.webhook_url = payload['webhook_url']
             if 'webhook_enabled' in payload:

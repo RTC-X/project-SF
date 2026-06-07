@@ -1663,6 +1663,14 @@ task.spawn(function()
                         local to = parsedData.target_priority
                         if to then _G.target_priority = to end
                         
+                        if parsedData.offset_height ~= nil then SETTINGS.OFFSET_HEIGHT = tonumber(parsedData.offset_height) or 7 end
+                        if parsedData.wait_altitude ~= nil then 
+                            SETTINGS.WAIT_ALTITUDE = tonumber(parsedData.wait_altitude) or 15 
+                            SETTINGS.RETREAT_ALTITUDE = tonumber(parsedData.wait_altitude) or 15 
+                        end
+                        
+                        if parsedData.ascender_enabled ~= nil then _G.ascender_enabled = parsedData.ascender_enabled end
+                        
                         local wurl = parsedData.webhook_url
                         if wurl then _G.webhook_url = wurl end
                         

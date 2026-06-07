@@ -64,6 +64,10 @@ class BotConfiguration(models.Model):
     target_enchant_sets = models.JSONField(default=list, blank=True, help_text="Target sets of enchants (wishlist)")
     whitelisted_uuids = models.JSONField(default=list, blank=True, help_text="Protected sword UUIDs/names")
     
+    # Advanced Physics configurations
+    offset_height = models.IntegerField(default=7, help_text="Hover height when attacking NPCs")
+    wait_altitude = models.IntegerField(default=15, help_text="Idle height when waiting for NPCs")
+    
     target_priority = models.CharField(max_length=50, default="Closest")
     
     webhook_url = models.URLField(max_length=500, blank=True)
@@ -84,6 +88,8 @@ class BotConfiguration(models.Model):
             'AscenderCriteria': self.ascender_criteria,
             'WebhookURL': self.webhook_url,
             'WebhookEnabled': self.webhook_enabled,
+            'offset_height': self.offset_height,
+            'wait_altitude': self.wait_altitude,
         }
 
     def __str__(self):

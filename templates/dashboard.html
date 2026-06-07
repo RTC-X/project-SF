@@ -571,6 +571,28 @@
                                 
                                 <span class="block text-[9px] text-amber-500/80 font-mono leading-tight mt-1">*Tip: Whitelisting protects items from being dropped/sold!</span>
                             </div>
+                            
+                            <!-- Advanced Physics -->
+                            <div class="space-y-3 pt-3 border-t border-white/5">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="crosshair" class="w-3.5 h-3.5 text-teal-400"></i>
+                                    <span class="block text-xs font-bold text-teal-400 font-mono tracking-wider uppercase">Advanced Physics</span>
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between text-[10px] font-mono text-zinc-400">
+                                        <span>Hover Height (Combat)</span>
+                                        <span x-text="(selectedBot.config.offset_height || 7) + ' Studs'"></span>
+                                    </div>
+                                    <input type="range" x-model="selectedBot.config.offset_height" min="0" max="30" step="1" @change="sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" class="w-full accent-teal-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer">
+                                </div>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between text-[10px] font-mono text-zinc-400">
+                                        <span>Idle Altitude (Waiting)</span>
+                                        <span x-text="(selectedBot.config.wait_altitude || 15) + ' Studs'"></span>
+                                    </div>
+                                    <input type="range" x-model="selectedBot.config.wait_altitude" min="0" max="150" step="1" @change="sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" class="w-full accent-teal-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer">
+                                </div>
+                            </div>
                         </div>
 
                         <!-- COLUMN 3: 🎒 Backpack Items -->
@@ -1105,6 +1127,28 @@
                             </button>
                         </div>
                     </div>
+                    
+                    <!-- Fleet Physics Config -->
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="crosshair" class="w-3.5 h-3.5 text-teal-400"></i>
+                            <span class="block text-xs font-bold text-teal-400 font-mono tracking-wider uppercase">Fleet Physics Override</span>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-[10px] font-mono text-zinc-400">
+                                <span>Hover Height (Combat)</span>
+                                <span x-text="multiConfigData.offset_height + ' Studs'"></span>
+                            </div>
+                            <input type="range" x-model="multiConfigData.offset_height" min="0" max="30" step="1" class="w-full accent-teal-500 h-1 bg-zinc-900 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between text-[10px] font-mono text-zinc-400">
+                                <span>Idle Altitude (Waiting)</span>
+                                <span x-text="multiConfigData.wait_altitude + ' Studs'"></span>
+                            </div>
+                            <input type="range" x-model="multiConfigData.wait_altitude" min="0" max="150" step="1" class="w-full accent-teal-500 h-1 bg-zinc-900 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Footer Navigation -->
@@ -1213,7 +1257,9 @@
                                 mold: multiConfigData.Mold || 'Crystal',
                                 level: parseInt(multiConfigData.Level) || 490,
                                 target_enchant_sets: multiConfigData.target_enchant_sets,
-                                whitelisted_uuids: multiConfigData.whitelisted_uuids
+                                whitelisted_uuids: multiConfigData.whitelisted_uuids,
+                                offset_height: parseInt(multiConfigData.offset_height),
+                                wait_altitude: parseInt(multiConfigData.wait_altitude)
                             });
                             // 2. Dispatch teleport Home or Toggle 3D rendering if enabled
                             if (multiConfigData.TeleportHome) {
@@ -1237,7 +1283,9 @@
                             target_enchant_sets: [],
                             whitelisted_uuids: [],
                             TeleportHome: false,
-                            Toggle3D: false
+                            Toggle3D: false,
+                            offset_height: 7,
+                            wait_altitude: 15
                         };
                     " type="button" class="px-6 py-2.5 bg-gradient-to-r from-teal-400 to-emerald-400 text-zinc-950 font-bold text-xs rounded-xl hover:opacity-90 transition-all font-mono uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-teal-500/10">
                         <i data-lucide="send" class="w-3.5 h-3.5"></i>
