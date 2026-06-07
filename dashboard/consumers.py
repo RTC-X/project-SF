@@ -104,7 +104,7 @@ class C2Consumer(AsyncWebsocketConsumer):
     async def check_rate_limit(self):
         """
         In-memory per-connection sliding window rate limiter.
-        Allows a maximum of 25 messages per 10 seconds (avg 2.5/sec) with a burst threshold.
+        Allows a maximum of 500 messages per 10 seconds to accommodate burst events like sword recovery.
         """
         import time
         now = time.time()
@@ -120,7 +120,7 @@ class C2Consumer(AsyncWebsocketConsumer):
         self.message_timestamps.append(now)
         
         # Validate count
-        if len(self.message_timestamps) > 25:
+        if len(self.message_timestamps) > 500:
             client_id = getattr(self, 'bot_username', None) or "Unregistered Client"
             print(f"[C2 Server] [Security Warning] Rate limit exceeded for client '{client_id}'. Disconnecting.")
             
@@ -129,7 +129,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                     'type': 'command',
                     'command': 'kick',
                     'payload': {
-                        'reason': 'Rate limit exceeded (Max 25 messages per 10s).'
+                        'reason': 'Rate limit exceeded (Max 500 messages per 10s).'
                     }
                 }))
                 await self.close()
