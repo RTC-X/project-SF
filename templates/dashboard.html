@@ -343,11 +343,11 @@
                             </div>
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xl font-bold tracking-tight text-white font-mono" x-text="selectedBot.username">ChongXiNa6</span>
+                                    <span class="text-xl font-bold tracking-tight text-white font-mono" x-text="selectedBot?.username">ChongXiNa6</span>
                                     <!-- Status Badge -->
                                     <span class="text-[9px] font-mono font-semibold px-2.5 py-0.5 rounded-full border bg-amber-500/10 border-amber-500/20 text-amber-400"
                                           :class="{'bg-emerald-500/10 border-emerald-500/20 text-emerald-400': selectedBot.Status === 'Farming', 'bg-teal-500/10 border-teal-500/20 text-teal-400': selectedBot.Status === 'Sniping'}"
-                                          x-text="selectedBot.Status">Idle</span>
+                                          x-text="selectedBot?.Status">Idle</span>
                                     
                                     <!-- Sniper Badge -->
                                     <span class="text-[9px] font-mono font-semibold px-2.5 py-0.5 rounded-full border"
@@ -355,7 +355,7 @@
                                           x-text="selectedBot.config?.snipe_enabled ? 'Sniper Active' : 'Sniper Inactive'">Sniper Active</span>
                                 </div>
                                 <div class="flex items-center gap-4 mt-1.5 text-xs text-zinc-500 font-mono">
-                                    <span class="text-teal-400">• <span class="text-zinc-400" x-text="selectedBot.Status">Idle</span></span>
+                                    <span class="text-teal-400">• <span class="text-zinc-400" x-text="selectedBot?.Status">Idle</span></span>
                                     <span>⏱ <span class="text-zinc-300" x-text="formatTime(selectedBot.SessionTime)">04:07:24</span></span>
                                     <span>⭐ <span class="text-zinc-300">+0 Lvls</span></span>
                                     <span>💰 <span class="text-zinc-300">+0 Cash</span></span>
@@ -378,22 +378,22 @@
                             
                             <button @click="selectedBot.config.farm_enabled = !selectedBot.config.farm_enabled; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
                                     class="px-4 py-1.5 bg-zinc-900/80 border text-xs font-semibold rounded-xl transition-all duration-300 font-mono flex items-center gap-1.5 select-none"
-                                    :class="selectedBot.config.farm_enabled ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5 shadow-[0_0_15px_rgba(52,211,153,0.1)] hover:bg-emerald-500/10' : 'border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'">
-                                <span class="h-1.5 w-1.5 rounded-full transition-all duration-300" :class="selectedBot.config.farm_enabled ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] animate-pulse' : 'bg-zinc-600'"></span>
+                                    :class="selectedBot?.config?.farm_enabled ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5 shadow-[0_0_15px_rgba(52,211,153,0.1)] hover:bg-emerald-500/10' : 'border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'">
+                                <span class="h-1.5 w-1.5 rounded-full transition-all duration-300" :class="selectedBot?.config?.farm_enabled ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] animate-pulse' : 'bg-zinc-600'"></span>
                                 <span>Toggle Farm</span>
                             </button>
                             
                             <button @click="selectedBot.config.snipe_enabled = !selectedBot.config.snipe_enabled; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
                                     class="px-4 py-1.5 bg-zinc-900/80 border text-xs font-semibold rounded-xl transition-all duration-300 font-mono flex items-center gap-1.5 select-none"
-                                    :class="selectedBot.config.snipe_enabled ? 'border-orange-500/30 text-orange-400 bg-orange-500/5 shadow-[0_0_15px_rgba(249,115,22,0.1)] hover:bg-orange-500/10' : 'border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'">
-                                <span class="h-1.5 w-1.5 rounded-full transition-all duration-300" :class="selectedBot.config.snipe_enabled ? 'bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.8)] animate-pulse' : 'bg-zinc-600'"></span>
+                                    :class="selectedBot?.config?.snipe_enabled ? 'border-orange-500/30 text-orange-400 bg-orange-500/5 shadow-[0_0_15px_rgba(249,115,22,0.1)] hover:bg-orange-500/10' : 'border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'">
+                                <span class="h-1.5 w-1.5 rounded-full transition-all duration-300" :class="selectedBot?.config?.snipe_enabled ? 'bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.8)] animate-pulse' : 'bg-zinc-600'"></span>
                                 <span>Toggle Sniper</span>
                             </button>
                             
                             <button @click="selectedBot.config.ascender_enabled = !selectedBot.config.ascender_enabled; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
                                     class="px-4 py-1.5 bg-zinc-900/80 border text-xs font-semibold rounded-xl transition-all duration-300 font-mono flex items-center gap-1.5 select-none"
-                                    :class="selectedBot.config.ascender_enabled ? 'border-amber-500/30 text-amber-400 bg-amber-500/5 shadow-[0_0_15px_rgba(245,158,11,0.1)] hover:bg-amber-500/10' : 'border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'">
-                                <span class="h-1.5 w-1.5 rounded-full transition-all duration-300" :class="selectedBot.config.ascender_enabled ? 'bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.8)] animate-pulse' : 'bg-zinc-600'"></span>
+                                    :class="selectedBot?.config?.ascender_enabled ? 'border-amber-500/30 text-amber-400 bg-amber-500/5 shadow-[0_0_15px_rgba(245,158,11,0.1)] hover:bg-amber-500/10' : 'border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'">
+                                <span class="h-1.5 w-1.5 rounded-full transition-all duration-300" :class="selectedBot?.config?.ascender_enabled ? 'bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.8)] animate-pulse' : 'bg-zinc-600'"></span>
                                 <span>Auto Ascender</span>
                             </button>
                             
@@ -450,46 +450,46 @@
                                 <!-- Level Card -->
                                 <div class="bg-zinc-950/60 border border-white/5 rounded-xl p-3">
                                     <span class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest">LEVEL</span>
-                                    <span class="block text-lg font-bold text-white mt-1" x-text="selectedBot.ascender_level || 0">490</span>
+                                    <span class="block text-lg font-bold text-white mt-1" x-text="selectedBot?.ascender_level || 0">490</span>
                                 </div>
                                 <!-- Class Card -->
                                 <div class="bg-zinc-950/60 border border-white/5 rounded-xl p-3">
                                     <span class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest">CLASS</span>
-                                    <span class="block text-xs font-bold text-white mt-1.5 truncate" x-text="selectedBot.BotClass">Unbeatable</span>
+                                    <span class="block text-xs font-bold text-white mt-1.5 truncate" x-text="selectedBot?.BotClass">Unbeatable</span>
                                 </div>
                                 <!-- Quality Card -->
                                 <div class="bg-zinc-950/60 border border-white/5 rounded-xl p-3 col-span-2">
                                     <span class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest">QUALITY</span>
-                                    <span class="block text-sm font-bold text-white mt-1" x-text="selectedBot.Quality">Spectacular</span>
+                                    <span class="block text-sm font-bold text-white mt-1" x-text="selectedBot?.Quality">Spectacular</span>
                                 </div>
                                 <!-- Rarity Card -->
                                 <div class="bg-zinc-950/60 border border-white/5 rounded-xl p-3">
                                     <span class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest">RARITY</span>
-                                    <span class="block text-xs font-bold text-white mt-1.5" x-text="selectedBot.Rarity">Heavenly++</span>
+                                    <span class="block text-xs font-bold text-white mt-1.5" x-text="selectedBot?.Rarity">Heavenly++</span>
                                 </div>
                                 <!-- Mold Card -->
                                 <div class="bg-zinc-950/60 border border-white/5 rounded-xl p-3">
                                     <span class="block text-[9px] font-mono text-zinc-500 uppercase tracking-widest">MOLD</span>
-                                    <span class="block text-xs font-bold text-white mt-1.5" x-text="selectedBot.Mold">Crystal</span>
+                                    <span class="block text-xs font-bold text-white mt-1.5" x-text="selectedBot?.Mold">Crystal</span>
                                 </div>
                             </div>
                             
                             <!-- Substats indicators list -->
                             <div class="space-y-1.5 pt-2 border-t border-white/5 font-mono text-xs">
-                                <div class="text-zinc-400">1: <span x-text="selectedBot.AscenderEnchant1">None</span></div>
-                                <div class="text-zinc-400">2: <span x-text="selectedBot.AscenderEnchant2">None</span></div>
-                                <div class="text-zinc-400">3: <span x-text="selectedBot.AscenderEnchant3">None</span></div>
-                                <div class="text-zinc-300 font-bold mt-2">Mode: <span class="text-amber-400" x-text="selectedBot.AscenderMode">None</span></div>
+                                <div class="text-zinc-400">1: <span x-text="selectedBot?.AscenderEnchant1">None</span></div>
+                                <div class="text-zinc-400">2: <span x-text="selectedBot?.AscenderEnchant2">None</span></div>
+                                <div class="text-zinc-400">3: <span x-text="selectedBot?.AscenderEnchant3">None</span></div>
+                                <div class="text-zinc-300 font-bold mt-2">Mode: <span class="text-amber-400" x-text="selectedBot?.AscenderMode">None</span></div>
                             </div>
                             
                             <!-- Target Filter Selector Buttons -->
                             <div class="grid grid-cols-3 gap-1.5 pt-2">
-                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Quality')" :class="selectedBot.AscenderMode === 'Quality' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Quality</button>
-                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Rarity')" :class="selectedBot.AscenderMode === 'Rarity' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Rarity</button>
-                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Mold')" :class="selectedBot.AscenderMode === 'Mold' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Mold</button>
-                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Class')" :class="selectedBot.AscenderMode === 'Class' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Class</button>
-                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Enchant')" :class="selectedBot.AscenderMode === 'Enchant' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Enchant</button>
-                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Level')" :class="selectedBot.AscenderMode === 'Level' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Level</button>
+                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Quality')" :class="selectedBot?.AscenderMode === 'Quality' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Quality</button>
+                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Rarity')" :class="selectedBot?.AscenderMode === 'Rarity' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Rarity</button>
+                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Mold')" :class="selectedBot?.AscenderMode === 'Mold' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Mold</button>
+                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Class')" :class="selectedBot?.AscenderMode === 'Class' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Class</button>
+                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Enchant')" :class="selectedBot?.AscenderMode === 'Enchant' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Enchant</button>
+                                <button @click="sendCommand(selectedBot.id, 'setAscenderMode', 'Level')" :class="selectedBot?.AscenderMode === 'Level' ? 'bg-amber-500/20 border-amber-500/30 text-amber-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Level</button>
                             </div>
                             <!-- Farm Target Priority -->
                             <div class="pt-4 mt-4 border-t border-white/5">
@@ -601,19 +601,27 @@
                                     <i data-lucide="crosshair" class="w-3.5 h-3.5 text-teal-400"></i>
                                     <span class="block text-xs font-bold text-teal-400 font-mono tracking-wider uppercase">Advanced Physics</span>
                                 </div>
-                                <div class="space-y-2">
-                                    <div class="flex justify-between text-[10px] font-mono text-zinc-400">
-                                        <span>Hover Height (Combat)</span>
-                                        <span x-text="(selectedBot.config.offset_height || 7) + ' Studs'"></span>
-                                    </div>
-                                    <input type="range" x-model="selectedBot.config.offset_height" min="0" max="30" step="1" @change="sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" class="w-full accent-teal-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer">
-                                </div>
-                                <div class="space-y-2">
-                                    <div class="flex justify-between text-[10px] font-mono text-zinc-400">
-                                        <span>Idle Altitude (Waiting)</span>
-                                        <span x-text="(selectedBot.config.wait_altitude || 15) + ' Studs'"></span>
-                                    </div>
-                                    <input type="range" x-model="selectedBot.config.wait_altitude" min="0" max="150" step="1" @change="sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" class="w-full accent-teal-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer">
+                                <!-- Flight Settings -->
+                                <div class="pt-4 border-t border-white/5 space-y-3">
+                                    <h5 class="text-[10px] font-bold text-teal-400 uppercase tracking-widest font-mono">Flight Parameters</h5>
+                                    <template x-if="selectedBot && selectedBot.config">
+                                        <div class="space-y-4">
+                                            <div class="space-y-2">
+                                                <div class="flex justify-between text-[10px] font-mono text-zinc-400">
+                                                    <span>Hover Height (Combat)</span>
+                                                    <span x-text="(selectedBot.config.offset_height || 7) + ' Studs'"></span>
+                                                </div>
+                                                <input type="range" x-model="selectedBot.config.offset_height" min="0" max="30" step="1" @change="sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" class="w-full accent-teal-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer">
+                                            </div>
+                                            <div class="space-y-2">
+                                                <div class="flex justify-between text-[10px] font-mono text-zinc-400">
+                                                    <span>Idle Altitude (Waiting)</span>
+                                                    <span x-text="(selectedBot.config.wait_altitude || 15) + ' Studs'"></span>
+                                                </div>
+                                                <input type="range" x-model="selectedBot.config.wait_altitude" min="0" max="150" step="1" @change="sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" class="w-full accent-teal-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer">
+                                            </div>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -1198,7 +1206,7 @@
                     <div class="flex items-center gap-2">
                         <!-- Toggle All button -->
                         <button @click="
-                            let visibleBots = bots.filter(b => b.username.toLowerCase().includes(multiConfigSearch.toLowerCase()));
+                            let visibleBots = bots.filter(b => (b.username || '').toLowerCase().includes(multiConfigSearch.toLowerCase()));
                             let allSelected = visibleBots.every(b => multiConfigSelectedIds[b.id]);
                             if (allSelected) {
                                 visibleBots.forEach(b => delete multiConfigSelectedIds[b.id]);
@@ -1217,7 +1225,7 @@
 
                 <!-- Targeted accounts list grid -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[300px] overflow-y-auto pr-1">
-                    <template x-for="bot in bots.filter(b => b.username.toLowerCase().includes(multiConfigSearch.toLowerCase()) && b.Status !== 'Offline')" :key="bot.id">
+                    <template x-for="bot in bots.filter(b => (b.username || '').toLowerCase().includes(multiConfigSearch.toLowerCase()) && b.Status !== 'Offline')" :key="bot.id">
                         <div @click="
                                    if (multiConfigSelectedIds[bot.id]) {
                                        delete multiConfigSelectedIds[bot.id];
@@ -1322,6 +1330,8 @@
     </div>
 </div>
 {% endblock %}
+
+
 
 
 
