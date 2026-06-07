@@ -33,6 +33,9 @@ class C2Consumer(AsyncWebsocketConsumer):
                     'type': 'new_log',
                     'log': log
                 }))
+                
+            # Start dashboard sync loop
+            self.dashboard_sync_task = asyncio.create_task(self.dashboard_sync_loop(user))
         else:
             print("[C2 Server] Bot/Client connection accepted (awaiting registration payload).")
             self.room_group_name = None
@@ -68,6 +71,18 @@ class C2Consumer(AsyncWebsocketConsumer):
         # Cancel heartbeat task if running
         if hasattr(self, 'heartbeat_task'):
             self.heartbeat_task.cancel()
+            
+        if hasattr(self, 'dashboard_sync_task'):
+            self.dashboard_sync_task.cancel()
+            
+    async def dashboard_sync_loop(self, user):
+        import asyncio
+        while True:
+            await asyncio.sleep(1)
+            try:
+                await self.broadcast_fleet_update_for_user(user)
+            except Exception:
+                pass
 
     async def monitor_heartbeat(self, timeout_seconds):
         import time
@@ -183,22 +198,21 @@ class C2Consumer(AsyncWebsocketConsumer):
                 
                 # Broadcast updated fleet status to the bot's owner
                 owner_user = await self.get_bot_owner(bot_id)
-                if owner_user:
-                    await self.broadcast_fleet_update_for_user(owner_user)
+                pass
                 
             elif action == 'clear_offline':
                 # Remove all offline bots for this user
                 owner_user = self.scope.get('user')
                 if owner_user and owner_user.is_authenticated:
                     await self.clear_offline_bots(owner_user)
-                    await self.broadcast_fleet_update_for_user(owner_user)
+                
                 
             elif action == 'reset_fleet':
                 # Force all bots to offline status (clears ghosts/stuck idle nodes)
                 owner_user = self.scope.get('user')
                 if owner_user and owner_user.is_authenticated:
                     await self.reset_fleet_status(owner_user)
-                    await self.broadcast_fleet_update_for_user(owner_user)
+                
                 
             elif action == 'command':
                 # Relaying UI commands from control panels out to individual Roblox bots
@@ -224,7 +238,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                                 'payload': payload
                             }
                         )
-                        await self.broadcast_fleet_update_for_user(user)
+ 
  
             elif action == 'log':
                 # Update heartbeat timestamp
@@ -268,11 +282,16 @@ class C2Consumer(AsyncWebsocketConsumer):
                             f"c2_fleet_user_{owner_user.id}",
                             {
                                 'type': 'broadcast_log',
-                                'log': log_data
+                                'log': {
+                                    'timestamp': log_data.timestamp.isoformat(),
+                                    'bot_username': username,
+                                    'event_type': event_type,
+                                    'message': message
+                                }
                             }
                         )
                         # Broadcast fleet size / status updates to owner
-                        await self.broadcast_fleet_update_for_user(owner_user)
+                        pass
  
             elif action == 'update_status':
                 import time
@@ -314,8 +333,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                     return
                 
                 owner_user = await self.get_bot_owner(bot_id)
-                if owner_user:
-                    await self.broadcast_fleet_update_for_user(owner_user)
+                pass
  
             elif action == 'update_metadata':
                 # Secure Admin Scraper Endpoint
