@@ -189,8 +189,8 @@ task.spawn(function()
             if v:IsA("Texture") or v:IsA("Decal") then
                 v:Destroy()
             elseif v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") then
-                v.Material = Enum.Material.Plastic
-                v.Reflectance = 0
+                if v.Material ~= Enum.Material.SmoothPlastic then v.Material = Enum.Material.SmoothPlastic end
+                if v.Reflectance ~= 0 then v.Reflectance = 0 end
                 v.CastShadow = false
             elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
                 v.Enabled = false
@@ -1432,18 +1432,6 @@ task.spawn(function()
     local function getAscenderPayload()
         local payload = { hasSword = false, mode = "None", stats = {} }
         pcall(function()
-            local stats = {}
-            pcall(function()
-                local ascenderStats = AscenderRemote:InvokeServer("GetStats")
-                if ascenderStats then
-                    stats.Level = ascenderStats.Level or 1
-                    stats.Class = getName("Class", ascenderStats.Class)
-                    stats.Quality = getName("Quality", ascenderStats.Quality)
-                    stats.Rarity = getName("Rarity", ascenderStats.Rarity)
-                    stats.Mold = getName("Mold", ascenderStats.Mold)
-                end
-            end)
-            
             local ascenderModeObj = PlayerStats:FindFirstChild("AscenderMode")
             if ascenderModeObj then payload.mode = ascenderModeObj.Value end
             
