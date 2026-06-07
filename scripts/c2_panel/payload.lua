@@ -1211,11 +1211,26 @@ task.spawn(function()
                     local parsedData = data.payload
                     if parsedData then
                         if parsedData.TargetSets then _G.ActiveTargetSets = parsedData.TargetSets end
-                        if parsedData.WhitelistedSwords then _G.WhitelistedSwords = parsedData.WhitelistedSwords end
+                        if parsedData.target_enchant_sets then _G.ActiveTargetSets = parsedData.target_enchant_sets end
+                        
+                        local wu = parsedData.WhitelistedSwords or parsedData.whitelisted_uuids
+                        if wu then
+                            local clean_wu = {}
+                            for _, id in ipairs(wu) do
+                                if type(id) == "string" then
+                                    table.insert(clean_wu, id:match("^%s*(.-)%s*$"))
+                                else
+                                    table.insert(clean_wu, id)
+                                end
+                            end
+                            _G.WhitelistedSwords = clean_wu
+                        end
+                        
                         if parsedData.SpecialOverrides then _G.SpecialOverrides = parsedData.SpecialOverrides end
                         if parsedData.WebhookURL then _G.WebhookURL = parsedData.WebhookURL end
                         if parsedData.WebhookEnabled ~= nil then _G.WebhookEnabled = parsedData.WebhookEnabled end
                         if parsedData.FarmAreas then _G.FarmAreas = parsedData.FarmAreas end
+                        if parsedData.active_areas then _G.FarmAreas = parsedData.active_areas end
                         if parsedData.Settings then for k,v in pairs(parsedData.Settings) do SETTINGS[k] = v end end
                         print("C2 Command: Configuration Synced remotely from Website!")
                         

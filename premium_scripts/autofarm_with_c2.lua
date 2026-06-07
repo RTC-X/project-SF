@@ -1656,7 +1656,17 @@ task.spawn(function()
                         if ts then _G.target_enchant_sets = ts end
                         
                         local wu = parsedData.whitelisted_uuids
-                        if wu then _G.whitelisted_uuids = wu end
+                        if wu then
+                            local clean_wu = {}
+                            for _, id in ipairs(wu) do
+                                if type(id) == "string" then
+                                    table.insert(clean_wu, id:match("^%s*(.-)%s*$"))
+                                else
+                                    table.insert(clean_wu, id)
+                                end
+                            end
+                            _G.whitelisted_uuids = clean_wu
+                        end
                         
                         local fa = parsedData.active_areas
                         if fa then _G.active_areas = fa end
