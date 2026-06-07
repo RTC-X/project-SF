@@ -610,7 +610,7 @@ ConfigTab:CreateButton({Name = "Test Webhook", Callback = function() SendWebhook
 ConfigTab:CreateSection("⚙️ Advanced Physics")
 OffsetSlider = ConfigTab:CreateSlider({Name = "Hover Height (Offset)", Range = {0, 30}, Increment = 1, Suffix = "Studs", CurrentValue = SETTINGS.OFFSET_HEIGHT, Callback = function(v) SETTINGS.OFFSET_HEIGHT = v end})
 WaitSlider = ConfigTab:CreateSlider({Name = "Wait / Retreat Altitude", Range = {0, 150}, Increment = 1, Suffix = "Studs", CurrentValue = SETTINGS.WAIT_ALTITUDE, Callback = function(v) SETTINGS.WAIT_ALTITUDE = v; SETTINGS.RETREAT_ALTITUDE = v end})
-TTKSlider = ConfigTab:CreateSlider({Name = "Stuck Detection (Time-To-Kill)", Range = {1, 5000}, Increment = 1, Suffix = "Seconds", CurrentValue = SETTINGS.MAX_KILL_TIME, Callback = function(v) SETTINGS.MAX_KILL_TIME = v end})
+
 HopSlider = ConfigTab:CreateSlider({Name = "Idle Time Before Map Hop", Range = {1, 15}, Increment = 1, Suffix = "Seconds", CurrentValue = SETTINGS.IDLE_BEFORE_HOP, Callback = function(v) SETTINGS.IDLE_BEFORE_HOP = v end})
 DensitySlider = ConfigTab:CreateSlider({Name = "Min Enemies Before Hop", Range = {0, 15}, Increment = 1, Suffix = "Enemies left", CurrentValue = SETTINGS.MIN_NPCS_TO_STAY, Callback = function(v) SETTINGS.MIN_NPCS_TO_STAY = v end})
 
@@ -951,17 +951,7 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(function()
         _G.CurrentState = "Farming: " .. currentTarget.Name
         StateData.IdleStartTime = 0 
         
-        if not StateData.LastTarget or StateData.LastTarget ~= currentTarget then
-            StateData.LastTarget = currentTarget
-            StateData.TargetStartTime = tick()
-        end
 
-        if tick() - StateData.TargetStartTime > SETTINGS.MAX_KILL_TIME then
-            warn("⌛ Stuck Detection! " .. currentTarget.Name .. " blacklisted.")
-            blacklistedNPCs[currentTarget] = tick()
-            currentTarget = nil
-            return
-        end
 
         if currentTarget:FindFirstChild("HumanoidRootPart") then
             hrp.CFrame = CFrame.lookAt(currentTarget.HumanoidRootPart.Position + Vector3.new(0, SETTINGS.OFFSET_HEIGHT, 0), currentTarget.HumanoidRootPart.Position)

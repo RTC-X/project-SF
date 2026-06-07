@@ -1290,18 +1290,7 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
         StateData.EquipAttemptStart = nil
         _G.CurrentState = "Farming: " .. currentTarget.Name
         StateData.IdleStartTime = 0 
-        
-        if not StateData.LastTarget or StateData.LastTarget ~= currentTarget then
-            StateData.LastTarget = currentTarget
-            StateData.TargetStartTime = tick()
-        end
 
-        if tick() - StateData.TargetStartTime > SETTINGS.MAX_KILL_TIME then
-            warn("⌛ Stuck Detection! " .. currentTarget.Name .. " blacklisted.")
-            blacklistedNPCs[currentTarget] = tick()
-            currentTarget = nil
-            return
-        end
 
         if currentTarget:FindFirstChild("HumanoidRootPart") then
             hrp.CFrame = CFrame.lookAt(currentTarget.HumanoidRootPart.Position + Vector3.new(0, SETTINGS.OFFSET_HEIGHT, 0), currentTarget.HumanoidRootPart.Position)
