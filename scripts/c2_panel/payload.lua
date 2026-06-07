@@ -184,7 +184,13 @@ local function hasMatchingCombo(swordEnchants)
     if #_G.ActiveTargetSets == 0 then return false end 
     for _, targetSet in ipairs(_G.ActiveTargetSets) do
         local tLeft = {}
-        for _, enc in ipairs(targetSet) do table.insert(tLeft, enc) end
+        if type(targetSet) == "string" then
+            for enc in string.gmatch(targetSet, "[^+]+") do
+                table.insert(tLeft, enc:match("^%s*(.-)%s*$"))
+            end
+        elseif type(targetSet) == "table" then
+            for _, enc in ipairs(targetSet) do table.insert(tLeft, enc) end
+        end
         for _, myEnc in ipairs(swordEnchants) do
             local idx = table.find(tLeft, myEnc)
             if idx then table.remove(tLeft, idx) end
