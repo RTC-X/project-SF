@@ -250,15 +250,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 
                 # Anti-hijacking: Prevent unauthenticated clients from spoofing another bot's logs
                 if not getattr(self, 'license_validated', False) or username != self.bot_username:
-                    print(f"[C2 Server] [Security Warning] Log request rejected. Session hijack attempt or missing validation. Username: '{username}', Expected: '{getattr(self, 'bot_username', None)}'")
-                    await self.send(text_data=json.dumps({
-                        'type': 'command',
-                        'command': 'kick',
-                        'payload': {
-                            'reason': 'Session verification failed. Please re-register.'
-                        }
-                    }))
-                    await self.close()
+                    # Ignore early logs silently to prevent race conditions during registration
                     return
                 
                 # Dynamic group joining if bot was not yet in its command group
@@ -303,15 +295,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 
                 # Anti-hijacking: Ensure client identity matches the registered session parameters
                 if not getattr(self, 'license_validated', False) or bot_id != self.bot_username or api_key != self.api_key:
-                    print(f"[C2 Server] [Security Warning] Status update rejected. Session hijack attempt. Username: '{bot_id}', Expected: '{getattr(self, 'bot_username', None)}'")
-                    await self.send(text_data=json.dumps({
-                        'type': 'command', 
-                        'command': 'kick', 
-                        'payload': {
-                            'reason': 'Session verification failed. Please re-register.'
-                        }
-                    }))
-                    await self.close()
+                    # Ignore early updates silently to prevent race conditions during registration
                     return
                 
                 # Check validation and update (performs local key validation without repeat Luarmor API hit)
