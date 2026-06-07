@@ -60,10 +60,33 @@
         this.ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             if (data.type === 'fleet_update') {
-                this.bots = data.bots;
+                // Only update the grid bots array without destroying references
+                if (!this.bots || this.bots.length === 0) {
+                    this.bots = data.bots;
+                } else {
+                    data.bots.forEach(incoming => {
+                        const existing = this.bots.find(b => b.id === incoming.id);
+                        if (existing) {
+                            existing.Status = incoming.Status;
+                            existing.Level = incoming.Level;
+                            existing.Money = incoming.Money;
+                            existing.BackpackItems = incoming.BackpackItems;
+                            // Do not overwrite existing.config to prevent UI debouncing
+                        } else {
+                            this.bots.push(incoming);
+                        }
+                    });
+                }
+                
                 if (this.selectedBot) {
-                    const updated = this.bots.find(b => b.id === this.selectedBot.id);
-                    if (updated) this.selectedBot = updated;
+                    const updated = data.bots.find(b => b.id === this.selectedBot.id);
+                    if (updated) {
+                        // Only update real-time telemetry, DO NOT overwrite the config object being edited!
+                        this.selectedBot.Status = updated.Status;
+                        this.selectedBot.Level = updated.Level;
+                        this.selectedBot.Money = updated.Money;
+                        this.selectedBot.BackpackItems = updated.BackpackItems;
+                    }
                 }
             } else if (data.type === 'new_log') {
                 this.logs.unshift(data.log);
