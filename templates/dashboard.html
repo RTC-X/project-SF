@@ -30,7 +30,7 @@
         TeleportHome: false,
         Toggle3D: false
     },
-    multiConfigSelectedIds: [],
+    multiConfigSelectedIds: {},
     multiEnchant1: '',
     multiEnchant2: '',
     multiEnchant3: '',
@@ -212,7 +212,7 @@
                         <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
                         Reset Fleet State
                     </button>
-                    <button @click="showMultiConfigModal = true; multiConfigStep = 1; multiConfigSelectedIds = [];" class="flex items-center gap-1.5 text-xs font-semibold font-mono text-teal-400 hover:text-white py-2 px-4 rounded-2xl bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 hover:border-teal-500/30 transition-all">
+                    <button @click="showMultiConfigModal = true; multiConfigStep = 1; multiConfigSelectedIds = {};" class="flex items-center gap-1.5 text-xs font-semibold font-mono text-teal-400 hover:text-white py-2 px-4 rounded-2xl bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 hover:border-teal-500/30 transition-all">
                         <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
                         Multi Config
                     </button>
@@ -1200,7 +1200,7 @@
                             let visibleBots = bots.filter(b => b.username.toLowerCase().includes(multiConfigSearch.toLowerCase()));
                             let allSelected = visibleBots.every(b => multiConfigSelectedIds.includes(b.id));
                             if (allSelected) {
-                                multiConfigSelectedIds = multiConfigSelectedIds.filter(id => !visibleBots.map(b => b.id).includes(id));
+                                visibleBots.forEach(b => delete multiConfigSelectedIds[b.id]);
                             } else {
                                 visibleBots.forEach(b => {
                                     if (!multiConfigSelectedIds.includes(b.id)) multiConfigSelectedIds.push(b.id);
@@ -1210,7 +1210,7 @@
                             Toggle All
                         </button>
                         
-                        <span class="text-[10px] text-zinc-500 font-mono" x-text="multiConfigSelectedIds.length + ' Selected'">0 Selected</span>
+                        <span class="text-[10px] text-zinc-500 font-mono" x-text="Object.keys(multiConfigSelectedIds).length + ' Selected'">0 Selected</span>
                     </div>
                 </div>
 
@@ -1218,28 +1218,28 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-h-[300px] overflow-y-auto pr-1">
                     <template x-for="bot in bots.filter(b => b.username.toLowerCase().includes(multiConfigSearch.toLowerCase()) && b.Status !== 'Offline')" :key="bot.id">
                         <div @click="
-                                   if (multiConfigSelectedIds.includes(bot.id)) {
-                                       multiConfigSelectedIds = multiConfigSelectedIds.filter(id => id !== bot.id);
+                                   if (multiConfigSelectedIds[bot.id]) {
+                                       delete multiConfigSelectedIds[bot.id];
                                    } else {
-                                       multiConfigSelectedIds.push(bot.id);
+                                       multiConfigSelectedIds[bot.id] = true;
                                    }
                                "
                                class="flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer select-none transition-all duration-300"
-                               :class="multiConfigSelectedIds.includes(bot.id) 
+                               :class="multiConfigSelectedIds[bot.id] 
                                        ? 'border-teal-500/30 bg-teal-500/5 shadow-[0_0_15px_rgba(45,212,191,0.05)]' 
                                        : 'border-white/5 bg-zinc-900/60 hover:bg-zinc-900/85'">
                             <div class="flex items-center gap-3">
                                 <!-- Custom Sliding Mini Switch -->
                                 <button type="button"
                                         class="relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none pointer-events-none"
-                                        :class="multiConfigSelectedIds.includes(bot.id) ? 'bg-teal-500/20 border-teal-500/30' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
+                                        :class="multiConfigSelectedIds[bot.id] ? 'bg-teal-500/20 border-teal-500/30' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
                                     <span class="pointer-events-none inline-block h-3 w-3 transform rounded-full shadow transition-all duration-300 ease-in-out"
-                                          :class="multiConfigSelectedIds.includes(bot.id) ? 'translate-x-3.5 bg-teal-400 shadow-[0_0_4px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
+                                          :class="multiConfigSelectedIds[bot.id] ? 'translate-x-3.5 bg-teal-400 shadow-[0_0_4px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
                                 </button>
                                 
                                 <div>
                                     <span class="block text-xs font-bold font-mono transition-colors" 
-                                          :class="multiConfigSelectedIds.includes(bot.id) ? 'text-teal-400' : 'text-white'"
+                                          :class="multiConfigSelectedIds[bot.id] ? 'text-teal-400' : 'text-white'"
                                           x-text="bot.username">Node</span>
                                     <span class="block text-[9px] font-mono text-zinc-500" x-text="'Lvl ' + bot.Level + ' • ' + bot.Status">Lvl 0 • Offline</span>
                                 </div>
@@ -1266,36 +1266,36 @@
                     </button>
                     
                     <button @click="
-                        if (multiConfigSelectedIds.length === 0) {
+                        if (Object.keys(multiConfigSelectedIds).length === 0) {
                             alert('Please select at least one active account to push configuration.');
                             return;
                         }
-                        multiConfigSelectedIds.forEach(id => {
-                            // 1. Sync config settings
-                            sendCommand(id, 'syncConfig', {
-                                farm_enabled: multiConfigData.farm_enabled,
-                                snipe_enabled: multiConfigData.snipe_enabled,
-                                bot_class: multiConfigData.BotClass || 'Unbeatable',
-                                quality: multiConfigData.Quality || 'Spectacular',
-                                rarity: multiConfigData.Rarity || 'Heavenly++',
-                                mold: multiConfigData.Mold || 'Crystal',
-                                level: parseInt(multiConfigData.Level) || 490,
-                                target_enchant_sets: multiConfigData.target_enchant_sets,
-                                whitelisted_uuids: multiConfigData.whitelisted_uuids,
-                                offset_height: parseInt(multiConfigData.offset_height),
-                                wait_altitude: parseInt(multiConfigData.wait_altitude)
-                            });
-                            // 2. Dispatch teleport Home or Toggle 3D rendering if enabled
-                            if (multiConfigData.TeleportHome) {
-                                sendCommand(id, 'teleportHome');
-                            }
-                            if (multiConfigData.Toggle3D) {
-                                sendCommand(id, 'toggle3D');
-                            }
-                        });
+                        let targetIds = Object.keys(multiConfigSelectedIds);
+                        let payload = {
+                            farm_enabled: multiConfigData.farm_enabled,
+                            snipe_enabled: multiConfigData.snipe_enabled,
+                            offset_height: parseInt(multiConfigData.offset_height) || 7,
+                            wait_altitude: parseInt(multiConfigData.wait_altitude) || 15
+                        };
+                        if (multiConfigData.target_enchant_sets.length > 0) payload.target_enchant_sets = multiConfigData.target_enchant_sets;
+                        if (multiConfigData.whitelisted_uuids.length > 0) payload.whitelisted_uuids = multiConfigData.whitelisted_uuids;
+                        if (multiConfigData.BotClass || multiConfigData.Quality || multiConfigData.Rarity || multiConfigData.Mold || multiConfigData.Level) {
+                            payload.ascender_criteria = {
+                                Class: multiConfigData.BotClass || 'Unbeatable',
+                                Quality: multiConfigData.Quality || 'Spectacular',
+                                Rarity: multiConfigData.Rarity || 'Heavenly++',
+                                Mold: multiConfigData.Mold || 'Crystal',
+                                Level: parseInt(multiConfigData.Level) || 490
+                            };
+                        }
+                        
+                        sendCommand(targetIds, 'syncConfig', payload);
+                        
+                        if (multiConfigData.TeleportHome) sendCommand(targetIds, 'teleportHome');
+                        if (multiConfigData.Toggle3D) sendCommand(targetIds, 'toggle3D');
                         showMultiConfigModal = false;
                         multiConfigStep = 1;
-                        multiConfigSelectedIds = [];
+                        multiConfigSelectedIds = {};
                         multiConfigData = {
                             farm_enabled: false,
                             snipe_enabled: false,
