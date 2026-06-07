@@ -670,6 +670,13 @@ task.spawn(function()
     local pStats = ReplicatedStorage:WaitForChild("Stats"):WaitForChild(tostring(player.Name))
     local invFolder = pStats:WaitForChild("Swords")
     _G.InvAddedConnection = invFolder.ChildAdded:Connect(evaluateInventorySword)
+    _G.InvRemovedConnection = invFolder.ChildRemoved:Connect(function() _G.InventoryDirty = true end)
+    
+    task.spawn(function()
+        while task.wait(15) do
+            _G.InventoryDirty = true
+        end
+    end)
     
     local sellingFolder = pStats:WaitForChild("Selling", 10)
     if sellingFolder then
