@@ -216,28 +216,33 @@ class C2Consumer(AsyncWebsocketConsumer):
                 
             elif action == 'command':
                 # Relaying UI commands from control panels out to individual Roblox bots
-                target_id = data.get('target_id')
                 command = data.get('command')
                 payload = data.get('payload', {})
+                target_ids = data.get('target_ids')
+                
+                # Fallback for single bot command
+                if not target_ids and data.get('target_id'):
+                    target_ids = [data.get('target_id')]
                 
                 user = self.scope.get('user')
-                if user and user.is_authenticated:
-                    # Verify user owns target bot and get its username
-                    bot_username = await self.verify_bot_ownership(user, target_id)
-                    if bot_username:
-                        # Persist settings in the DB for persistence across page loads (restricted to authorized owner)
-                        if command == 'syncConfig':
-                            await self.save_bot_configuration(target_id, payload)
-                        
-                        await self.channel_layer.group_send(
-                            f"c2_bot_{bot_username}",
-                            {
-                                'type': 'relay_command',
-                                'target_id': target_id,
-                                'command': command,
-                                'payload': payload
-                            }
-                        )
+                if user and user.is_authenticated and target_ids:
+                    for tid in target_ids:
+                        # Verify user owns target bot and get its username
+                        bot_username = await self.verify_bot_ownership(user, tid)
+                        if bot_username:
+                            # Persist settings in the DB for persistence across page loads (restricted to authorized owner)
+                            if command == 'syncConfig':
+                                await self.save_bot_configuration(tid, payload)
+                            
+                            await self.channel_layer.group_send(
+                                f"c2_bot_{bot_username}",
+                                {
+                                    'type': 'relay_command',
+                                    'target_id': tid,
+                                    'command': command,
+                                    'payload': payload
+                                }
+                            )
  
  
             elif action == 'log':

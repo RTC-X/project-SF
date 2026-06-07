@@ -576,7 +576,7 @@
                                 <div class="flex items-center gap-1.5 pt-1">
                                     <select x-model="newUuid" class="flex-1 w-full min-w-0 truncate bg-zinc-950/60 border border-white/5 text-[10px] rounded-lg px-2 py-1.5 text-zinc-400 font-mono focus:outline-none focus:ring-1 focus:ring-teal-400">
                                         <option value="">Backpack empty...</option>
-                                        <template x-for="item in (selectedBot.BackpackItems || []).filter(i => !i.inBank)">
+                                        <template x-for="item in (selectedBot?.BackpackItems || []).filter(i => !i.inBank)">
                                             <option :value="item.id" x-text="getItemName(item)"></option>
                                         </template>
                                     </select>
@@ -626,12 +626,12 @@
                                         <i data-lucide="shopping-bag" class="w-4 h-4 text-orange-400"></i>
                                         <h5 class="text-sm font-bold text-white font-mono tracking-wide uppercase">Inventory & Bank</h5>
                                     </div>
-                                    <span class="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-white/5" x-text="(selectedBot.BackpackItems?.length || 0) + ' Total'">0 Total</span>
+                                    <span class="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-white/5" x-text="(selectedBot?.BackpackItems?.length || 0) + ' Total'">0 Total</span>
                                 </div>
                                 
                                 <!-- Backpack items scroller -->
                                 <div class="space-y-1.5 pr-1" style="max-height: 400px; overflow-y: auto;">
-                                    <template x-for="item in [...(selectedBot.BackpackItems || [])].sort((a, b) => (a.inBank === b.inBank) ? 0 : a.inBank ? 1 : -1)" :key="item.id">
+                                    <template x-for="item in [...(selectedBot?.BackpackItems || [])].sort((a, b) => (a.inBank === b.inBank) ? 0 : a.inBank ? 1 : -1)" :key="item.id">
                                         <div x-data="{ open: false }" @click.away="open = false" class="p-3 rounded-xl bg-zinc-950/60 border border-white/5 flex items-center justify-between gap-2 hover:border-orange-500/20 transition-all select-none relative">
                                             <div class="space-y-0.5 flex-1 min-w-0">
                                                 <div class="flex items-center gap-1.5">
@@ -729,7 +729,7 @@
     <!-- Map Options Modal -->
     <div x-show="showMapOptions" 
          x-data="{ localActiveAreas: [] }" 
-         x-init="$watch('showMapOptions', value => { if(value) localActiveAreas = [...(selectedBot.config?.active_areas || [])].map(Number); })"
+         x-init="$watch('showMapOptions', value => { if(value) localActiveAreas = [...(selectedBot?.config?.active_areas || [])].map(Number); })"
          @click.self="showMapOptions = false" 
          class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" 
          x-transition 
@@ -786,6 +786,7 @@
          x-data="{ 
              localQueue: [],
              localCriteria: {},
+             newAscenderUuid: '',
              getBankCapacity() {
                  if (!selectedBot || !selectedBot.BankLevel) return 0;
                  let lvl = selectedBot.BankLevel;
@@ -896,7 +897,7 @@
                 <div class="flex items-center gap-2 mb-2">
                     <select x-model="newAscenderUuid" class="flex-1 w-full min-w-0 bg-zinc-950/60 border border-white/5 text-xs rounded-lg px-3 py-2 text-zinc-400 font-mono focus:outline-none focus:ring-1 focus:ring-amber-400">
                         <option value="">Select a sword from Bank to queue...</option>
-                        <template x-for="item in (selectedBot.BackpackItems || []).filter(i => i.inBank)">
+                        <template x-for="item in (selectedBot?.BackpackItems || []).filter(i => i.inBank)">
                             <option :value="item.id" x-text="'[Slot ' + item.BankSlot + '] ' + getItemName(item)"></option>
                         </template>
                     </select>
