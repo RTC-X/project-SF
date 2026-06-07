@@ -40,8 +40,6 @@ class C2Consumer(AsyncWebsocketConsumer):
             self.last_heartbeat = time.time()
             # Allow bot connection to accept; they will dynamically join their group during register/log
             await self.accept()
-            # Enforce 60 second registration timeout to prevent resource exhaustion attacks
-            asyncio.create_task(self.enforce_registration_timeout(60))
             # Start heartbeat monitor (expects a ping at least every 120 seconds)
             self.last_heartbeat = time.time()
             self.heartbeat_task = asyncio.create_task(self.monitor_heartbeat(120))
@@ -70,23 +68,6 @@ class C2Consumer(AsyncWebsocketConsumer):
         # Cancel heartbeat task if running
         if hasattr(self, 'heartbeat_task'):
             self.heartbeat_task.cancel()
-
-    async def enforce_registration_timeout(self, seconds):
-        await asyncio.sleep(seconds)
-        if not getattr(self, 'bot_username', None):
-            print("[C2 Server] [Security Warning] Registration timeout exceeded. Rejecting unauthenticated connection.")
-            try:
-                await self.send(text_data=json.dumps({
-                    'type': 'command',
-                    'command': 'kick',
-                    'payload': {
-                        'reason': 'Registration timeout exceeded. You must register within 60 seconds of connection.'
-                    }
-                }))
-                await self.close()
-                await self.close()
-            except Exception:
-                pass
 
     async def monitor_heartbeat(self, timeout_seconds):
         import time
