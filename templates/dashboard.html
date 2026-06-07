@@ -1161,9 +1161,10 @@
             </div>
 
             <!-- STEP 2: Choose targeted accounts -->
-            <div x-show="multiConfigStep === 2" class="space-y-6">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div class="flex-1 relative">
+            <template x-if="multiConfigStep === 2">
+                <div class="space-y-6">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="flex-1 relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-zinc-500">
                             <i data-lucide="search" class="w-4 h-4"></i>
                         </span>

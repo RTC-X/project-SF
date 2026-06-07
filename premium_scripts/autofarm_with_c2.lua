@@ -1460,6 +1460,21 @@ task.spawn(function()
         return payload
     end
 
+    _G.InventoryDirty = true
+    
+    task.spawn(function()
+        local invFolder = PlayerStats:WaitForChild("Swords", 5)
+        if invFolder then
+            invFolder.DescendantAdded:Connect(function() _G.InventoryDirty = true end)
+            invFolder.DescendantRemoving:Connect(function() _G.InventoryDirty = true end)
+        end
+        local bankFolder = PlayerStats:WaitForChild("Bank", 5)
+        if bankFolder then
+            bankFolder.DescendantAdded:Connect(function() _G.InventoryDirty = true end)
+            bankFolder.DescendantRemoving:Connect(function() _G.InventoryDirty = true end)
+        end
+    end)
+
     local function getBackpackPayload()
         local payload = {}
         pcall(function()
@@ -1753,46 +1768,53 @@ task.spawn(function()
                             local myBankLevel = PlayerStats:FindFirstChild("BankLevel") and PlayerStats.BankLevel.Value or 0
                             local ascenderData = getAscenderPayload()
                             
+                            local payloadTable = {
+                                Status = _G.CurrentState or "Idle",
+                                Level = myLevel,
+                                Money = myMoney,
+                                BankLevel = myBankLevel,
+                                Quality = ascenderData.stats.Quality or "Standard",
+                                Rarity = ascenderData.stats.Rarity or "Common",
+                                Mold = ascenderData.stats.Mold or "Basic",
+                                BotClass = ascenderData.stats.Class or "None",
+                                AscenderEnchant1 = ascenderData.stats.Enchant1 or "None",
+                                AscenderEnchant2 = ascenderData.stats.Enchant2 or "None",
+                                AscenderEnchant3 = ascenderData.stats.Enchant3 or "None",
+                                AscenderMode = ascenderData.mode or "None",
+                                TargetEnchantSets = (function()
+                                    local formattedSets = {}
+                                    local setsToUse = (#_G.target_enchant_sets > 0 and _G.target_enchant_sets) or {{"Ancient", "Fortune", "Insight"}}
+                                    for _, set in ipairs(setsToUse) do
+                                        if type(set) == "string" then
+                                            table.insert(formattedSets, set)
+                                        elseif type(set) == "table" then
+                                            table.insert(formattedSets, table.concat(set, " + "))
+                                        end
+                                    end
+                                    return formattedSets
+                                end)(),
+                                target_enchant_sets = _G.target_enchant_sets,
+                                whitelisted_uuids = _G.whitelisted_uuids or {},
+                                farm_enabled = _G.on,
+                                snipe_enabled = _G.autoDropEnabled,
+                                activate_panel = _G.activate_panel,
+                                active_areas = _G.active_areas,
+                                target_priority = _G.target_priority,
+                                ascender_enabled = _G.ascender_enabled,
+                                ascender_queue = _G.ascender_queue,
+                                ascender_criteria = _G.ascender_criteria
+                            }
+                            
+                            if _G.InventoryDirty then
+                                payloadTable.BackpackItems = getBackpackPayload()
+                                _G.InventoryDirty = false
+                            end
+                            
                             _G.C2_WS:Send(HttpService:JSONEncode({
                                 action = "update_status",
                                 username = player.Name,
                                 api_key = C2_API_KEY,
-                                payload = {
-                                    Status = _G.CurrentState or "Idle",
-                                    Level = myLevel,
-                                    Money = myMoney,
-                                    BankLevel = myBankLevel,
-                                    BackpackItems = getBackpackPayload(),
-                                    Quality = ascenderData.stats.Quality or "Standard",
-                                    Rarity = ascenderData.stats.Rarity or "Common",
-                                    Mold = ascenderData.stats.Mold or "Basic",
-                                    BotClass = ascenderData.stats.Class or "None",
-                                    AscenderEnchant1 = ascenderData.stats.Enchant1 or "None",
-                                    AscenderEnchant2 = ascenderData.stats.Enchant2 or "None",
-                                    AscenderEnchant3 = ascenderData.stats.Enchant3 or "None",
-                                    AscenderMode = ascenderData.mode or "None",
-                                    TargetEnchantSets = (function()
-                                        local formattedSets = {}
-                                        local setsToUse = (#_G.target_enchant_sets > 0 and _G.target_enchant_sets) or {{"Ancient", "Fortune", "Insight"}}
-                                        for _, set in ipairs(setsToUse) do
-                                            if type(set) == "string" then
-                                                table.insert(formattedSets, set)
-                                            elseif type(set) == "table" then
-                                                table.insert(formattedSets, table.concat(set, " + "))
-                                            end
-                                        end
-                                        return formattedSets
-                                    end)(),
-                                    target_enchant_sets = _G.target_enchant_sets,
-                                    whitelisted_uuids = _G.whitelisted_uuids or {},
-                                    farm_enabled = _G.on,
-                                    snipe_enabled = _G.autoDropEnabled,
-                                    activate_panel = _G.activate_panel,
-                                    ascender_enabled = _G.ascender_enabled,
-                                    ascender_queue = _G.ascender_queue,
-                                    ascender_criteria = _G.ascender_criteria,
-                                    active_areas = _G.active_areas
-                                }
+                                payload = payloadTable
                             }))
                         end
                     end)
