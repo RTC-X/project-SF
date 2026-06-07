@@ -1778,7 +1778,11 @@ task.spawn(function()
                                         local formattedSets = {}
                                         local setsToUse = (#_G.target_enchant_sets > 0 and _G.target_enchant_sets) or {{"Ancient", "Fortune", "Insight"}}
                                         for _, set in ipairs(setsToUse) do
-                                            table.insert(formattedSets, table.concat(set, " + "))
+                                            if type(set) == "string" then
+                                                table.insert(formattedSets, set)
+                                            elseif type(set) == "table" then
+                                                table.insert(formattedSets, table.concat(set, " + "))
+                                            end
                                         end
                                         return formattedSets
                                     end)(),
