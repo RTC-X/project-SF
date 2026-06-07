@@ -1805,12 +1805,18 @@ task.spawn(function()
                                 _G.InventoryDirty = false
                             end
                             
-                            _G.C2_WS:Send(HttpService:JSONEncode({
-                                action = "update_status",
-                                username = player.Name,
-                                api_key = C2_API_KEY,
-                                payload = payloadTable
-                            }))
+                            local success, err = pcall(function()
+                                _G.C2_WS:Send(HttpService:JSONEncode({
+                                    action = "update_status",
+                                    username = player.Name,
+                                    api_key = C2_API_KEY,
+                                    payload = payloadTable
+                                }))
+                            end)
+                            if not success then
+                                warn("[C2] Silent disconnect detected (Send failed):", tostring(err))
+                                _G.C2_WS = nil -- Force reconnection loop to trigger
+                            end
                         end
                     end)
                 end
