@@ -1,6 +1,6 @@
 local RunService = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualInputManager = game:GetService("VirtualInputManager")
+local VirtualUser = game:GetService("VirtualUser")
 local HttpService = game:GetService("HttpService")
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -615,8 +615,10 @@ HopSlider = ConfigTab:CreateSlider({Name = "Idle Time Before Map Hop", Range = {
 DensitySlider = ConfigTab:CreateSlider({Name = "Min Enemies Before Hop", Range = {0, 15}, Increment = 1, Suffix = "Enemies left", CurrentValue = SETTINGS.MIN_NPCS_TO_STAY, Callback = function(v) SETTINGS.MIN_NPCS_TO_STAY = v end})
 
 -- [[ 9. BACKGROUND THREADS & UI UPDATERS ]]
-_G.AntiAFKConnection = task.spawn(function()
-    while task.wait(30) do pcall(function() VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0); task.wait(0.1); VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0) end) end
+_G.AntiAFKConnection = player.Idled:Connect(function()
+    VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    task.wait(1)
+    VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
 end)
 
 _G.StatsConnection = task.spawn(function()

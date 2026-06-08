@@ -142,13 +142,11 @@ end
 ResetPhysics()
 
 -- [[ 3.5. ANTI-AFK MECHANISM ]]
-local VirtualInputManager = game:GetService("VirtualInputManager")
-_G.AntiAFKConnection = task.spawn(function()
-    while task.wait(20) do
-        pcall(function()
-            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-        end)
-    end
+local VirtualUser = game:GetService("VirtualUser")
+player.Idled:Connect(function()
+    VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    task.wait(1)
+    VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
 end)
 
 -- [[ 3.6. EXTREME RAM OPTIMIZATION ]]
@@ -671,12 +669,6 @@ task.spawn(function()
     local invFolder = pStats:WaitForChild("Swords")
     _G.InvAddedConnection = invFolder.ChildAdded:Connect(evaluateInventorySword)
     _G.InvRemovedConnection = invFolder.ChildRemoved:Connect(function() _G.InventoryDirty = true end)
-    
-    task.spawn(function()
-        while task.wait(15) do
-            _G.InventoryDirty = true
-        end
-    end)
     
     local sellingFolder = pStats:WaitForChild("Selling", 10)
     if sellingFolder then
