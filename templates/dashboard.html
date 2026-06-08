@@ -1301,6 +1301,17 @@
                             alert('Please select at least one active account to push configuration.');
                             return;
                         }
+                        
+                        // Auto-flush any pending target set inputs if the user forgot to click 'Add Target Set'
+                        let pendingCombo = [];
+                        if (multiEnchant1) pendingCombo.push(multiEnchant1);
+                        if (multiEnchant2) pendingCombo.push(multiEnchant2);
+                        if (multiEnchant3) pendingCombo.push(multiEnchant3);
+                        if (pendingCombo.length > 0) {
+                            multiConfigData.target_enchant_sets.push(pendingCombo.join(' + '));
+                            multiEnchant1 = ''; multiEnchant2 = ''; multiEnchant3 = '';
+                        }
+                        
                         let targetIds = Object.keys(multiConfigSelectedIds);
                         
                         // Smart Patcher: Apply individually to each selected bot
