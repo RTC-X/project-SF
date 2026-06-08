@@ -18,8 +18,8 @@
     multiConfigStep: 1,
     multiConfigSearch: '',
     multiConfigData: {
-        farm_enabled: false,
-        snipe_enabled: false,
+        farm_enabled: 'no_change',
+        snipe_enabled: 'no_change',
         BotClass: '',
         Quality: '',
         Rarity: '',
@@ -27,8 +27,9 @@
         Level: '',
         target_enchant_sets: [],
         whitelisted_uuids: [],
-        TeleportHome: false,
-        Toggle3D: false,
+        replace_combos: false,
+        TeleportHome: 'no_change',
+        Toggle3D: 'no_change',
         offset_height: 7,
         wait_altitude: 15
     },
@@ -212,8 +213,24 @@
                 <div class="flex items-center gap-2">
                     <button @click="ws.send(JSON.stringify({action: 'reset_fleet'}))" class="flex items-center gap-1.5 text-xs font-semibold font-mono text-amber-400 hover:text-white py-2 px-4 rounded-2xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/30 transition-all" title="Clears stuck nodes from the dashboard. Active nodes will reconnect automatically.">
                         <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                        Reset Fleet State
+                        Reset
                     </button>
+                    <button @click="sendCommand(null, 'clear_offline')" class="px-3 py-1.5 bg-zinc-900 hover:bg-red-500/10 text-zinc-400 hover:text-red-400 font-semibold text-[10px] rounded-lg transition-all border border-white/5 hover:border-red-500/20 font-mono">
+                        Clear Offline
+                    </button>
+                    <!-- Global Toggle All Snipe -->
+                    <button @click="
+                        let isAnySniperOff = bots.filter(b => b.Status !== 'Offline').some(b => !b.config?.snipe_enabled);
+                        let newVal = isAnySniperOff;
+                        bots.filter(b => b.Status !== 'Offline').forEach(b => {
+                            b.config = b.config || {};
+                            b.config.snipe_enabled = newVal;
+                            sendCommand(b.id, 'syncConfig', b.config);
+                        });
+                    " class="px-3 py-1.5 bg-zinc-900 hover:bg-teal-500/10 text-zinc-400 hover:text-teal-400 font-semibold text-[10px] rounded-lg transition-all border border-white/5 hover:border-teal-500/20 font-mono">
+                        Toggle All Sniper
+                    </button>
+                    <!-- Multi Config Button -->
                     <button @click="showMultiConfigModal = true; multiConfigStep = 1; multiConfigSelectedIds = {};" class="flex items-center gap-1.5 text-xs font-semibold font-mono text-teal-400 hover:text-white py-2 px-4 rounded-2xl bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/20 hover:border-teal-500/30 transition-all">
                         <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
                         Multi Config
@@ -251,6 +268,10 @@
                                             'bg-zinc-500/10 border-zinc-500/20 text-zinc-400': bot.Status === 'Offline'
                                         }"
                                         x-text="bot.Status">OFFLINE</span>
+                                    <!-- Sniper Badge -->
+                                    <span class="text-[9px] font-mono font-semibold px-2 py-0.5 rounded-full border"
+                                        :class="bot.config?.snipe_enabled ? 'bg-teal-500/10 border-teal-500/20 text-teal-400' : 'bg-zinc-500/10 border-zinc-500/20 text-zinc-500'"
+                                        x-text="bot.config?.snipe_enabled ? 'Sniper ON' : 'Sniper OFF'">Sniper OFF</span>
                                 </div>
                             </div>
                             
@@ -353,7 +374,7 @@
                                     
                                     <!-- Sniper Badge -->
                                     <span class="text-[9px] font-mono font-semibold px-2.5 py-0.5 rounded-full border"
-                                          :class="selectedBot?.config?.snipe_enabled ? 'bg-teal-500/10 border-teal-500/20 text-teal-400' : 'bg-zinc-800 border-zinc-700 text-zinc-500'"
+                                          :class="selectedBot?.config?.snipe_enabled ? 'bg-teal-500/10 border-teal-500/20 text-teal-400' : 'bg-zinc-500/10 border-zinc-500/20 text-zinc-500'"
                                           x-text="selectedBot?.config?.snipe_enabled ? 'Sniper Active' : 'Sniper Inactive'">Sniper Active</span>
                                 </div>
                                 <div class="flex items-center gap-4 mt-1.5 text-xs text-zinc-500 font-mono">
@@ -1003,13 +1024,11 @@
                             <span class="block text-xs font-bold text-white font-mono">Sniper Mode</span>
                             <span class="block text-[10px] text-zinc-500 font-mono">Automated god-roll sniping</span>
                         </div>
-                        <button @click="multiConfigData.snipe_enabled = !multiConfigData.snipe_enabled" 
-                                type="button"
-                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]"
-                                :class="multiConfigData.snipe_enabled ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
-                            <span class="pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full shadow transition-all duration-300 ease-in-out"
-                                  :class="multiConfigData.snipe_enabled ? 'translate-x-5 bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
-                        </button>
+                        <div class="flex items-center gap-1.5 p-1 bg-zinc-950/80 rounded-lg border border-white/5">
+                            <button @click="multiConfigData.snipe_enabled = 'no_change'" :class="multiConfigData.snipe_enabled === 'no_change' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-white'" type="button" class="px-2.5 py-1 text-[10px] font-mono rounded-md transition-all shadow-sm">Skip</button>
+                            <button @click="multiConfigData.snipe_enabled = true" :class="multiConfigData.snipe_enabled === true ? 'bg-teal-500/20 text-teal-400 border-teal-500/30 shadow-[0_0_10px_rgba(45,212,191,0.15)]' : 'border-transparent text-zinc-500 hover:text-white'" type="button" class="px-2.5 py-1 text-[10px] font-mono rounded-md border transition-all">On</button>
+                            <button @click="multiConfigData.snipe_enabled = false" :class="multiConfigData.snipe_enabled === false ? 'bg-red-500/20 text-red-400 border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.15)]' : 'border-transparent text-zinc-500 hover:text-white'" type="button" class="px-2.5 py-1 text-[10px] font-mono rounded-md border transition-all">Off</button>
+                        </div>
                     </div>
 
                     <!-- Toggle Farm -->
@@ -1018,13 +1037,11 @@
                             <span class="block text-xs font-bold text-white font-mono">Farming Mode</span>
                             <span class="block text-[10px] text-zinc-500 font-mono">Automated target level farming</span>
                         </div>
-                        <button @click="multiConfigData.farm_enabled = !multiConfigData.farm_enabled" 
-                                type="button"
-                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]"
-                                :class="multiConfigData.farm_enabled ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
-                            <span class="pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full shadow transition-all duration-300 ease-in-out"
-                                  :class="multiConfigData.farm_enabled ? 'translate-x-5 bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
-                        </button>
+                        <div class="flex items-center gap-1.5 p-1 bg-zinc-950/80 rounded-lg border border-white/5">
+                            <button @click="multiConfigData.farm_enabled = 'no_change'" :class="multiConfigData.farm_enabled === 'no_change' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-white'" type="button" class="px-2.5 py-1 text-[10px] font-mono rounded-md transition-all shadow-sm">Skip</button>
+                            <button @click="multiConfigData.farm_enabled = true" :class="multiConfigData.farm_enabled === true ? 'bg-teal-500/20 text-teal-400 border-teal-500/30 shadow-[0_0_10px_rgba(45,212,191,0.15)]' : 'border-transparent text-zinc-500 hover:text-white'" type="button" class="px-2.5 py-1 text-[10px] font-mono rounded-md border transition-all">On</button>
+                            <button @click="multiConfigData.farm_enabled = false" :class="multiConfigData.farm_enabled === false ? 'bg-red-500/20 text-red-400 border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.15)]' : 'border-transparent text-zinc-500 hover:text-white'" type="button" class="px-2.5 py-1 text-[10px] font-mono rounded-md border transition-all">Off</button>
+                        </div>
                     </div>
 
                     <!-- Toggle Home -->
@@ -1033,13 +1050,11 @@
                             <span class="block text-xs font-bold text-white font-mono">Teleport Home</span>
                             <span class="block text-[10px] text-zinc-500 font-mono">Relay teleport-to-home command</span>
                         </div>
-                        <button @click="multiConfigData.TeleportHome = !multiConfigData.TeleportHome" 
-                                type="button"
-                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]"
-                                :class="multiConfigData.TeleportHome ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
-                            <span class="pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full shadow transition-all duration-300 ease-in-out"
-                                  :class="multiConfigData.TeleportHome ? 'translate-x-5 bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
-                        </button>
+                        <div class="flex items-center gap-1.5 p-1 bg-zinc-950/80 rounded-lg border border-white/5">
+                            <button @click="multiConfigData.TeleportHome = 'no_change'" :class="multiConfigData.TeleportHome === 'no_change' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-white'" type="button" class="px-2.5 py-1 text-[10px] font-mono rounded-md transition-all shadow-sm">Skip</button>
+                            <button @click="multiConfigData.TeleportHome = true" :class="multiConfigData.TeleportHome === true ? 'bg-teal-500/20 text-teal-400 border-teal-500/30 shadow-[0_0_10px_rgba(45,212,191,0.15)]' : 'border-transparent text-zinc-500 hover:text-white'" type="button" class="px-2.5 py-1 text-[10px] font-mono rounded-md border transition-all">On</button>
+                            <button @click="multiConfigData.TeleportHome = false" :class="multiConfigData.TeleportHome === false ? 'bg-red-500/20 text-red-400 border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.15)]' : 'border-transparent text-zinc-500 hover:text-white'" type="button" class="px-2.5 py-1 text-[10px] font-mono rounded-md border transition-all">Off</button>
+                        </div>
                     </div>
 
                     <!-- Toggle 3D Rendering -->
@@ -1048,13 +1063,11 @@
                             <span class="block text-xs font-bold text-white font-mono">Toggle 3D Rendering</span>
                             <span class="block text-[10px] text-zinc-500 font-mono">Disable 3D rendering to save CPU</span>
                         </div>
-                        <button @click="multiConfigData.Toggle3D = !multiConfigData.Toggle3D" 
-                                type="button"
-                                class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)]"
-                                :class="multiConfigData.Toggle3D ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_15px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
-                            <span class="pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full shadow transition-all duration-300 ease-in-out"
-                                  :class="multiConfigData.Toggle3D ? 'translate-x-5 bg-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
-                        </button>
+                        <div class="flex items-center gap-1.5 p-1 bg-zinc-950/80 rounded-lg border border-white/5">
+                            <button @click="multiConfigData.Toggle3D = 'no_change'" :class="multiConfigData.Toggle3D === 'no_change' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-white'" type="button" class="px-2.5 py-1 text-[10px] font-mono rounded-md transition-all shadow-sm">Skip</button>
+                            <button @click="multiConfigData.Toggle3D = true" :class="multiConfigData.Toggle3D === true ? 'bg-teal-500/20 text-teal-400 border-teal-500/30 shadow-[0_0_10px_rgba(45,212,191,0.15)]' : 'border-transparent text-zinc-500 hover:text-white'" type="button" class="px-2.5 py-1 text-[10px] font-mono rounded-md border transition-all">On</button>
+                            <button @click="multiConfigData.Toggle3D = false" :class="multiConfigData.Toggle3D === false ? 'bg-red-500/20 text-red-400 border-red-500/30 shadow-[0_0_10px_rgba(239,68,68,0.15)]' : 'border-transparent text-zinc-500 hover:text-white'" type="button" class="px-2.5 py-1 text-[10px] font-mono rounded-md border transition-all">Off</button>
+                        </div>
                     </div>
                 </div>
 
@@ -1095,7 +1108,13 @@
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="block text-xs font-bold text-teal-400 font-mono tracking-wider uppercase">Sniper Wishlist Sets</span>
-                            <span class="text-[9px] font-mono text-zinc-500" x-text="multiConfigData.target_enchant_sets.length + ' Sets'">0 Sets</span>
+                            <div class="flex items-center gap-3">
+                                <label class="flex items-center gap-1.5 cursor-pointer text-[9px] font-mono text-zinc-400 hover:text-amber-400 transition-colors">
+                                    <input type="checkbox" x-model="multiConfigData.replace_combos" class="rounded border-white/10 bg-zinc-950 text-amber-500 focus:ring-amber-500/30 w-3 h-3">
+                                    <span>Replace Existing</span>
+                                </label>
+                                <span class="text-[9px] font-mono text-zinc-500" x-text="multiConfigData.target_enchant_sets.length + ' Sets'">0 Sets</span>
+                            </div>
                         </div>
                         
                         <div class="space-y-1.5 max-h-[100px] overflow-y-auto">
@@ -1283,34 +1302,69 @@
                             return;
                         }
                         let targetIds = Object.keys(multiConfigSelectedIds);
-                        let payload = {
-                            farm_enabled: multiConfigData.farm_enabled,
-                            snipe_enabled: multiConfigData.snipe_enabled,
-                            offset_height: parseInt(multiConfigData.offset_height) || 7,
-                            wait_altitude: parseInt(multiConfigData.wait_altitude) || 15
-                        };
-                        if (multiConfigData.target_enchant_sets.length > 0) payload.target_enchant_sets = multiConfigData.target_enchant_sets;
-                        if (multiConfigData.whitelisted_uuids.length > 0) payload.whitelisted_uuids = multiConfigData.whitelisted_uuids;
-                        if (multiConfigData.BotClass || multiConfigData.Quality || multiConfigData.Rarity || multiConfigData.Mold || multiConfigData.Level) {
-                            payload.ascender_criteria = {
-                                Class: multiConfigData.BotClass || 'Unbeatable',
-                                Quality: multiConfigData.Quality || 'Spectacular',
-                                Rarity: multiConfigData.Rarity || 'Heavenly++',
-                                Mold: multiConfigData.Mold || 'Crystal',
-                                Level: parseInt(multiConfigData.Level) || 490
-                            };
-                        }
                         
-                        sendCommand(targetIds, 'syncConfig', payload);
+                        // Smart Patcher: Apply individually to each selected bot
+                        targetIds.forEach(tidStr => {
+                            let tid = parseInt(tidStr);
+                            let bot = bots.find(b => b.id === tid);
+                            if (!bot) return;
+                            
+                            // Clone existing config to merge into
+                            let mergedConfig = JSON.parse(JSON.stringify(bot.config || {}));
+                            
+                            // Apply 3-state toggles
+                            if (multiConfigData.farm_enabled !== 'no_change') mergedConfig.farm_enabled = multiConfigData.farm_enabled;
+                            if (multiConfigData.snipe_enabled !== 'no_change') mergedConfig.snipe_enabled = multiConfigData.snipe_enabled;
+                            
+                            // Apply ranges
+                            mergedConfig.offset_height = parseInt(multiConfigData.offset_height) || 7;
+                            mergedConfig.wait_altitude = parseInt(multiConfigData.wait_altitude) || 15;
+                            
+                            // Apply arrays (Append vs Overwrite)
+                            if (multiConfigData.target_enchant_sets.length > 0) {
+                                if (multiConfigData.replace_combos) {
+                                    mergedConfig.target_enchant_sets = [...multiConfigData.target_enchant_sets];
+                                } else {
+                                    mergedConfig.target_enchant_sets = [...(mergedConfig.target_enchant_sets || []), ...multiConfigData.target_enchant_sets];
+                                    mergedConfig.target_enchant_sets = [...new Set(mergedConfig.target_enchant_sets)];
+                                }
+                            }
+                            
+                            if (multiConfigData.whitelisted_uuids.length > 0) {
+                                mergedConfig.whitelisted_uuids = [...(mergedConfig.whitelisted_uuids || []), ...multiConfigData.whitelisted_uuids];
+                                mergedConfig.whitelisted_uuids = [...new Set(mergedConfig.whitelisted_uuids)];
+                            }
+                            
+                            // Apply Ascender
+                            if (multiConfigData.BotClass || multiConfigData.Quality || multiConfigData.Rarity || multiConfigData.Mold || multiConfigData.Level) {
+                                mergedConfig.ascender_enabled = true;
+                                mergedConfig.ascender_criteria = {
+                                    Class: multiConfigData.BotClass || 'Unbeatable',
+                                    Quality: multiConfigData.Quality || 'Spectacular',
+                                    Rarity: multiConfigData.Rarity || 'Heavenly++',
+                                    Mold: multiConfigData.Mold || 'Crystal',
+                                    Level: parseInt(multiConfigData.Level) || 490
+                                };
+                            }
+                            
+                            // Update local memory to stay in sync!
+                            bot.config = mergedConfig;
+                            
+                            // Push the final merged payload to the server
+                            sendCommand(tid, 'syncConfig', mergedConfig);
+                            
+                            // One-off Commands
+                            if (multiConfigData.TeleportHome === true) sendCommand(tid, 'teleportHome');
+                            if (multiConfigData.Toggle3D === true) sendCommand(tid, 'toggle3D');
+                            if (multiConfigData.Toggle3D === false) { mergedConfig.activate_panel = false; sendCommand(tid, 'set3d', false); }
+                        });
                         
-                        if (multiConfigData.TeleportHome) sendCommand(targetIds, 'teleportHome');
-                        if (multiConfigData.Toggle3D) sendCommand(targetIds, 'toggle3D');
                         showMultiConfigModal = false;
                         multiConfigStep = 1;
                         multiConfigSelectedIds = {};
                         multiConfigData = {
-                            farm_enabled: false,
-                            snipe_enabled: false,
+                            farm_enabled: 'no_change',
+                            snipe_enabled: 'no_change',
                             BotClass: '',
                             Quality: '',
                             Rarity: '',
@@ -1318,8 +1372,9 @@
                             Level: '',
                             target_enchant_sets: [],
                             whitelisted_uuids: [],
-                            TeleportHome: false,
-                            Toggle3D: false,
+                            replace_combos: false,
+                            TeleportHome: 'no_change',
+                            Toggle3D: 'no_change',
                             offset_height: 7,
                             wait_altitude: 15
                         };
