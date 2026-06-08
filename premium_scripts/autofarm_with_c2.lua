@@ -146,12 +146,19 @@ end
 ResetPhysics()
 
 -- [[ 3.5. ANTI-AFK MECHANISM ]]
-local VirtualUser = game:GetService("VirtualUser")
-player.Idled:Connect(function()
-    VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-    task.wait(1)
-    VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-end)
+  if _G.AntiAFKConnection then task.cancel(_G.AntiAFKConnection) end
+  local VirtualInputManager = game:GetService("VirtualInputManager")
+  
+  _G.AntiAFKConnection = task.spawn(function()
+      while task.wait(600) do -- Every 10 minutes (600 seconds)
+          pcall(function()
+              VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+              task.wait(0.1)
+              VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+              print("[Anti-AFK] Simulated input to prevent disconnect.")
+          end)
+      end
+  end)
 
 -- [[ 3.6. EXTREME RAM OPTIMIZATION ]]
   task.spawn(function()
