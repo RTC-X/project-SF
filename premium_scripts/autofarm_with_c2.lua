@@ -35,7 +35,10 @@ disconnectIfConnected(_G.CharRespawnConnection)
   disconnectIfConnected(_G.GraphicsStripperConnection2)
   disconnectIfConnected(_G.GraphicsStripperConnection3)
 
-if _G.AntiAFKConnection then task.cancel(_G.AntiAFKConnection); _G.AntiAFKConnection = nil end
+if _G.AntiAFKConnection then 
+    if typeof(_G.AntiAFKConnection) == "thread" then task.cancel(_G.AntiAFKConnection) else _G.AntiAFKConnection:Disconnect() end
+    _G.AntiAFKConnection = nil 
+end
 if _G.InventorySweeperConnection then task.cancel(_G.InventorySweeperConnection); _G.InventorySweeperConnection = nil end
 if _G.C2ConnectionTask then task.cancel(_G.C2ConnectionTask); _G.C2ConnectionTask = nil end
 if _G.MainLoopTask then task.cancel(_G.MainLoopTask); _G.MainLoopTask = nil end
@@ -127,7 +130,9 @@ if _G.C2_WS then
 end
 if _G.UltimateFarmConnection then _G.UltimateFarmConnection:Disconnect() end
 if _G.StatsConnection then task.cancel(_G.StatsConnection) end
-if _G.AntiAFKConnection then task.cancel(_G.AntiAFKConnection) end
+if _G.AntiAFKConnection then 
+    if typeof(_G.AntiAFKConnection) == "thread" then task.cancel(_G.AntiAFKConnection) else _G.AntiAFKConnection:Disconnect() end
+end
 if _G.InventorySweeperConnection then task.cancel(_G.InventorySweeperConnection) end
 if _G.CharRespawnConnection then _G.CharRespawnConnection:Disconnect() end
     if _G.SwordAddedConnection then _G.SwordAddedConnection:Disconnect() end
@@ -146,18 +151,16 @@ end
 ResetPhysics()
 
 -- [[ 3.5. ANTI-AFK MECHANISM ]]
-  if _G.AntiAFKConnection then task.cancel(_G.AntiAFKConnection) end
-  local VirtualInputManager = game:GetService("VirtualInputManager")
+  if _G.AntiAFKConnection then 
+      if typeof(_G.AntiAFKConnection) == "thread" then task.cancel(_G.AntiAFKConnection) else _G.AntiAFKConnection:Disconnect() end
+  end
   
-  _G.AntiAFKConnection = task.spawn(function()
-      while task.wait(600) do -- Every 10 minutes (600 seconds)
-          pcall(function()
-              VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
-              task.wait(0.1)
-              VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
-              print("[Anti-AFK] Simulated input to prevent disconnect.")
-          end)
-      end
+  local VirtualUser = game:GetService("VirtualUser")
+  _G.AntiAFKConnection = game.Players.LocalPlayer.Idled:Connect(function()
+      VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+      task.wait(1)
+      VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+      print("[Anti-AFK] Blocked idle disconnect!")
   end)
 
 -- [[ 3.6. EXTREME RAM OPTIMIZATION ]]
