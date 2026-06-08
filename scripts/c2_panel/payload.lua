@@ -773,12 +773,13 @@ local StateData = {
     IdleStartTime = 0,
     TargetStartTime = 0,
     LastTarget = nil,
-    MissingSwords = {}
+    MissingSwords = {},
+    LastTouch = 0
 }
 
--- 🎯 Target Updater Loop (Runs 5 times a second instead of 60 to save CPU)
+-- 🎯 Target Updater Loop (Runs 2 times a second instead of 60 to save CPU)
 task.spawn(function()
-    while task.wait(0.2) do
+    while task.wait(0.5) do
         if not _G.on or BotState == "Dead" or BotState == "Disabled" then continue end
         -- Only search for targets if we are actively trying to fight
         if BotState == "Farming" or BotState == "Idle" then
@@ -919,16 +920,20 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(function()
         if targetCFrame then 
             local offset = CFrame.new(math.sin(tick() * 15) * 2, 0, math.cos(tick() * 15) * 2)
             hrp.CFrame = targetCFrame * offset
-            pcall(function()
-                if firetouchinterest then
-                    local partToTouch = droppedSword:IsA("BasePart") and droppedSword or droppedSword:FindFirstChildWhichIsA("BasePart", true)
-                    local limb = character:FindFirstChild("Left Leg") or character:FindFirstChild("LeftFoot") or character:FindFirstChild("HumanoidRootPart")
-                    if partToTouch and limb then
-                        firetouchinterest(limb, partToTouch, 0)
-                        firetouchinterest(limb, partToTouch, 1)
+            
+            if not StateData.LastTouch or tick() - StateData.LastTouch > 0.2 then
+                StateData.LastTouch = tick()
+                pcall(function()
+                    if firetouchinterest then
+                        local partToTouch = droppedSword:IsA("BasePart") and droppedSword or droppedSword:FindFirstChildWhichIsA("BasePart", true)
+                        local limb = character:FindFirstChild("Left Leg") or character:FindFirstChild("LeftFoot") or character:FindFirstChild("HumanoidRootPart")
+                        if partToTouch and limb then
+                            firetouchinterest(limb, partToTouch, 0)
+                            firetouchinterest(limb, partToTouch, 1)
+                        end
                     end
-                end
-            end)
+                end)
+            end
         end
 
     elseif BotState == "Equipping" then

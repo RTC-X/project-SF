@@ -28,10 +28,12 @@ local function disconnectIfConnected(conn)
 end
 disconnectIfConnected(_G.UltimateFarmConnection)
 disconnectIfConnected(_G.CharRespawnConnection)
-disconnectIfConnected(_G.SwordAddedConnection)
-disconnectIfConnected(_G.InvAddedConnection)
-disconnectIfConnected(_G.SellingAddedConnection)
-disconnectIfConnected(_G.GraphicsStripperConnection)
+  disconnectIfConnected(_G.SwordAddedConnection)
+  disconnectIfConnected(_G.InvAddedConnection)
+  disconnectIfConnected(_G.SellingAddedConnection)
+  disconnectIfConnected(_G.GraphicsStripperConnection1)
+  disconnectIfConnected(_G.GraphicsStripperConnection2)
+  disconnectIfConnected(_G.GraphicsStripperConnection3)
 
 if _G.AntiAFKConnection then task.cancel(_G.AntiAFKConnection); _G.AntiAFKConnection = nil end
 if _G.InventorySweeperConnection then task.cancel(_G.InventorySweeperConnection); _G.InventorySweeperConnection = nil end
@@ -128,10 +130,12 @@ if _G.StatsConnection then task.cancel(_G.StatsConnection) end
 if _G.AntiAFKConnection then task.cancel(_G.AntiAFKConnection) end
 if _G.InventorySweeperConnection then task.cancel(_G.InventorySweeperConnection) end
 if _G.CharRespawnConnection then _G.CharRespawnConnection:Disconnect() end
-  if _G.SwordAddedConnection then _G.SwordAddedConnection:Disconnect() end
-  if _G.InvAddedConnection then _G.InvAddedConnection:Disconnect() end
-  if _G.SellingAddedConnection then _G.SellingAddedConnection:Disconnect() end
-if _G.GraphicsStripperConnection then _G.GraphicsStripperConnection:Disconnect() end
+    if _G.SwordAddedConnection then _G.SwordAddedConnection:Disconnect() end
+    if _G.InvAddedConnection then _G.InvAddedConnection:Disconnect() end
+    if _G.SellingAddedConnection then _G.SellingAddedConnection:Disconnect() end
+  if _G.GraphicsStripperConnection1 then _G.GraphicsStripperConnection1:Disconnect() end
+  if _G.GraphicsStripperConnection2 then _G.GraphicsStripperConnection2:Disconnect() end
+  if _G.GraphicsStripperConnection3 then _G.GraphicsStripperConnection3:Disconnect() end
 _G.UltimateFarmConnection = nil
 isTeleporting = false
 _G.fetchingGodRoll = false
@@ -150,52 +154,47 @@ player.Idled:Connect(function()
 end)
 
 -- [[ 3.6. EXTREME RAM OPTIMIZATION ]]
-task.spawn(function()
-    pcall(function()
-        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-        UserSettings():GetService("UserGameSettings").MasterVolume = 0
-        
-        local Lighting = game:GetService("Lighting")
-        Lighting.GlobalShadows = false
-        Lighting.FogEnd = 9e9
-        Lighting.FogStart = 0
-        for _, v in pairs(Lighting:GetDescendants()) do
-            if v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Sky") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or v:IsA("SunRaysEffect") or v:IsA("BlurEffect") or v:IsA("DepthOfFieldEffect") then
-                v:Destroy()
-            end
-        end
-        
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("Texture") or v:IsA("Decal") then
-                v:Destroy()
-            elseif v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") then
-                v.Material = Enum.Material.Plastic
-                v.Reflectance = 0
-                v.CastShadow = false
-            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
-                v.Enabled = false
-            end
-        end
-        
-        workspace.Terrain.WaterWaveSize = 0
-        workspace.Terrain.WaterWaveSpeed = 0
-        workspace.Terrain.WaterReflectance = 0
-        workspace.Terrain.WaterTransparency = 0
-        
-        -- Connect to any new items to strip graphics immediately
-        _G.GraphicsStripperConnection = workspace.DescendantAdded:Connect(function(v)
-            if v:IsA("Texture") or v:IsA("Decal") then
-                v:Destroy()
-            elseif v:IsA("BasePart") and not v.Parent:FindFirstChild("Humanoid") then
-                if v.Material ~= Enum.Material.SmoothPlastic then v.Material = Enum.Material.SmoothPlastic end
-                if v.Reflectance ~= 0 then v.Reflectance = 0 end
-                v.CastShadow = false
-            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
-                v.Enabled = false
-            end
-        end)
-    end)
-end)
+  task.spawn(function()
+      pcall(function()
+          settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+          UserSettings():GetService("UserGameSettings").MasterVolume = 0
+          
+          local Lighting = game:GetService("Lighting")
+          Lighting.GlobalShadows = false
+          Lighting.FogEnd = 9e9
+          Lighting.FogStart = 0
+          for _, v in pairs(Lighting:GetDescendants()) do
+              if v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Sky") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or v:IsA("SunRaysEffect") or v:IsA("BlurEffect") or v:IsA("DepthOfFieldEffect") then
+                  v:Destroy()
+              end
+          end
+          
+          local function stripGraphics(v)
+              if v:IsA("Texture") or v:IsA("Decal") then
+                  v:Destroy()
+              elseif v:IsA("BasePart") and not (v.Parent and v.Parent:FindFirstChild("Humanoid")) then
+                  if v.Material ~= Enum.Material.SmoothPlastic then v.Material = Enum.Material.SmoothPlastic end
+                  if v.Reflectance ~= 0 then v.Reflectance = 0 end
+                  v.CastShadow = false
+              elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
+                  v.Enabled = false
+              end
+          end
+
+          for _, v in pairs(workspace:GetDescendants()) do
+              stripGraphics(v)
+          end
+          
+          workspace.Terrain.WaterWaveSize = 0
+          workspace.Terrain.WaterWaveSpeed = 0
+          workspace.Terrain.WaterReflectance = 0
+          workspace.Terrain.WaterTransparency = 0
+          
+          if workspace:FindFirstChild("Swords") then _G.GraphicsStripperConnection1 = workspace.Swords.DescendantAdded:Connect(stripGraphics) end
+          if workspace:FindFirstChild("Spawns") then _G.GraphicsStripperConnection2 = workspace.Spawns.DescendantAdded:Connect(stripGraphics) end
+          if workspace:FindFirstChild("Mobs") then _G.GraphicsStripperConnection3 = workspace.Mobs.DescendantAdded:Connect(stripGraphics) end
+      end)
+  end)       
 
 -- [[ 4. MODULES & REMOTES SETUP ]]
 local Tables = ReplicatedStorage:WaitForChild("Tables")
@@ -719,9 +718,9 @@ local StateData = {
     MissingSwords = {}
 }
 
--- 🎯 Target Updater Loop (Runs 5 times a second instead of 60 to save CPU)
-task.spawn(function()
-    while task.wait(0.2) do
+  -- Target Updater Loop (Runs 2 times a second instead of 60 to save CPU)
+  task.spawn(function()
+      while task.wait(0.5) do
         if not _G.on or BotState == "Dead" or BotState == "Disabled" then continue end
         -- Only search for targets if we are actively trying to fight
         if BotState == "Farming" or BotState == "Idle" then
@@ -1257,16 +1256,19 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
             -- Use CFrame.new(Position) to prevent inheriting the sword's rotation
             hrp.CFrame = CFrame.new(targetPos + offsetPos)
             
-            pcall(function()
-                if firetouchinterest then
-                    local partToTouch = droppedSword:IsA("BasePart") and droppedSword or droppedSword:FindFirstChildWhichIsA("BasePart", true)
-                    local limb = character:FindFirstChild("Left Leg") or character:FindFirstChild("LeftFoot") or character:FindFirstChild("HumanoidRootPart")
-                    if partToTouch and limb then
-                        firetouchinterest(limb, partToTouch, 0)
-                        firetouchinterest(limb, partToTouch, 1)
+            if not StateData.LastTouch or tick() - StateData.LastTouch > 0.2 then
+                StateData.LastTouch = tick()
+                pcall(function()
+                    if firetouchinterest then
+                        local partToTouch = droppedSword:IsA("BasePart") and droppedSword or droppedSword:FindFirstChildWhichIsA("BasePart", true)
+                        local limb = character:FindFirstChild("Left Leg") or character:FindFirstChild("LeftFoot") or character:FindFirstChild("HumanoidRootPart")
+                        if partToTouch and limb then
+                            firetouchinterest(limb, partToTouch, 0)
+                            firetouchinterest(limb, partToTouch, 1)
+                        end
                     end
-                end
-            end)
+                end)
+            end
         end
 
     elseif BotState == "Equipping" then
