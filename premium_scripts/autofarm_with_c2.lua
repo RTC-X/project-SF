@@ -351,9 +351,11 @@ local function TeleportSequence(areaNum)
     -- [[ STEP 1: ALWAYS RETURN TO BASE FIRST ]]
     if currentVal ~= "0" and currentVal ~= "Base" and currentVal ~= "Spawn" then
         print("[DEBUG] Returning to Base first...")
-        pcall(function() 
-            remote:InvokeServer("Teleport In Base", "Return") 
-            remote:InvokeServer("Teleport In Base", "Home")
+        task.spawn(function()
+            pcall(function() 
+                remote:InvokeServer("Teleport In Base", "Return") 
+                remote:InvokeServer("Teleport In Base", "Home")
+            end)
         end)
         
         local waitBase = tick()
@@ -368,9 +370,11 @@ local function TeleportSequence(areaNum)
     else
         print("[DEBUG] Already in Base.")
         if tostring(areaNum) == "0" then
-            pcall(function() 
-                remote:InvokeServer("Teleport In Base", "Home") 
-                remote:InvokeServer("Teleport In Base", "Return")
+            task.spawn(function()
+                pcall(function() 
+                    remote:InvokeServer("Teleport In Base", "Home") 
+                    remote:InvokeServer("Teleport In Base", "Return")
+                end)
             end)
         end
     end
@@ -381,7 +385,7 @@ local function TeleportSequence(areaNum)
     -- [[ STEP 2: TELEPORT TO TARGET MAP ]]
     if tostring(areaNum) ~= "0" and tostring(areaNum) ~= "Base" and tostring(areaNum) ~= "Spawn" then
         print("[DEBUG] Teleporting from Base to Area:", areaNum)
-        pcall(function() remote:InvokeServer("Teleport Area", tonumber(areaNum)) end)
+        task.spawn(function() pcall(function() remote:InvokeServer("Teleport Area", tonumber(areaNum)) end) end)
         
         local waitArea = tick()
         while internalArea and tostring(internalArea.Value) ~= tostring(areaNum) and tick() - waitArea < 7 do
@@ -681,7 +685,7 @@ task.spawn(function()
     
     local sellingFolder = pStats:WaitForChild("Selling", 10)
     if sellingFolder then
-        _G.SellingAddedConnection = sellingFolder.DescendantAdded:Connect(evaluateSellingSword)
+        _G.SellingAddedConnection = sellingFolder.ChildAdded:Connect(evaluateSellingSword)
     end
 end)
 
@@ -899,7 +903,7 @@ local function enforceCleanInventory(allowedUUID)
         print("[AutoAscender] 🧹 Found " .. #extraSwords .. " extra/stuck sword(s) in inventory. Strictly depositing to Bank...")
         local AscenderFunc = ReplicatedStorage:WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remotefunction")
         local AscenderEvent = ReplicatedStorage:WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remoteevent")
-        pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Bank") end)
+        task.spawn(function() pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Bank") end) end)
         task.wait(0.6) -- Strict wait to ensure character is on the bank
         
         for _, uuid in ipairs(extraSwords) do
@@ -948,7 +952,7 @@ local function ExecuteAscenderAction(actionDetails)
             print("[AutoAscender] 🎯 Target reached for sword:", currentSword.Name)
             print("[AutoAscender] Picking up from Ascender...")
             
-            AscenderFunc:InvokeServer("Pickup Ascender")
+            task.spawn(function() pcall(function() AscenderFunc:InvokeServer("Pickup Ascender") end) end)
             
             local waitTime = 0
             while not PlayerStats.Swords:FindFirstChild(currentSword.Name) and waitTime < 5 do
@@ -973,7 +977,7 @@ local function ExecuteAscenderAction(actionDetails)
                 end
             else
                 print("[AutoAscender] Depositing to Bank...")
-                pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Bank") end)
+                task.spawn(function() pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Bank") end) end)
                 task.wait(0.6)
                 AscenderEvent:FireServer("Drop Sword", currentSword.Name)
                 
@@ -993,7 +997,7 @@ local function ExecuteAscenderAction(actionDetails)
                 
                 if readyToDrop then
                     enforceCleanInventory(nextUUID)
-                    pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
+                    task.spawn(function() pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end) end)
                     task.wait(0.5) 
                     AscenderEvent:FireServer("Drop Sword", nextUUID)
                     table.remove(_G.ascender_queue, 1)
@@ -1032,7 +1036,7 @@ local function ExecuteAscenderAction(actionDetails)
             
             if readyToDrop then
                 enforceCleanInventory(nextUUID)
-                pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end)
+                task.spawn(function() pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Ascender") end) end)
                 task.wait(0.5) 
                 AscenderEvent:FireServer("Drop Sword", nextUUID)
                 table.remove(_G.ascender_queue, 1)
@@ -1096,6 +1100,8 @@ local function CheckAscenderNeedsAction()
 end
 
 -- 🧠 FSM Brain: Determines absolute priority
+local lastMissingCheck = 0
+
 local DetermineState = LPH_NO_VIRTUALIZE(function()
     -- Independent Background Logic: Auto-Set Ascender Mode
     pcall(function()
@@ -1159,7 +1165,10 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
     end
 
     -- Priority 2: Mass Recovery Check
-    StateData.MissingSwords = CheckMissingSwords()
+    if tick() - lastMissingCheck > 1 then
+        lastMissingCheck = tick()
+        StateData.MissingSwords = CheckMissingSwords()
+    end
     if #StateData.MissingSwords > 0 then return "Recovering" end
 
     -- Priority 3: Smart Equip Check
@@ -1221,6 +1230,8 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
 end)
 
 -- ⚙️ Executor Loop
+local lastSwing = 0
+
 _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(function()
     -- Ask the Brain what we should be doing right now
     local newState, extraData = DetermineState()
@@ -1305,8 +1316,11 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
 
         if currentTarget:FindFirstChild("HumanoidRootPart") then
             hrp.CFrame = CFrame.lookAt(currentTarget.HumanoidRootPart.Position + Vector3.new(0, SETTINGS.OFFSET_HEIGHT, 0), currentTarget.HumanoidRootPart.Position)
-            local currentTool = character:FindFirstChildOfClass("Tool")
-            if currentTool then currentTool:Activate() end
+            if tick() - lastSwing > 0.05 then
+                lastSwing = tick()
+                local currentTool = character:FindFirstChildOfClass("Tool")
+                if currentTool then currentTool:Activate() end
+            end
         end
 
     elseif BotState == "Idle" then
@@ -1542,6 +1556,7 @@ task.spawn(function()
         ws.OnMessage:Connect(function(msg)
             local s, data = pcall(function() return HttpService:JSONDecode(msg) end)
             if not s then return end
+            print("[C2 DEBUG] Received Payload Command:", data.command)
 
             if data.command == "toggleAscender" then
                 _G.ascender_enabled = data.payload
@@ -1585,8 +1600,12 @@ task.spawn(function()
                     pcall(function()
                         local remote = game:GetService("ReplicatedStorage"):WaitForChild("Paper", 9e9):WaitForChild("Remotes", 9e9):WaitForChild("__remotefunction", 9e9)
                         -- Try both arguments! The server will accept the correct one and safely reject the wrong one.
-                        remote:InvokeServer("Teleport In Base", "Return")
-                        remote:InvokeServer("Teleport In Base", "Home")
+                        task.spawn(function()
+                            pcall(function()
+                                remote:InvokeServer("Teleport In Base", "Return")
+                                remote:InvokeServer("Teleport In Base", "Home")
+                            end)
+                        end)
                     end)
                 end)
 
@@ -1819,6 +1838,7 @@ task.spawn(function()
                             end
                             
                             local success, err = pcall(function()
+                                print("[C2 DEBUG] Sending Payload Update: Status & Data")
                                 _G.C2_WS:Send(HttpService:JSONEncode({
                                     action = "update_status",
                                     username = player.Name,
