@@ -1227,7 +1227,17 @@ task.spawn(function()
                         if parsedData.WebhookURL then _G.WebhookURL = parsedData.WebhookURL end
                         if parsedData.WebhookEnabled ~= nil then _G.WebhookEnabled = parsedData.WebhookEnabled end
                         if parsedData.FarmAreas then _G.FarmAreas = parsedData.FarmAreas end
-                        if parsedData.active_areas then _G.FarmAreas = parsedData.active_areas end
+                        if parsedData.active_areas then 
+                            _G.FarmAreas = parsedData.active_areas 
+                            -- Force teleport if current map is no longer in the active areas
+                            if #activeAreaRotationIds > 0 and not table.find(activeAreaRotationIds, tonumber(currentArea)) then
+                                currentArea = activeAreaRotationIds[1]
+                                if _G.on and not isTeleporting then
+                                    isTeleporting = true
+                                    task.spawn(function() TeleportSequence(currentArea) end)
+                                end
+                            end
+                        end
                         if parsedData.Settings then for k,v in pairs(parsedData.Settings) do SETTINGS[k] = v end end
                         print("C2 Command: Configuration Synced remotely from Website!")
                         

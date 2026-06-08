@@ -1662,7 +1662,16 @@ task.spawn(function()
                         end
                         
                         local fa = parsedData.active_areas
-                        if fa then _G.active_areas = fa end
+                        if fa then 
+                            _G.active_areas = fa 
+                            if #_G.active_areas > 0 and not table.find(_G.active_areas, tonumber(currentArea)) then
+                                currentArea = _G.active_areas[1]
+                                if _G.on and not isTeleporting then
+                                    isTeleporting = true
+                                    task.spawn(function() TeleportSequence(currentArea) end)
+                                end
+                            end
+                        end
                         if parsedData.SpecialOverrides then _G.SpecialOverrides = parsedData.SpecialOverrides end
                         local to = parsedData.target_priority
                         if to then _G.target_priority = to end
