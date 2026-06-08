@@ -158,13 +158,23 @@
     resolveStatName(category, id) {
         if (!id || id === 'None' || id === 0 || id === '0') return 'None';
         if (!this.gameData) return id;
-        let catData = this.gameData[category];
+        
+        let keyMap = {
+            'Enchant': 'Enchants',
+            'Mold': 'Molds',
+            'Rarity': 'Rarities',
+            'Class': 'Classes',
+            'Quality': 'Qualities'
+        };
+        let catKey = keyMap[category] || category;
+        let catData = this.gameData[catKey];
+        
         if (!catData) return id;
         let parsedId = parseInt(id);
         if (!isNaN(parsedId) && catData[parsedId]) {
-            return catData[parsedId].Name || catData[parsedId] || id;
+            return catData[parsedId];
         }
-        return catData[id]?.Name || catData[id] || id;
+        return id;
     }
 }">
 
