@@ -1315,8 +1315,7 @@
                         let targetIds = Object.keys(multiConfigSelectedIds);
                         
                         // Smart Patcher: Apply individually to each selected bot
-                        targetIds.forEach(tidStr => {
-                            let tid = parseInt(tidStr);
+                        targetIds.forEach(tid => {
                             let bot = bots.find(b => b.id === tid);
                             if (!bot) return;
                             
