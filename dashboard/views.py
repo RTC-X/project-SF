@@ -33,7 +33,7 @@ def login_view(request):
         return redirect('dashboard')
     return render(request, 'login.html')
 
-# @login_required
+@login_required
 def dashboard_view(request):
     user_id = request.user.id
     secret = settings.SECRET_KEY
