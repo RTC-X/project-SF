@@ -308,7 +308,7 @@
             
             <!-- Modal Header -->
             <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/5">
-                <h4 class="text-lg font-bold text-white font-mono" x-text="selectedBot ? 'Manage Fleet Bot: ' + selectedBot.username : 'Provision New Bot Token'">Manage Fleet Bot</h4>
+                <h4 class="text-lg font-bold text-white font-mono" x-text="selectedBot ? 'Manage Fleet Bot: ' + selectedBot?.username : 'Provision New Bot Token'">Manage Fleet Bot</h4>
                 <button @click="showConfigModal = false; selectedBot = null" class="text-zinc-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-white/5 transition-all relative z-10" title="Close Modal">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <line x1="18" y1="6" x2="6" y2="18"/>
@@ -332,7 +332,7 @@
 
             <!-- If managing live bot (matching game-monitoring console mockup exactly) -->
             <template x-if="selectedBot">
-                <div class="space-y-6 transition-all duration-500" x-data="{ fpsCap: 60 }" :class="selectedBot.config?.activate_panel ? 'drop-shadow-[0_0_20px_rgba(45,212,191,0.2)] border border-teal-500/30 rounded-3xl p-4 bg-teal-500/5' : ''">
+                <div class="space-y-6 transition-all duration-500" x-data="{ fpsCap: 60 }" :class="selectedBot?.config?.activate_panel ? 'drop-shadow-[0_0_20px_rgba(45,212,191,0.2)] border border-teal-500/30 rounded-3xl p-4 bg-teal-500/5' : ''">
                     
                     <!-- Premium Header Sub-Bar -->
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-zinc-900/40 border border-white/5">
@@ -346,17 +346,17 @@
                                     <span class="text-xl font-bold tracking-tight text-white font-mono" x-text="selectedBot?.username">ChongXiNa6</span>
                                     <!-- Status Badge -->
                                     <span class="text-[9px] font-mono font-semibold px-2.5 py-0.5 rounded-full border bg-amber-500/10 border-amber-500/20 text-amber-400"
-                                          :class="{'bg-emerald-500/10 border-emerald-500/20 text-emerald-400': selectedBot.Status === 'Farming', 'bg-teal-500/10 border-teal-500/20 text-teal-400': selectedBot.Status === 'Sniping'}"
+                                          :class="{'bg-emerald-500/10 border-emerald-500/20 text-emerald-400': selectedBot?.Status === 'Farming', 'bg-teal-500/10 border-teal-500/20 text-teal-400': selectedBot?.Status === 'Sniping'}"
                                           x-text="selectedBot?.Status">Idle</span>
                                     
                                     <!-- Sniper Badge -->
                                     <span class="text-[9px] font-mono font-semibold px-2.5 py-0.5 rounded-full border"
-                                          :class="selectedBot.config?.snipe_enabled ? 'bg-teal-500/10 border-teal-500/20 text-teal-400' : 'bg-zinc-800 border-zinc-700 text-zinc-500'"
-                                          x-text="selectedBot.config?.snipe_enabled ? 'Sniper Active' : 'Sniper Inactive'">Sniper Active</span>
+                                          :class="selectedBot?.config?.snipe_enabled ? 'bg-teal-500/10 border-teal-500/20 text-teal-400' : 'bg-zinc-800 border-zinc-700 text-zinc-500'"
+                                          x-text="selectedBot?.config?.snipe_enabled ? 'Sniper Active' : 'Sniper Inactive'">Sniper Active</span>
                                 </div>
                                 <div class="flex items-center gap-4 mt-1.5 text-xs text-zinc-500 font-mono">
                                     <span class="text-teal-400">• <span class="text-zinc-400" x-text="selectedBot?.Status">Idle</span></span>
-                                    <span>⏱ <span class="text-zinc-300" x-text="formatTime(selectedBot.SessionTime)">04:07:24</span></span>
+                                    <span>⏱ <span class="text-zinc-300" x-text="formatTime(selectedBot?.SessionTime)">04:07:24</span></span>
                                     <span>⭐ <span class="text-zinc-300">+0 Lvls</span></span>
                                     <span>💰 <span class="text-zinc-300">+0 Cash</span></span>
                                 </div>
@@ -370,9 +370,9 @@
                                 <button @click="selectedBot.config.activate_panel = !selectedBot.config.activate_panel; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config); if(selectedBot.config.activate_panel) { sendCommand(selectedBot.id, 'set3d', true); fpsCap = 60; sendCommand(selectedBot.id, 'setFPS', 60); } else { sendCommand(selectedBot.id, 'set3d', false); }" 
                                         type="button"
                                         class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border transition-all duration-300 ease-in-out focus:outline-none"
-                                        :class="selectedBot.config?.activate_panel ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_10px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
+                                        :class="selectedBot?.config?.activate_panel ? 'bg-teal-500/20 border-teal-500/30 shadow-[0_0_10px_rgba(45,212,191,0.2)]' : 'bg-zinc-950 border-white/5 hover:bg-zinc-900'">
                                     <span class="pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full shadow transition-all duration-300 ease-in-out"
-                                          :class="selectedBot.config?.activate_panel ? 'translate-x-4 bg-teal-400 shadow-[0_0_6px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
+                                          :class="selectedBot?.config?.activate_panel ? 'translate-x-4 bg-teal-400 shadow-[0_0_6px_rgba(45,212,191,0.8)]' : 'translate-x-0 bg-zinc-600'"></span>
                                 </button>
                             </label>
                             
@@ -496,13 +496,13 @@
                                 <span class="block text-[10px] font-bold text-teal-400 font-mono tracking-wider uppercase mb-2">Target Priority</span>
                                 <div class="grid grid-cols-3 gap-1.5">
                                     <button @click="selectedBot.config.target_priority = 'Closest'; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
-                                    :class="(selectedBot.config?.target_priority || 'Closest') === 'Closest' ? 'bg-teal-500/20 border-teal-500/30 text-teal-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Closest</button>
+                                    :class="(selectedBot?.config?.target_priority || 'Closest') === 'Closest' ? 'bg-teal-500/20 border-teal-500/30 text-teal-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Closest</button>
                                     
                                     <button @click="selectedBot.config.target_priority = 'Highest XP'; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
-                                    :class="selectedBot.config?.target_priority === 'Highest XP' ? 'bg-teal-500/20 border-teal-500/30 text-teal-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Most XP</button>
+                                    :class="selectedBot?.config?.target_priority === 'Highest XP' ? 'bg-teal-500/20 border-teal-500/30 text-teal-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Most XP</button>
                                     
                                     <button @click="selectedBot.config.target_priority = 'Highest Money'; sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
-                                    :class="selectedBot.config?.target_priority === 'Highest Money' ? 'bg-teal-500/20 border-teal-500/30 text-teal-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Most $$$</button>
+                                    :class="selectedBot?.config?.target_priority === 'Highest Money' ? 'bg-teal-500/20 border-teal-500/30 text-teal-400' : 'bg-zinc-900 border-white/5 text-zinc-400 hover:text-white hover:bg-zinc-800'" class="py-1 px-1.5 text-[9px] font-semibold font-mono rounded-lg transition-all text-center">Most $$$</button>
                                 </div>
                             </div>
                         </div>
@@ -519,10 +519,10 @@
                                 <span class="block text-[10px] font-bold text-teal-400 font-mono tracking-wider uppercase">Target Sets</span>
                                 
                                 <div class="space-y-1.5 max-h-[85px] overflow-y-auto">
-                                    <template x-if="!selectedBot.config?.target_enchant_sets || selectedBot.config.target_enchant_sets.length === 0">
+                                    <template x-if="!selectedBot?.config?.target_enchant_sets || selectedBot?.config.target_enchant_sets.length === 0">
                                         <div class="text-[10px] text-zinc-500 font-mono italic">No enchant sets in sniper wishlist.</div>
                                     </template>
-                                    <template x-for="(set, idx) in selectedBot.config?.target_enchant_sets || []" :key="idx">
+                                    <template x-for="(set, idx) in selectedBot?.config?.target_enchant_sets || []" :key="idx">
                                         <div class="flex items-center justify-between p-2 rounded-xl bg-zinc-950/60 border border-white/5">
                                             <span class="text-[10px] text-zinc-300 font-mono font-semibold" x-text="set">Ancient + Fortune</span>
                                             <button @click="selectedBot.config.target_enchant_sets.splice(idx, 1); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
@@ -561,10 +561,10 @@
                                 <span class="block text-[10px] font-bold text-teal-400 font-mono tracking-wider uppercase">Protected UUIDs</span>
                                 
                                 <div class="max-h-[60px] overflow-y-auto space-y-1.5">
-                                    <template x-if="!selectedBot.config?.whitelisted_uuids || selectedBot.config.whitelisted_uuids.length === 0">
+                                    <template x-if="!selectedBot?.config?.whitelisted_uuids || selectedBot?.config.whitelisted_uuids.length === 0">
                                         <div class="text-[10px] text-zinc-500 font-mono italic">Whitelist is empty</div>
                                     </template>
-                                    <template x-for="(uuid, idx) in selectedBot.config?.whitelisted_uuids || []" :key="idx">
+                                    <template x-for="(uuid, idx) in selectedBot?.config?.whitelisted_uuids || []" :key="idx">
                                         <div class="flex items-center justify-between p-1.5 rounded-lg bg-zinc-950/60 border border-white/5">
                                             <span class="text-[10px] text-zinc-400 font-mono truncate mr-2" x-text="uuid">Sword_1</span>
                                             <button @click="selectedBot.config.whitelisted_uuids.splice(idx, 1); sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" 
@@ -604,19 +604,19 @@
                                 <!-- Flight Settings -->
                                 <div class="pt-4 border-t border-white/5 space-y-3">
                                     <h5 class="text-[10px] font-bold text-teal-400 uppercase tracking-widest font-mono">Flight Parameters</h5>
-                                    <template x-if="selectedBot && selectedBot.config">
+                                    <template x-if="selectedBot && selectedBot?.config">
                                         <div class="space-y-4">
                                             <div class="space-y-2">
                                                 <div class="flex justify-between text-[10px] font-mono text-zinc-400">
                                                     <span>Hover Height (Combat)</span>
-                                                    <span x-text="(selectedBot.config.offset_height || 7) + ' Studs'"></span>
+                                                    <span x-text="(selectedBot?.config.offset_height || 7) + ' Studs'"></span>
                                                 </div>
                                                 <input type="range" x-model="selectedBot.config.offset_height" min="0" max="30" step="1" @change="sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" class="w-full accent-teal-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer">
                                             </div>
                                             <div class="space-y-2">
                                                 <div class="flex justify-between text-[10px] font-mono text-zinc-400">
                                                     <span>Idle Altitude (Waiting)</span>
-                                                    <span x-text="(selectedBot.config.wait_altitude || 15) + ' Studs'"></span>
+                                                    <span x-text="(selectedBot?.config.wait_altitude || 15) + ' Studs'"></span>
                                                 </div>
                                                 <input type="range" x-model="selectedBot.config.wait_altitude" min="0" max="150" step="1" @change="sendCommand(selectedBot.id, 'syncConfig', selectedBot.config)" class="w-full accent-teal-500 h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer">
                                             </div>
@@ -684,21 +684,21 @@
                                                                 open = false;
                                                             " 
                                                             class="w-full text-left px-3 py-1.5 text-[10px] font-mono font-semibold hover:bg-white/5 transition-colors flex items-center gap-2 cursor-pointer"
-                                                            :class="selectedBot.config?.whitelisted_uuids?.includes(item.id) ? 'text-amber-400' : 'text-zinc-300'">
+                                                            :class="selectedBot?.config?.whitelisted_uuids?.includes(item.id) ? 'text-amber-400' : 'text-zinc-300'">
                                                         <!-- Lock/Unlock SVG -->
-                                                        <template x-if="selectedBot.config?.whitelisted_uuids?.includes(item.id)">
+                                                        <template x-if="selectedBot?.config?.whitelisted_uuids?.includes(item.id)">
                                                             <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                                                                 <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
                                                             </svg>
                                                         </template>
-                                                        <template x-if="!selectedBot.config?.whitelisted_uuids?.includes(item.id)">
+                                                        <template x-if="!selectedBot?.config?.whitelisted_uuids?.includes(item.id)">
                                                             <svg class="w-3.5 h-3.5 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                                                                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                                                             </svg>
                                                         </template>
-                                                        <span x-text="selectedBot.config?.whitelisted_uuids?.includes(item.id) ? 'Unprotect' : 'Protect'">Protect</span>
+                                                        <span x-text="selectedBot?.config?.whitelisted_uuids?.includes(item.id) ? 'Unprotect' : 'Protect'">Protect</span>
                                                     </button>
                                                     
 
@@ -929,14 +929,14 @@
                         <div class="flex items-center gap-3 w-full">
                             <span class="text-xs font-bold text-zinc-500 font-mono w-6 text-center" x-text="'#' + (idx + 1)"></span>
                             <div class="flex-1 min-w-0 flex flex-col">
-                                <template x-if="selectedBot && selectedBot.BackpackItems && selectedBot.BackpackItems.find(i => i.id === uuid)">
+                                <template x-if="selectedBot && selectedBot?.BackpackItems && selectedBot?.BackpackItems.find(i => i.id === uuid)">
                                     <div>
-                                        <span class="block text-xs font-bold text-white font-mono truncate" x-text="getItemName(selectedBot.BackpackItems.find(i => i.id === uuid))"></span>
-                                        <span class="block text-[9px] font-mono text-amber-500/70 truncate mt-0.5" x-text="getItemTraits(selectedBot.BackpackItems.find(i => i.id === uuid)) || 'No Enchants'"></span>
-                                        <span class="text-[10px] font-mono text-teal-400 truncate block mt-0.5" x-text="selectedBot.BackpackItems.find(i => i.id === uuid).inBank ? 'Currently inside Bank (Slot ' + (selectedBot.BackpackItems.find(i => i.id === uuid).BankSlot || '?') + ')' : 'Currently in Backpack'"></span>
+                                        <span class="block text-xs font-bold text-white font-mono truncate" x-text="getItemName(selectedBot?.BackpackItems.find(i => i.id === uuid))"></span>
+                                        <span class="block text-[9px] font-mono text-amber-500/70 truncate mt-0.5" x-text="getItemTraits(selectedBot?.BackpackItems.find(i => i.id === uuid)) || 'No Enchants'"></span>
+                                        <span class="text-[10px] font-mono text-teal-400 truncate block mt-0.5" x-text="selectedBot?.BackpackItems.find(i => i.id === uuid).inBank ? 'Currently inside Bank (Slot ' + (selectedBot?.BackpackItems.find(i => i.id === uuid).BankSlot || '?') + ')' : 'Currently in Backpack'"></span>
                                     </div>
                                 </template>
-                                <template x-if="!(selectedBot && selectedBot.BackpackItems && selectedBot.BackpackItems.find(i => i.id === uuid))">
+                                <template x-if="!(selectedBot && selectedBot?.BackpackItems && selectedBot?.BackpackItems.find(i => i.id === uuid))">
                                     <div>
                                         <span class="text-xs font-bold text-zinc-400 font-mono truncate">Unknown Sword (Not in inventory)</span>
                                         <span class="text-[9px] font-mono text-zinc-600 block" x-text="uuid"></span>
@@ -1330,6 +1330,7 @@
     </div>
 </div>
 {% endblock %}
+
 
 
 
