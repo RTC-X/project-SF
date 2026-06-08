@@ -155,28 +155,33 @@
         return traits.length > 0 ? traits.join(', ') : 'No Enchants';
     },
 
-    resolveStatName(category, id) {
-        if (!id || id === 'None' || id === 0 || id === '0') return 'None';
-        if (!this.gameData) return id;
-        
-        let keyMap = {
-            'Enchant': 'Enchants',
-            'Mold': 'Molds',
-            'Rarity': 'Rarities',
-            'Class': 'Classes',
-            'Quality': 'Qualities'
-        };
-        let catKey = keyMap[category] || category;
-        let catData = this.gameData[catKey];
-        
-        if (!catData) return id;
-        let parsedId = parseInt(id);
-        if (!isNaN(parsedId) && catData[parsedId]) {
-            return catData[parsedId];
-        }
-        return id;
-    }
-}">
+      resolveStatName(category, id) {
+          if (!id || id === 'None' || id === '0') return 'None';
+          if (!this.gameData) return id;
+          
+          let keyMap = {
+              'Enchant': 'Enchants',
+              'Mold': 'Molds',
+              'Rarity': 'Rarities',
+              'Class': 'Classes',
+              'Quality': 'Qualities'
+          };
+          let catKey = keyMap[category] || category;
+          let catData = this.gameData[catKey];
+          
+          if (!catData) return id;
+          let parsedId = parseInt(id);
+          if (!isNaN(parsedId)) {
+              // Lua tables start at -1 (Unknown), but JSON arrays start at 0.
+              // So an ID of 10 in Lua is actually at index 11 in the JSON array.
+              let shiftedId = parsedId + 1;
+              if (catData[shiftedId]) {
+                  return catData[shiftedId];
+              }
+          }
+          return id;
+      }
+  }">
 
     <!-- Reconnection Banner -->
     <div x-show="!isConnected" class="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-2xl flex items-center justify-center gap-3 font-mono font-bold animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.1)]">
