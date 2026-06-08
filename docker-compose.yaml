@@ -11,10 +11,10 @@ services:
       - "3000:8000"
     environment:
       DEBUG: "False"
-      SECRET_KEY: ${SECRET_KEY}
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-default-key-for-dev-only}
+      DB_NAME: ${DB_NAME:-c2_db}
+      DB_USER: ${DB_USER:-c2_admin}
+      DB_PASSWORD: ${DB_PASSWORD:-c2_secure_pass_998}
       DB_HOST: "db"
       DB_PORT: "5432"
       ALLOWED_HOSTS: "*"
@@ -31,9 +31,9 @@ services:
     container_name: c2_db
     restart: always
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-c2_db}
+      POSTGRES_USER: ${DB_USER:-c2_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-c2_secure_pass_998}
     volumes:
       - postgres_data_v2:/var/lib/postgresql/data
 
