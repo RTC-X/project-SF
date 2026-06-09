@@ -155,12 +155,13 @@ ResetPhysics()
       if typeof(_G.AntiAFKConnection) == "thread" then task.cancel(_G.AntiAFKConnection) else _G.AntiAFKConnection:Disconnect() end
   end
   
-  local VirtualUser = game:GetService("VirtualUser")
-  _G.AntiAFKConnection = game.Players.LocalPlayer.Idled:Connect(function()
-      VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-      task.wait(1)
-      VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-      print("[Anti-AFK] Blocked idle disconnect!")
+  local VirtualInputManager = game:GetService("VirtualInputManager")
+  _G.AntiAFKConnection = task.spawn(function()
+      while task.wait(20) do
+          pcall(function()
+              VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+          end)
+      end
   end)
 
 -- [[ 3.6. EXTREME RAM OPTIMIZATION ]]
