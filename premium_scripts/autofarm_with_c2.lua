@@ -1176,9 +1176,10 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
     
     -- 1. Check for whitelisted sword in inventory
     if PlayerStats and PlayerStats:FindFirstChild("Swords") then
-        for _, sword in pairs(PlayerStats.Swords:GetChildren()) do
-            if sword:IsA("Folder") and table.find(_G.whitelisted_uuids, sword.Name) and not isSwordLockedInAnyMachine(sword.Name) then
-                bestSwordToEquip = sword.Name
+        for _, uuid in ipairs(_G.whitelisted_uuids or {}) do
+            local sword = PlayerStats.Swords:FindFirstChild(uuid)
+            if sword and sword:IsA("Folder") and not isSwordLockedInAnyMachine(uuid) then
+                bestSwordToEquip = uuid
                 break
             end
         end
