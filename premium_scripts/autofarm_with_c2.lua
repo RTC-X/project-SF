@@ -179,16 +179,40 @@ ResetPhysics()
               end
           end
           
+          local stripQueue = {}
+          local isStripping = false
+          
+          local function processStripQueue()
+              if isStripping then return end
+              isStripping = true
+              task.spawn(function()
+                  local processedCount = 0
+                  while #stripQueue > 0 do
+                      local v = table.remove(stripQueue, 1)
+                      pcall(function()
+                          if v:IsA("Texture") or v:IsA("Decal") then
+                              v:Destroy()
+                          elseif v:IsA("BasePart") and not (v.Parent and v.Parent:FindFirstChild("Humanoid")) then
+                              if v.Material ~= Enum.Material.SmoothPlastic then v.Material = Enum.Material.SmoothPlastic end
+                              if v.Reflectance ~= 0 then v.Reflectance = 0 end
+                              v.CastShadow = false
+                          elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
+                              v.Enabled = false
+                          end
+                      end)
+                      
+                      processedCount = processedCount + 1
+                      if processedCount % 50 == 0 then 
+                          task.wait() -- Yield every 50 parts to prevent freezing
+                      end
+                  end
+                  isStripping = false
+              end)
+          end
+          
           local function stripGraphics(v)
-              if v:IsA("Texture") or v:IsA("Decal") then
-                  v:Destroy()
-              elseif v:IsA("BasePart") and not (v.Parent and v.Parent:FindFirstChild("Humanoid")) then
-                  if v.Material ~= Enum.Material.SmoothPlastic then v.Material = Enum.Material.SmoothPlastic end
-                  if v.Reflectance ~= 0 then v.Reflectance = 0 end
-                  v.CastShadow = false
-              elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
-                  v.Enabled = false
-              end
+              table.insert(stripQueue, v)
+              processStripQueue()
           end
 
           for _, v in pairs(workspace:GetDescendants()) do
