@@ -176,43 +176,18 @@ ResetPhysics()
           for _, v in pairs(Lighting:GetDescendants()) do
               if v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Sky") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or v:IsA("SunRaysEffect") or v:IsA("BlurEffect") or v:IsA("DepthOfFieldEffect") then
                   v:Destroy()
-              end
-          end
-          
-          local stripQueue = {}
-          local isStripping = false
-          
-          local function processStripQueue()
-              if isStripping then return end
-              isStripping = true
-              task.spawn(function()
-                  local processedCount = 0
-                  while #stripQueue > 0 do
-                      local v = table.remove(stripQueue, 1)
-                      pcall(function()
-                          if v:IsA("Texture") or v:IsA("Decal") then
-                              v:Destroy()
-                          elseif v:IsA("BasePart") and not (v.Parent and v.Parent:FindFirstChild("Humanoid")) then
-                              if v.Material ~= Enum.Material.SmoothPlastic then v.Material = Enum.Material.SmoothPlastic end
-                              if v.Reflectance ~= 0 then v.Reflectance = 0 end
-                              v.CastShadow = false
-                          elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
-                              v.Enabled = false
-                          end
-                      end)
-                      
-                      processedCount = processedCount + 1
-                      if processedCount % 50 == 0 then 
-                          task.wait() -- Yield every 50 parts to prevent freezing
-                      end
-                  end
-                  isStripping = false
-              end)
-          end
-          
           local function stripGraphics(v)
-              table.insert(stripQueue, v)
-              processStripQueue()
+              pcall(function()
+                  if v:IsA("Texture") or v:IsA("Decal") then
+                      v:Destroy()
+                  elseif v:IsA("BasePart") and not (v.Parent and v.Parent:FindFirstChild("Humanoid")) then
+                      if v.Material ~= Enum.Material.SmoothPlastic then v.Material = Enum.Material.SmoothPlastic end
+                      if v.Reflectance ~= 0 then v.Reflectance = 0 end
+                      v.CastShadow = false
+                  elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
+                      v.Enabled = false
+                  end
+              end)
           end
 
           for _, v in pairs(workspace:GetDescendants()) do
@@ -223,10 +198,6 @@ ResetPhysics()
           workspace.Terrain.WaterWaveSpeed = 0
           workspace.Terrain.WaterReflectance = 0
           workspace.Terrain.WaterTransparency = 0
-          
-          if workspace:FindFirstChild("Swords") then _G.GraphicsStripperConnection1 = workspace.Swords.DescendantAdded:Connect(stripGraphics) end
-          if workspace:FindFirstChild("Spawns") then _G.GraphicsStripperConnection2 = workspace.Spawns.DescendantAdded:Connect(stripGraphics) end
-          if workspace:FindFirstChild("Mobs") then _G.GraphicsStripperConnection3 = workspace.Mobs.DescendantAdded:Connect(stripGraphics) end
       end)
   end)       
 
