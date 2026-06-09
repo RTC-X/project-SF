@@ -176,6 +176,9 @@ ResetPhysics()
           for _, v in pairs(Lighting:GetDescendants()) do
               if v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Sky") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or v:IsA("SunRaysEffect") or v:IsA("BlurEffect") or v:IsA("DepthOfFieldEffect") then
                   v:Destroy()
+              end
+          end
+          
           local function stripGraphics(v)
               pcall(function()
                   if v:IsA("Texture") or v:IsA("Decal") then
