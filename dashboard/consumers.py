@@ -598,7 +598,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                     'farm_enabled': False,
                     'snipe_enabled': False,
                     'activate_panel': False,
-                    'active_areas': [1, 2, 5, 12],
+                    'active_areas': [],
                     'target_enchant_sets': ["Ancient + Fortune + Insight"],
                     'whitelisted_uuids': ["sword_92k"]
                 }

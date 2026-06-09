@@ -1690,7 +1690,7 @@ task.spawn(function()
                             _G.whitelisted_uuids = clean_wu
                         end
                         
-                        local fa = parsedData.active_areas
+                        local fa = parsedData.active_areas or parsedData.FarmAreas
                         if fa then 
                             _G.active_areas = fa 
                             if #_G.active_areas > 0 and not table.find(_G.active_areas, tonumber(currentArea)) then
