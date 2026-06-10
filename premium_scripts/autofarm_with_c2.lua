@@ -477,12 +477,18 @@ end
 local function isSwordLockedInAnyMachine(uuid)
     local allStats = ReplicatedStorage:FindFirstChild("Stats")
     if not allStats then return false end
-    local machineFolders = {"Ascender", "Sell", "Plot", "Bank", "Auction"}
+    local machineFolders = {"Ascender", "Sell", "Plot", "Bank", "Auction", "Transcender"}
     
     for _, pStat in pairs(allStats:GetChildren()) do
         for _, folderName in ipairs(machineFolders) do
             local f = pStat:FindFirstChild(folderName)
-            if f and f:FindFirstChild(uuid) then return true end
+            if f then
+                -- Check if it exists as a child folder
+                if f:FindFirstChild(uuid) then return true end
+                -- Check if it is stored in a SwordUUID StringValue
+                local uuidVal = f:FindFirstChild("SwordUUID")
+                if uuidVal and uuidVal:IsA("StringValue") and uuidVal.Value == uuid then return true end
+            end
         end
     end
     return false
