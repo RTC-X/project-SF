@@ -1217,6 +1217,7 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
             return "Equipping"
         else
             _G.SavedSwordName = bestSwordToEquip
+            _G.SentNoSwordNotif = false
             if not table.find(_G.KeptSwords, bestSwordToEquip) then table.insert(_G.KeptSwords, bestSwordToEquip) end
         end
     else
@@ -1227,14 +1228,17 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
                 pcall(function() hrp.CFrame = hrp.CFrame + Vector3.new(0, 300 - hrp.Position.Y + 50, 0) end)
             end
             
-            pcall(function()
-                if _G.C2_WS then
-                    _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
-                        type = "notification",
-                        message = "⚠️ Account " .. player.Name .. " hovering safely: No whitelisted/equipped sword found."
-                    }))
-                end
-            end)
+            if not _G.SentNoSwordNotif then
+                _G.SentNoSwordNotif = true
+                pcall(function()
+                    if _G.C2_WS then
+                        _G.C2_WS:Send(game:GetService("HttpService"):JSONEncode({
+                            type = "notification",
+                            message = "⚠️ Account " .. player.Name .. " hovering safely: No whitelisted/equipped sword found."
+                        }))
+                    end
+                end)
+            end
             return "No Valid Sword!"
         end
         return "Idle"
