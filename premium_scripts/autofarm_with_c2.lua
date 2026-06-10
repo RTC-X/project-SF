@@ -298,10 +298,28 @@ local function matchesSpecial(instance)
     return false
 end
 
+_G.DropQueue = _G.DropQueue or {}
+_G.DropQueueProcessing = _G.DropQueueProcessing or false
+
+local function processDropQueue()
+    if _G.DropQueueProcessing then return end
+    _G.DropQueueProcessing = true
+    while #_G.DropQueue > 0 do
+        local swordUUID = table.remove(_G.DropQueue, 1)
+        if _G.autoDropEnabled then
+            DropRemote:FireServer(unpack({[1] = "Drop Sword", [2] = swordUUID}))
+        end
+        task.wait(0.15)
+    end
+    _G.DropQueueProcessing = false
+end
+
 local function dropBadSword(swordFolder)
     if not _G.autoDropEnabled then return end
-    DropRemote:FireServer(unpack({[1] = "Drop Sword", [2] = swordFolder.Name}))
-    task.wait(0.1) 
+    if not table.find(_G.DropQueue, swordFolder.Name) then
+        table.insert(_G.DropQueue, swordFolder.Name)
+        task.spawn(processDropQueue)
+    end
 end
 
 local function evaluateInventorySword(swordFolder)
@@ -1842,6 +1860,10 @@ task.spawn(function()
                                 payloadTable.BackpackItems = getBackpackPayload()
                                 _G.InventoryDirty = false
                             end
+                            
+                            local payloadJSON = HttpService:JSONEncode(payloadTable)
+                            if _G.LastPayloadJSON == payloadJSON then return end
+                            _G.LastPayloadJSON = payloadJSON
                             
                             local success, err = pcall(function()
                                 print("[C2 DEBUG] Sending Payload Update: Status & Data")
