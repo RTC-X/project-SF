@@ -1843,6 +1843,10 @@ task.spawn(function()
                                 _G.InventoryDirty = false
                             end
                             
+                            local payloadJSON = HttpService:JSONEncode(payloadTable)
+                            if _G.LastPayloadJSON == payloadJSON then return end
+                            _G.LastPayloadJSON = payloadJSON
+                            
                             local success, err = pcall(function()
                                 print("[C2 DEBUG] Sending Payload Update: Status & Data")
                                 _G.C2_WS:Send(HttpService:JSONEncode({
