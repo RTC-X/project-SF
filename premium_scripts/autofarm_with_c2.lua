@@ -160,6 +160,8 @@ ResetPhysics()
       while task.wait(20) do
           pcall(function()
               VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+              task.wait(0.1)
+              VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
           end)
       end
   end)
@@ -1478,13 +1480,17 @@ task.spawn(function()
     task.spawn(function()
         local invFolder = PlayerStats:WaitForChild("Swords", 5)
         if invFolder then
-            invFolder.DescendantAdded:Connect(function() _G.InventoryDirty = true end)
-            invFolder.DescendantRemoving:Connect(function() _G.InventoryDirty = true end)
+            if _G.C2InvAddConn then _G.C2InvAddConn:Disconnect() end
+            if _G.C2InvRemConn then _G.C2InvRemConn:Disconnect() end
+            _G.C2InvAddConn = invFolder.DescendantAdded:Connect(function() _G.InventoryDirty = true end)
+            _G.C2InvRemConn = invFolder.DescendantRemoving:Connect(function() _G.InventoryDirty = true end)
         end
         local bankFolder = PlayerStats:WaitForChild("Bank", 5)
         if bankFolder then
-            bankFolder.DescendantAdded:Connect(function() _G.InventoryDirty = true end)
-            bankFolder.DescendantRemoving:Connect(function() _G.InventoryDirty = true end)
+            if _G.C2BankAddConn then _G.C2BankAddConn:Disconnect() end
+            if _G.C2BankRemConn then _G.C2BankRemConn:Disconnect() end
+            _G.C2BankAddConn = bankFolder.DescendantAdded:Connect(function() _G.InventoryDirty = true end)
+            _G.C2BankRemConn = bankFolder.DescendantRemoving:Connect(function() _G.InventoryDirty = true end)
         end
     end)
 
