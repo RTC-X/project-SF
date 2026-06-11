@@ -23,20 +23,21 @@ end
 -- [[ 0. MEMORY LEAK CLEANUP ]]
 local function disconnectIfConnected(conn)
     if conn and typeof(conn) == "RBXScriptConnection" and conn.Connected then
-        conn:Disconnect()
+        pcall(function() conn:Disconnect() end)
     end
 end
 disconnectIfConnected(_G.UltimateFarmConnection)
 disconnectIfConnected(_G.CharRespawnConnection)
-  disconnectIfConnected(_G.SwordAddedConnection)
-  disconnectIfConnected(_G.InvAddedConnection)
-  disconnectIfConnected(_G.SellingAddedConnection)
-  disconnectIfConnected(_G.GraphicsStripperConnection1)
-  disconnectIfConnected(_G.GraphicsStripperConnection2)
-  disconnectIfConnected(_G.GraphicsStripperConnection3)
+disconnectIfConnected(_G.SwordAddedConnection)
+disconnectIfConnected(_G.InvAddedConnection)
+disconnectIfConnected(_G.InvRemovedConnection)
+disconnectIfConnected(_G.SellingAddedConnection)
+disconnectIfConnected(_G.GraphicsStripperConnection1)
+disconnectIfConnected(_G.GraphicsStripperConnection2)
+disconnectIfConnected(_G.GraphicsStripperConnection3)
 
 if _G.AntiAFKConnection then 
-    if typeof(_G.AntiAFKConnection) == "thread" then task.cancel(_G.AntiAFKConnection) else _G.AntiAFKConnection:Disconnect() end
+    if typeof(_G.AntiAFKConnection) == "thread" then task.cancel(_G.AntiAFKConnection) else pcall(function() _G.AntiAFKConnection:Disconnect() end) end
     _G.AntiAFKConnection = nil 
 end
 if _G.InventorySweeperConnection then task.cancel(_G.InventorySweeperConnection); _G.InventorySweeperConnection = nil end
@@ -44,6 +45,8 @@ if _G.C2ConnectionTask then task.cancel(_G.C2ConnectionTask); _G.C2ConnectionTas
 if _G.MainLoopTask then task.cancel(_G.MainLoopTask); _G.MainLoopTask = nil end
 if _G.PeriodicLogTask then task.cancel(_G.PeriodicLogTask); _G.PeriodicLogTask = nil end
 if _G.TargetUpdaterTask then task.cancel(_G.TargetUpdaterTask); _G.TargetUpdaterTask = nil end
+if _G.SniperTask then task.cancel(_G.SniperTask); _G.SniperTask = nil end
+if _G.TeleportTask then task.cancel(_G.TeleportTask); _G.TeleportTask = nil end
 
 if _G.C2_WS then 
     pcall(function() _G.C2_WS:Close() end)
@@ -197,8 +200,12 @@ ResetPhysics()
               end)
           end
 
-          for _, v in pairs(workspace:GetDescendants()) do
+          local descendants = workspace:GetDescendants()
+          for i, v in ipairs(descendants) do
               stripGraphics(v)
+              if i % 200 == 0 then 
+                  task.wait() 
+              end
           end
           
           workspace.Terrain.WaterWaveSize = 0
@@ -633,73 +640,74 @@ _G.InventorySweeperConnection = task.spawn(function()
 end)
 
 local function evaluateSellingSword(swordFolder)
-    if not _G.autoDropEnabled then return end
-    if not swordFolder:IsA("Folder") then return end
+    if not _G.autoDropEnabled or not swordFolder:IsA("Folder") then return end
     task.wait(0.2) 
     if not swordFolder or not swordFolder.Parent then return end
     
-    local keep = false
-    if hasMatchingCombo(getEnchants(swordFolder)) or matchesSpecial(swordFolder) then keep = true end
+    local keep = hasMatchingCombo(getEnchants(swordFolder)) or matchesSpecial(swordFolder)
     
     if keep then
-        print("C2 Sniper: God Roll found in Selling queue!", swordFolder.Name)
-        _G.fetchingGodRoll = true
-        _G.CurrentState = "Sniping God Roll from Sell Plot!"
+        if _G.SniperTask then task.cancel(_G.SniperTask) end
         
-        local pStats = ReplicatedStorage:FindFirstChild("Stats")
-        local myStats = pStats and pStats:FindFirstChild(tostring(player.Name))
-        local internalArea = myStats and myStats:FindFirstChild("CurrentArea")
-        local actualArea = internalArea and internalArea.Value or currentArea
-        local areaToReturnTo = actualArea 
-        local originalCFrame = hrp.CFrame
+        _G.SniperTask = task.spawn(function()
+            print("C2 Sniper: God Roll found in Selling queue!", swordFolder.Name)
+            _G.fetchingGodRoll = true
+            _G.CurrentState = "Sniping God Roll from Sell Plot!"
+            
+            local pStats = ReplicatedStorage:FindFirstChild("Stats")
+            local myStats = pStats and pStats:FindFirstChild(tostring(player.Name))
+            local internalArea = myStats and myStats:FindFirstChild("CurrentArea")
+            local actualArea = internalArea and internalArea.Value or currentArea
+            local areaToReturnTo = actualArea 
+            local originalCFrame = hrp.CFrame
 
-        if tostring(actualArea) ~= "0" then
-            TeleportSequence(0)
-        end
-        
-        local physicalSword = nil
-        local waitStart = tick()
-        while not physicalSword and tick() - waitStart < 5 do
-            physicalSword = workspace:FindFirstChild(swordFolder.Name, true)
-            if not physicalSword then task.wait(0.1) end
-        end
-        
-        if physicalSword then
-            local touchStart = tick()
-            -- Actively track and try to touch the weapon for 2 seconds
-            while physicalSword and physicalSword.Parent and tick() - touchStart < 2 do
-                local targetCFrame = physicalSword:IsA("Model") and physicalSword:GetPivot() or physicalSword.CFrame
-                if targetCFrame then
-                    local offset = CFrame.new(math.sin(tick() * 15) * 2, 0, math.cos(tick() * 15) * 2)
-                    pcall(function() hrp.CFrame = targetCFrame * offset end)
-                    
-                    pcall(function()
-                        if firetouchinterest then
-                            local partToTouch = physicalSword:IsA("BasePart") and physicalSword or physicalSword:FindFirstChildWhichIsA("BasePart", true)
-                            local limb = character:FindFirstChild("Left Leg") or character:FindFirstChild("LeftFoot") or hrp
-                            if partToTouch and limb then
-                                firetouchinterest(limb, partToTouch, 0)
-                                firetouchinterest(limb, partToTouch, 1)
-                            end
-                        end
-                    end)
-                end
-                task.wait(0.1)
+            if tostring(actualArea) ~= "0" then
+                TeleportSequence(0)
             end
-        else
-            warn("Could not find physical sword in workspace for Selling item:", swordFolder.Name)
-        end
-        
-        task.wait(0.5)
-        
-        if _G.on and tostring(actualArea) ~= "0" then
-            TeleportSequence(areaToReturnTo)
-        else
+            
+            local physicalSword = nil
+            local waitStart = tick()
+            while not physicalSword and tick() - waitStart < 5 do
+                physicalSword = workspace.Swords:FindFirstChild(swordFolder.Name) or workspace:FindFirstChild(swordFolder.Name)
+                if not physicalSword then task.wait(0.1) end
+            end
+            
+            if physicalSword then
+                local touchStart = tick()
+                while physicalSword and physicalSword.Parent and tick() - touchStart < 2 do
+                    local targetCFrame = physicalSword:IsA("Model") and physicalSword:GetPivot() or physicalSword.CFrame
+                    if targetCFrame then
+                        local offset = CFrame.new(math.sin(tick() * 15) * 2, 0, math.cos(tick() * 15) * 2)
+                        pcall(function() hrp.CFrame = targetCFrame * offset end)
+                        
+                        pcall(function()
+                            if firetouchinterest then
+                                local partToTouch = physicalSword:IsA("BasePart") and physicalSword or physicalSword:FindFirstChildWhichIsA("BasePart", true)
+                                local limb = character:FindFirstChild("Left Leg") or character:FindFirstChild("LeftFoot") or hrp
+                                if partToTouch and limb then
+                                    firetouchinterest(limb, partToTouch, 0)
+                                    firetouchinterest(limb, partToTouch, 1)
+                                end
+                            end
+                        end)
+                    end
+                    task.wait(0.1)
+                end
+            else
+                warn("Could not find physical sword in workspace for Selling item:", swordFolder.Name)
+            end
+            
             task.wait(0.5)
-            pcall(function() hrp.CFrame = originalCFrame end)
-        end
-        
-        _G.fetchingGodRoll = false
+            
+            if _G.on and tostring(actualArea) ~= "0" then
+                TeleportSequence(areaToReturnTo)
+            else
+                task.wait(0.5)
+                pcall(function() hrp.CFrame = originalCFrame end)
+            end
+            
+            _G.fetchingGodRoll = false
+        end)
     end
 end
 
@@ -727,9 +735,11 @@ _G.CharRespawnConnection = player.CharacterAdded:Connect(function(newCharacter)
     if _G.on then
         warn("💀 Respawn detected! Hopping zones to unlock interactions...")
         if not isTeleporting then
-            isTeleporting = true
-            local targetArea = (#_G.active_areas > 0 and _G.active_areas[1]) or currentArea
-            task.spawn(function() TeleportSequence(targetArea) end)
+            if _G.TeleportTask then task.cancel(_G.TeleportTask) end
+            _G.TeleportTask = task.spawn(function()
+                local targetArea = (#_G.active_areas > 0 and _G.active_areas[1]) or currentArea
+                TeleportSequence(targetArea)
+            end)
         end
     end
 end)
