@@ -43,6 +43,7 @@ if _G.InventorySweeperConnection then task.cancel(_G.InventorySweeperConnection)
 if _G.C2ConnectionTask then task.cancel(_G.C2ConnectionTask); _G.C2ConnectionTask = nil end
 if _G.MainLoopTask then task.cancel(_G.MainLoopTask); _G.MainLoopTask = nil end
 if _G.PeriodicLogTask then task.cancel(_G.PeriodicLogTask); _G.PeriodicLogTask = nil end
+if _G.TargetUpdaterTask then task.cancel(_G.TargetUpdaterTask); _G.TargetUpdaterTask = nil end
 
 if _G.C2_WS then 
     pcall(function() _G.C2_WS:Close() end)
@@ -758,7 +759,7 @@ local StateData = {
 }
 
   -- Target Updater Loop (Runs 2 times a second instead of 60 to save CPU)
-  task.spawn(function()
+  _G.TargetUpdaterTask = task.spawn(function()
       while task.wait(0.5) do
         if not _G.on or BotState == "Dead" or BotState == "Disabled" then continue end
         -- Only search for targets if we are actively trying to fight
@@ -1458,19 +1459,6 @@ task.spawn(function()
                                 _G.C2_WS = nil
                             end)
                         end
-                        
-                        -- Clean up websocket to prevent ghost clients on Dashboard
-                        game.Players.PlayerRemoving:Connect(function(plr)
-                            if plr == game.Players.LocalPlayer then
-                                if _G.C2_WS then pcall(function() _G.C2_WS:Close() end) end
-                            end
-                        end)
-                        
-                        if game.Players.LocalPlayer.OnTeleport then
-                            game.Players.LocalPlayer.OnTeleport:Connect(function()
-                                if _G.C2_WS then pcall(function() _G.C2_WS:Close() end) end
-                            end)
-                        end
                     end)
                 else
                     warn("⚠️ WebSocket C2 Server unreachable. Retrying in 10s...")
@@ -1479,6 +1467,19 @@ task.spawn(function()
             
             task.wait(10)
         end
+    end
+
+    -- Clean up websocket to prevent ghost clients on Dashboard
+    game.Players.PlayerRemoving:Connect(function(plr)
+        if plr == game.Players.LocalPlayer then
+            if _G.C2_WS then pcall(function() _G.C2_WS:Close() end) end
+        end
+    end)
+    
+    if game.Players.LocalPlayer.OnTeleport then
+        game.Players.LocalPlayer.OnTeleport:Connect(function()
+            if _G.C2_WS then pcall(function() _G.C2_WS:Close() end) end
+        end)
     end
 
     local function getName(category, id)
