@@ -1146,6 +1146,7 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
     if not character or not character.Parent or not humanoid or humanoid.Health <= 0 then return "Dead" end
     if _G.fetchingGodRoll then return "Sniping" end
     if _G.HandlingAscender then return "Ascending" end
+    if isTeleporting then return "Teleporting" end
     
     -- Priority 1.5: Auto Ascender Check (Elevated above Disabled check so it works independently)
     if _G.ascender_enabled and not _G.HandlingAscender then
@@ -1176,6 +1177,8 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
     
     if tostring(actualArea) == "Base" or tostring(actualArea) == "Spawn" then actualArea = 0 end
     local actualNum, wantedNum = tonumber(actualArea) or 0, tonumber(currentArea)
+    if actualNum ~= 0 then _G.LastKnownArea = actualNum end
+    
     if (not wantedNum or wantedNum == 0) and #_G.active_areas > 0 then 
         wantedNum = _G.active_areas[1]
         currentArea = wantedNum
@@ -1183,18 +1186,19 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
         wantedNum = 0; currentArea = 0 
     end
 
-    if actualNum ~= wantedNum then 
-        isTeleporting = true
-        task.spawn(function() TeleportSequence(wantedNum) end)
-        return "Teleporting"
-    end
-
-    -- Priority 2: Mass Recovery Check
+    -- Priority 1: Mass Recovery Check
     if tick() - lastMissingCheck > 1 then
         lastMissingCheck = tick()
         StateData.MissingSwords = CheckMissingSwords()
     end
     if #StateData.MissingSwords > 0 then return "Recovering" end
+
+    -- Priority 2: Area Teleport Check
+    if actualNum ~= wantedNum then 
+        isTeleporting = true
+        task.spawn(function() TeleportSequence(wantedNum) end)
+        return "Teleporting"
+    end
 
     -- Priority 3: Smart Equip Check
     local currentTool = character:FindFirstChildOfClass("Tool")
@@ -1280,6 +1284,15 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
 
     -- Execute State Actions
     if BotState == "Recovering" then
+        local myStats = game:GetService("ReplicatedStorage"):FindFirstChild("Stats") and game:GetService("ReplicatedStorage").Stats:FindFirstChild(tostring(game.Players.LocalPlayer.Name))
+        local internalArea = myStats and myStats:FindFirstChild("CurrentArea")
+        local actualNum = internalArea and tonumber(internalArea.Value) or 0
+        if _G.LastKnownArea and _G.LastKnownArea ~= 0 and actualNum ~= _G.LastKnownArea then
+            isTeleporting = true
+            task.spawn(function() TeleportSequence(_G.LastKnownArea) end)
+            return
+        end
+
         StateData.SignalWaitStart = nil -- Reset other timers
         _G.CurrentState = "Mass Recovery! (" .. #StateData.MissingSwords .. " items left)"
         
@@ -1297,11 +1310,12 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
             local offsetPos
             
             -- Alternate between spiraling and back-and-forth sweeping every 1 second
+            local hoverHeight = 0
             if (t % 2) < 1 then
-                offsetPos = Vector3.new(math.sin(t * 15) * 2, 0, math.cos(t * 15) * 2)
+                offsetPos = Vector3.new(math.sin(t * 15) * 2, hoverHeight, math.cos(t * 15) * 2)
             else
                 local sweep = math.sin(t * 15) * 3
-                offsetPos = Vector3.new(sweep, 0, sweep)
+                offsetPos = Vector3.new(sweep, hoverHeight, sweep)
             end
             
             -- Use CFrame.new(Position) to prevent inheriting the sword's rotation
