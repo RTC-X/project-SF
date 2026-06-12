@@ -106,7 +106,7 @@ local isEscaping = false
 local currentTarget = nil
 local targetStartTime = 0
 local idleStartTime = 0
-local blacklistedNPCs = {}
+local blacklistedNPCs = setmetatable({}, {__mode = "k"})
 
 local SETTINGS = {
     OFFSET_HEIGHT = 7, WAIT_ALTITUDE = 15, RETREAT_ALTITUDE = 15,
@@ -763,8 +763,8 @@ end
 task.spawn(function()
     local pStats = ReplicatedStorage:WaitForChild("Stats"):WaitForChild(tostring(player.Name))
     local invFolder = pStats:WaitForChild("Swords")
+    if _G.InvAddedConnection then _G.InvAddedConnection:Disconnect() end
     _G.InvAddedConnection = invFolder.ChildAdded:Connect(evaluateInventorySword)
-    _G.InvRemovedConnection = invFolder.ChildRemoved:Connect(function() _G.InventoryDirty = true end)
     
     local sellingFolder = pStats:WaitForChild("Selling", 10)
     if sellingFolder then
@@ -1424,7 +1424,8 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
 
 
         if currentTarget:FindFirstChild("HumanoidRootPart") then
-            hrp.CFrame = CFrame.lookAt(currentTarget.HumanoidRootPart.Position + Vector3.new(0, SETTINGS.OFFSET_HEIGHT, 0), currentTarget.HumanoidRootPart.Position)
+            local offsetHeight = SETTINGS.OFFSET_HEIGHT == 0 and 0.001 or SETTINGS.OFFSET_HEIGHT
+            hrp.CFrame = CFrame.lookAt(currentTarget.HumanoidRootPart.Position + Vector3.new(0, offsetHeight, 0), currentTarget.HumanoidRootPart.Position)
             if tick() - lastSwing > 0.05 then
                 lastSwing = tick()
                 local currentTool = character:FindFirstChildOfClass("Tool")
@@ -1582,24 +1583,9 @@ task.spawn(function()
         return payload
     end
 
-    _G.InventoryDirty = true
-    
-    task.spawn(function()
-        local invFolder = PlayerStats:WaitForChild("Swords", 5)
-        if invFolder then
-            if _G.C2InvAddConn then _G.C2InvAddConn:Disconnect() end
-            if _G.C2InvRemConn then _G.C2InvRemConn:Disconnect() end
-            _G.C2InvAddConn = invFolder.DescendantAdded:Connect(function() _G.InventoryDirty = true end)
-            _G.C2InvRemConn = invFolder.DescendantRemoving:Connect(function() _G.InventoryDirty = true end)
-        end
-        local bankFolder = PlayerStats:WaitForChild("Bank", 5)
-        if bankFolder then
-            if _G.C2BankAddConn then _G.C2BankAddConn:Disconnect() end
-            if _G.C2BankRemConn then _G.C2BankRemConn:Disconnect() end
-            _G.C2BankAddConn = bankFolder.DescendantAdded:Connect(function() _G.InventoryDirty = true end)
-            _G.C2BankRemConn = bankFolder.DescendantRemoving:Connect(function() _G.InventoryDirty = true end)
-        end
-    end)
+    if _G.SetupC2Events then return end
+
+    _G.InventoryDirty = true -- Send once on startup
 
     local function getBackpackPayload()
         local payload = {}
