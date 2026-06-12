@@ -370,7 +370,11 @@ local function TeleportSequence(areaNum)
     local remote = ReplicatedStorage:WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remotefunction")
     local internalArea = PlayerStats:FindFirstChild("CurrentArea")
     
-    if hrp then hrp.AssemblyLinearVelocity = Vector3.zero end
+    -- Safety Anchor: Prevents gravity from pulling character into the void during Streaming Pauses
+    if hrp then 
+        hrp.AssemblyLinearVelocity = Vector3.zero
+        hrp.Anchored = true
+    end
     
     local currentVal = internalArea and tostring(internalArea.Value) or "0"
     print("[DEBUG] Current Area before teleport:", currentVal)
@@ -386,12 +390,29 @@ local function TeleportSequence(areaNum)
         end)
         
         local waitBase = tick()
-        while internalArea and tostring(internalArea.Value) ~= "0" and tick() - waitBase < 5 do
-            if not _G.on and not _G.fetchingGodRoll and not _G.HandlingAscender then isTeleporting = false; return end
-            if hrp then hrp.AssemblyLinearVelocity = Vector3.zero end
+        -- Extend timeout to 15 seconds to safely outlast Roblox's "Please wait while the game loads" barrier
+        while internalArea and tostring(internalArea.Value) ~= "0" and tick() - waitBase < 15 do
+            if not _G.on and not _G.fetchingGodRoll and not _G.HandlingAscender then 
+                isTeleporting = false
+                if hrp then hrp.Anchored = false end
+                return 
+            end
             task.wait(0.1)
         end
-        if not _G.on and not _G.fetchingGodRoll and not _G.HandlingAscender then isTeleporting = false; return end
+        
+        -- If we failed to reach base after 15 seconds, abort sequence to prevent desync crash loop
+        if internalArea and tostring(internalArea.Value) ~= "0" then
+            warn("[!] Teleport to Base timed out! Aborting sequence.")
+            isTeleporting = false
+            if hrp then hrp.Anchored = false end
+            return
+        end
+        
+        if not _G.on and not _G.fetchingGodRoll and not _G.HandlingAscender then 
+            isTeleporting = false
+            if hrp then hrp.Anchored = false end
+            return 
+        end
         print("[DEBUG] Arrived in Base.")
         task.wait(1)
     else
@@ -406,7 +427,11 @@ local function TeleportSequence(areaNum)
         end
     end
     
-    if not _G.on and not _G.fetchingGodRoll and not _G.HandlingAscender then isTeleporting = false; return end
+    if not _G.on and not _G.fetchingGodRoll and not _G.HandlingAscender then 
+        isTeleporting = false
+        if hrp then hrp.Anchored = false end
+        return 
+    end
     DestroyCutscene() 
     
     -- [[ STEP 2: TELEPORT TO TARGET MAP ]]
@@ -415,12 +440,27 @@ local function TeleportSequence(areaNum)
         task.spawn(function() pcall(function() remote:InvokeServer("Teleport Area", tonumber(areaNum)) end) end)
         
         local waitArea = tick()
-        while internalArea and tostring(internalArea.Value) ~= tostring(areaNum) and tick() - waitArea < 7 do
-            if not _G.on and not _G.fetchingGodRoll and not _G.HandlingAscender then isTeleporting = false; return end
-            if hrp then hrp.AssemblyLinearVelocity = Vector3.zero end
+        while internalArea and tostring(internalArea.Value) ~= tostring(areaNum) and tick() - waitArea < 15 do
+            if not _G.on and not _G.fetchingGodRoll and not _G.HandlingAscender then 
+                isTeleporting = false
+                if hrp then hrp.Anchored = false end
+                return 
+            end
             task.wait(0.1)
         end
-        if not _G.on and not _G.fetchingGodRoll and not _G.HandlingAscender then isTeleporting = false; return end
+        
+        if internalArea and tostring(internalArea.Value) ~= tostring(areaNum) then
+            warn("[!] Teleport to Area timed out! Aborting sequence.")
+            isTeleporting = false
+            if hrp then hrp.Anchored = false end
+            return
+        end
+        
+        if not _G.on and not _G.fetchingGodRoll and not _G.HandlingAscender then 
+            isTeleporting = false
+            if hrp then hrp.Anchored = false end
+            return 
+        end
         print("[DEBUG] Arrived in Target Area:", areaNum)
         task.wait(2.5) 
     end
@@ -429,6 +469,7 @@ local function TeleportSequence(areaNum)
     lastTeleportEnd = tick() 
     idleStartTime = 0 
     isTeleporting = false
+    if hrp then hrp.Anchored = false end
     print("[DEBUG] --- TeleportSequence Completed ---")
 end
 
@@ -630,6 +671,14 @@ _G.InventorySweeperConnection = task.spawn(function()
                                 end
                             elseif _G.autoDropEnabled then 
                                 dropBadSword(swordFolder) 
+                            end
+                        end
+                        
+                        -- Garbage Collector: Prune stale UUIDs from KeptSwords
+                        for i = #_G.KeptSwords, 1, -1 do
+                            local uuid = _G.KeptSwords[i]
+                            if not invFolder:FindFirstChild(uuid) and not workspace.Swords:FindFirstChild(uuid) then
+                                table.remove(_G.KeptSwords, i)
                             end
                         end
                     end
@@ -1149,7 +1198,12 @@ local DetermineState = LPH_NO_VIRTUALIZE(function()
             lastModeSet = os.time()
             local targetMode = getTargetMode(sword)
             if targetMode ~= "None" then
-                game:GetService("ReplicatedStorage"):WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remoteevent"):FireServer("Set Ascender Mode", targetMode)
+                local paper = game:GetService("ReplicatedStorage"):FindFirstChild("Paper")
+                local remotes = paper and paper:FindFirstChild("Remotes")
+                local remoteEvt = remotes and remotes:FindFirstChild("__remoteevent")
+                if remoteEvt then
+                    remoteEvt:FireServer("Set Ascender Mode", targetMode)
+                end
             end
         end
     end)
