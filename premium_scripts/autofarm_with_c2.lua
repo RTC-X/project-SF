@@ -15,7 +15,11 @@ if not LUARMOR_LICENSE or LUARMOR_LICENSE == "" then
 end
 
 if LPH_OBFUSCATED == nil then
-    getgenv().LPH_NO_VIRTUALIZE = function(f) return f end
+    getgenv().LPH_OBFUSCATED = false
+end
+
+if not LPH_OBFUSCATED then
+    function LPH_NO_VIRTUALIZE(f) return f end
 end
 
 -- [[ 0. MEMORY LEAK CLEANUP ]]
