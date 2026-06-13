@@ -724,13 +724,7 @@ local function evaluateSellingSword(swordFolder)
                         pcall(function() hrp.CFrame = targetCFrame * offset end)
                         
                         pcall(function()
-                            if firetouchinterest then
-                                local partToTouch = physicalSword:IsA("BasePart") and physicalSword or physicalSword:FindFirstChildWhichIsA("BasePart", true)
-                                local limb = character:FindFirstChild("Left Leg") or character:FindFirstChild("LeftFoot") or hrp
-                                if partToTouch and limb then
-                                    firetouchinterest(limb, partToTouch, 0)
-                                    firetouchinterest(limb, partToTouch, 1)
-                                end
+                            -- firetouchinterest completely removed for memory leak fix.
                             end
                         end)
                     end
@@ -944,13 +938,7 @@ local function PickupPhysicalSword(uuid)
         hrp.CFrame = pivot * CFrame.new(0, 15, 0) 
         
         pcall(function()
-            if firetouchinterest then
-                local touchPart = physicalSword:IsA("BasePart") and physicalSword or physicalSword:FindFirstChildWhichIsA("BasePart", true)
-                if touchPart then
-                    firetouchinterest(hrp, touchPart, 0)
-                    task.wait(0.05)
-                    firetouchinterest(hrp, touchPart, 1)
-                end
+            -- firetouchinterest completely removed for memory leak fix.
             end
         end)
         attempts = attempts + 1
@@ -1383,13 +1371,7 @@ local FarmHeartbeatLoop = function()
             if not StateData.LastTouch or tick() - StateData.LastTouch > 0.2 then
                 StateData.LastTouch = tick()
                 pcall(function()
-                    if firetouchinterest then
-                        local partToTouch = droppedSword:IsA("BasePart") and droppedSword or droppedSword:FindFirstChildWhichIsA("BasePart", true)
-                        local limb = character:FindFirstChild("Left Leg") or character:FindFirstChild("LeftFoot") or character:FindFirstChild("HumanoidRootPart")
-                        if partToTouch and limb then
-                            firetouchinterest(limb, partToTouch, 0)
-                            firetouchinterest(limb, partToTouch, 1)
-                        end
+                    -- firetouchinterest completely removed for memory leak fix.
                     end
                 end)
             end
@@ -1879,8 +1861,8 @@ task.spawn(function()
         _G.MainLoopTask = task.spawn(function()
             local lastFarmState = _G.on
             local lastSnipeState = _G.autoDropEnabled
-            while task.wait(1) do
-                if not _G.LastC2SyncTime or tick() - _G.LastC2SyncTime >= 2 then
+            while task.wait(5) do
+                if not _G.LastC2SyncTime or tick() - _G.LastC2SyncTime >= 5 then
                     _G.LastC2SyncTime = tick()
                     
                     pcall(function()
