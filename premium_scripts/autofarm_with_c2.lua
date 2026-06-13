@@ -8,11 +8,11 @@ local C2_API_KEY = (args[1] and type(args[1]) == "string" and args[1] ~= "") or 
 local LUARMOR_LICENSE = (args[2] and type(args[2]) == "string" and args[2] ~= "") or (typeof(script_key) == "string" and script_key ~= "your_license_here" and script_key) or ""
 
 if not C2_API_KEY or C2_API_KEY == "" then
-    warn("[!] Missing ApiKey! Please set ApiKey='.'. before running the script.")
+    warn("[!] Missing ApiKey! Please set ApiKey='.' before running the script.")
     return
 end
 if not LUARMOR_LICENSE or LUARMOR_LICENSE == "" then
-    warn("[!] Missing script_key! Please set script_key='.'. before running the script.")
+    warn("[!] Missing script_key! Please set script_key='.' before running the script.")
     return
 end
 
@@ -363,7 +363,7 @@ end
 -- DYNAMIC YIELD TELEPORT (ALWAYS RETURN HOME FIRST)
 local function TeleportSequence(areaNum)
     print("[DEBUG] --- TeleportSequence Initiated | Target Area:", tostring(areaNum), "---")
-    _G.CurrentState = "Teleporting.".
+    _G.CurrentState = "Teleporting."
     isTeleporting = true 
     ResetPhysics()
     
@@ -381,7 +381,7 @@ local function TeleportSequence(areaNum)
 
     -- [[ STEP 1: ALWAYS RETURN TO BASE FIRST ]]
     if currentVal ~= "0" and currentVal ~= "Base" and currentVal ~= "Spawn" then
-        print("[DEBUG] Returning to Base first.".)
+        print("[DEBUG] Returning to Base first.")
         task.spawn(function()
             pcall(function() 
                 remote:InvokeServer("Teleport In Base", "Return") 
@@ -782,7 +782,7 @@ _G.CharRespawnConnection = player.CharacterAdded:Connect(function(newCharacter)
     playerGui = player:WaitForChild("PlayerGui")
     
     if _G.on then
-        warn("💀 Respawn detected! Hopping zones to unlock interactions.".)
+        warn("💀 Respawn detected! Hopping zones to unlock interactions.")
         if not isTeleporting then
             if _G.TeleportTask then task.cancel(_G.TeleportTask) end
             _G.TeleportTask = task.spawn(function()
@@ -1018,7 +1018,7 @@ end
 local function ExecuteAscenderAction(actionDetails)
     if _G.HandlingAscender then return end
     _G.HandlingAscender = true
-    _G.CurrentState = "Managing Ascender.".
+    _G.CurrentState = "Managing Ascender."
 
     local originalArea = currentArea
     local PaperRemotes = ReplicatedStorage:WaitForChild("Paper"):WaitForChild("Remotes")
@@ -1035,7 +1035,7 @@ local function ExecuteAscenderAction(actionDetails)
             if not currentSword then return end
             
             print("[AutoAscender] 🎯 Target reached for sword:", currentSword.Name)
-            print("[AutoAscender] Picking up from Ascender.".)
+            print("[AutoAscender] Picking up from Ascender.")
             
             task.spawn(function() pcall(function() AscenderFunc:InvokeServer("Pickup Ascender") end) end)
             
@@ -1061,7 +1061,7 @@ local function ExecuteAscenderAction(actionDetails)
                     end
                 end
             else
-                print("[AutoAscender] Depositing to Bank.".)
+                print("[AutoAscender] Depositing to Bank.")
                 task.spawn(function() pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Bank") end) end)
                 task.wait(0.6)
                 AscenderEvent:FireServer("Drop Sword", currentSword.Name)
@@ -1338,7 +1338,7 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
 
     -- Handle lockouts and physical resets
     if BotState == "Disabled" then _G.CurrentState = "Idle"; return end
-    if BotState == "Dead" then _G.CurrentState = "Dead/Respawning.".; return end
+    if BotState == "Dead" then _G.CurrentState = "Dead/Respawning."; return end
     if BotState == "Sniping" or BotState == "Teleporting" or BotState == "Ascending" then return end
 
     -- Global Physics enforcement
@@ -1402,7 +1402,7 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
         end
 
     elseif BotState == "Equipping" then
-        _G.CurrentState = "Equipping Main Weapon.".
+        _G.CurrentState = "Equipping Main Weapon."
         if not StateData.EquipAttemptStart then StateData.EquipAttemptStart = tick() end
         if tick() - StateData.EquipAttemptStart > 5 then
             warn("[DEBUG] Failed to equip sword after 5s! Retrying without dropping protection.")
@@ -1438,12 +1438,12 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
         local now = tick()
         
         if now - lastTeleportEnd < SETTINGS.SPAWN_GRACE_PERIOD then
-            _G.CurrentState = "Waiting for Spawns.".
+            _G.CurrentState = "Waiting for Spawns."
             StateData.IdleStartTime = 0 
         elseif StateData.IdleStartTime == 0 then 
             StateData.IdleStartTime = now
         elseif now - StateData.IdleStartTime > SETTINGS.IDLE_BEFORE_HOP then
-            _G.CurrentState = "Hopping Areas.".
+            _G.CurrentState = "Hopping Areas."
             
             local actualArea = tonumber(currentArea)
             local pStats = ReplicatedStorage:FindFirstChild("Stats")
@@ -1471,7 +1471,7 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
             return 
         end
         
-        _G.CurrentState = "Area Clear / Hovering.".
+        _G.CurrentState = "Area Clear / Hovering."
         hrp.CFrame = CFrame.new(hrp.Position.X, SETTINGS.WAIT_ALTITUDE, hrp.Position.Z)
     end
 end))
@@ -1520,13 +1520,13 @@ task.spawn(function()
                     pcall(function()
                         if ws.OnClose then
                             ws.OnClose:Connect(function()
-                                print("⚠️ C2 Connection Lost! Reconnecting in 10s.".)
+                                print("⚠️ C2 Connection Lost! Reconnecting in 10s.")
                                 _G.C2_WS = nil
                             end)
                         end
                     end)
                 else
-                    warn("⚠️ WebSocket C2 Server unreachable. Retrying in 10s.".)
+                    warn("⚠️ WebSocket C2 Server unreachable. Retrying in 10s.")
                 end
             end
             
