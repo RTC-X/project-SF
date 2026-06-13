@@ -16,7 +16,7 @@ if not LUARMOR_LICENSE or LUARMOR_LICENSE == "" then
 end
 
 if LPH_OBFUSCATED == nil then
-    getgenv()["LPH_NO_" .. "VIRTUALIZE"] = function(f) return f end
+    getgenv()[table.concat({"LPH", "_NO_", "VIRTUALIZE"})] = function(f) return f end
 end
 
 -- [[ 0. MEMORY LEAK CLEANUP ]]
