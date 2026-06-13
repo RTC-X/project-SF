@@ -312,7 +312,7 @@ local function processDropQueue()
     while #_G.DropQueue > 0 do
         local swordUUID = table.remove(_G.DropQueue, 1)
         if _G.autoDropEnabled then
-            DropRemote:FireServer(unpack({[1] = "Drop Sword", [2] = swordUUID}))
+            DropRemote:FireServer("Drop Sword", swordUUID)
         end
         task.wait(0.15)
     end
