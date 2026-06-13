@@ -723,10 +723,7 @@ local function evaluateSellingSword(swordFolder)
                         local offset = CFrame.new(math.sin(tick() * 15) * 2, 0, math.cos(tick() * 15) * 2)
                         pcall(function() hrp.CFrame = targetCFrame * offset end)
                         
-                        pcall(function()
-                            -- firetouchinterest completely removed for memory leak fix.
-                            end
-                        end)
+-- firetouch pcall removed
                     end
                     task.wait(0.1)
                 end
@@ -937,10 +934,7 @@ local function PickupPhysicalSword(uuid)
         local pivot = physicalSword:GetPivot()
         hrp.CFrame = pivot * CFrame.new(0, 15, 0) 
         
-        pcall(function()
-            -- firetouchinterest completely removed for memory leak fix.
-            end
-        end)
+-- firetouch pcall removed
         attempts = attempts + 1
         task.wait(0.3)
     end
@@ -1370,10 +1364,7 @@ local FarmHeartbeatLoop = function()
             
             if not StateData.LastTouch or tick() - StateData.LastTouch > 0.2 then
                 StateData.LastTouch = tick()
-                pcall(function()
-                    -- firetouchinterest completely removed for memory leak fix.
-                    end
-                end)
+-- firetouch pcall removed
             end
         end
 
