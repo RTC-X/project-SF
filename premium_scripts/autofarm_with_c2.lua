@@ -2,21 +2,22 @@
 getgenv().ApiKey = getgenv().ApiKey or "your_api_key_here"
 getgenv().script_key = getgenv().script_key or "your_license_here"
 
+-- [[ RESOLVE KEYS ]]
 local args = {...}
-local C2_API_KEY = (args[1] and type(args[1]) == "string" and args[1] ~= "") or (typeof(getgenv().ApiKey) == "string" and getgenv().ApiKey ~= "your_api_key_here" and getgenv().ApiKey) or ""
-local LUARMOR_LICENSE = (args[2] and type(args[2]) == "string" and args[2] ~= "") or (typeof(getgenv().script_key) == "string" and getgenv().script_key ~= "your_license_here" and getgenv().script_key) or ""
+local C2_API_KEY = (args[1] and type(args[1]) == "string" and args[1] ~= "") or (typeof(ApiKey) == "string" and ApiKey ~= "your_api_key_here" and ApiKey) or ""
+local LUARMOR_LICENSE = (args[2] and type(args[2]) == "string" and args[2] ~= "") or (typeof(script_key) == "string" and script_key ~= "your_license_here" and script_key) or ""
 
 if not C2_API_KEY or C2_API_KEY == "" then
-    warn("[!] Missing ApiKey! Please set ApiKey='' before running the script.")
+    warn("[!] Missing ApiKey! Please set ApiKey='...' before running the script.")
     return
 end
 if not LUARMOR_LICENSE or LUARMOR_LICENSE == "" then
-    warn("[!] Missing script_key! Please set script_key='' before running the script.")
+    warn("[!] Missing script_key! Please set script_key='...' before running the script.")
     return
 end
 
 if LPH_OBFUSCATED == nil then
-    getgenv()[table.concat({"LPH", "_NO_", "VIRTUALIZE"})] = function(f) return f end
+    getgenv()["LPH_NO_" .. "VIRTUALIZE"] = function(f) return f end
 end
 
 -- [[ 0. MEMORY LEAK CLEANUP ]]
@@ -169,6 +170,51 @@ ResetPhysics()
       end
   end)
 
+-- [[ 3.6. EXTREME RAM OPTIMIZATION ]]
+  task.spawn(function()
+      pcall(function()
+          settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+          UserSettings():GetService("UserGameSettings").MasterVolume = 0
+          
+          local Lighting = game:GetService("Lighting")
+          Lighting.GlobalShadows = false
+          Lighting.FogEnd = 9e9
+          Lighting.FogStart = 0
+          for _, v in pairs(Lighting:GetDescendants()) do
+              if v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Sky") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or v:IsA("SunRaysEffect") or v:IsA("BlurEffect") or v:IsA("DepthOfFieldEffect") then
+                  v:Destroy()
+              end
+          end
+          
+          local function stripGraphics(v)
+              pcall(function()
+                  if v:IsA("Texture") or v:IsA("Decal") then
+                      v:Destroy()
+                  elseif v:IsA("BasePart") and not (v.Parent and v.Parent:FindFirstChild("Humanoid")) then
+                      if v.Material ~= Enum.Material.SmoothPlastic then v.Material = Enum.Material.SmoothPlastic end
+                      if v.Reflectance ~= 0 then v.Reflectance = 0 end
+                      v.CastShadow = false
+                  elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
+                      v.Enabled = false
+                  end
+              end)
+          end
+
+          local descendants = workspace:GetDescendants()
+          for i, v in ipairs(descendants) do
+              stripGraphics(v)
+              if i % 200 == 0 then 
+                  task.wait() 
+              end
+          end
+          
+          workspace.Terrain.WaterWaveSize = 0
+          workspace.Terrain.WaterWaveSpeed = 0
+          workspace.Terrain.WaterReflectance = 0
+          workspace.Terrain.WaterTransparency = 0
+      end)
+  end)       
+
 -- [[ 4. MODULES & REMOTES SETUP ]]
 local Tables = ReplicatedStorage:WaitForChild("Tables")
 local DropRemote = ReplicatedStorage:WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remoteevent")
@@ -317,7 +363,7 @@ end
 -- DYNAMIC YIELD TELEPORT (ALWAYS RETURN HOME FIRST)
 local function TeleportSequence(areaNum)
     print("[DEBUG] --- TeleportSequence Initiated | Target Area:", tostring(areaNum), "---")
-    _G.CurrentState = "Teleporting"
+    _G.CurrentState = "Teleporting..."
     isTeleporting = true 
     ResetPhysics()
     
@@ -335,7 +381,7 @@ local function TeleportSequence(areaNum)
 
     -- [[ STEP 1: ALWAYS RETURN TO BASE FIRST ]]
     if currentVal ~= "0" and currentVal ~= "Base" and currentVal ~= "Spawn" then
-        print("[DEBUG] Returning to Base first")
+        print("[DEBUG] Returning to Base first...")
         task.spawn(function()
             pcall(function() 
                 remote:InvokeServer("Teleport In Base", "Return") 
@@ -683,7 +729,16 @@ local function evaluateSellingSword(swordFolder)
                         local offset = CFrame.new(math.sin(tick() * 15) * 2, 0, math.cos(tick() * 15) * 2)
                         pcall(function() hrp.CFrame = targetCFrame * offset end)
                         
-                        -- Rely on the CFrame offset to organically trigger native TouchEvents.
+                        pcall(function()
+                            if firetouchinterest then
+                                local partToTouch = physicalSword:IsA("BasePart") and physicalSword or physicalSword:FindFirstChildWhichIsA("BasePart", true)
+                                local limb = character:FindFirstChild("Left Leg") or character:FindFirstChild("LeftFoot") or hrp
+                                if partToTouch and limb then
+                                    firetouchinterest(limb, partToTouch, 0)
+                                    firetouchinterest(limb, partToTouch, 1)
+                                end
+                            end
+                        end)
                     end
                     task.wait(0.1)
                 end
@@ -727,7 +782,7 @@ _G.CharRespawnConnection = player.CharacterAdded:Connect(function(newCharacter)
     playerGui = player:WaitForChild("PlayerGui")
     
     if _G.on then
-        warn("💀 Respawn detected! Hopping zones to unlock interactions")
+        warn("💀 Respawn detected! Hopping zones to unlock interactions...")
         if not isTeleporting then
             if _G.TeleportTask then task.cancel(_G.TeleportTask) end
             _G.TeleportTask = task.spawn(function()
@@ -894,7 +949,16 @@ local function PickupPhysicalSword(uuid)
         local pivot = physicalSword:GetPivot()
         hrp.CFrame = pivot * CFrame.new(0, 15, 0) 
         
-        -- Rely on the 15 stud overhead to pull the item natively via proximity magnitude.
+        pcall(function()
+            if firetouchinterest then
+                local touchPart = physicalSword:IsA("BasePart") and physicalSword or physicalSword:FindFirstChildWhichIsA("BasePart", true)
+                if touchPart then
+                    firetouchinterest(hrp, touchPart, 0)
+                    task.wait(0.05)
+                    firetouchinterest(hrp, touchPart, 1)
+                end
+            end
+        end)
         attempts = attempts + 1
         task.wait(0.3)
     end
@@ -921,7 +985,7 @@ local function enforceCleanInventory(allowedUUID)
             return
         end
         
-        print("[AutoAscender] 🧹 Found " .. #extraSwords .. " extra/stuck sword(s) in inventory. Strictly depositing to Bank")
+        print("[AutoAscender] 🧹 Found " .. #extraSwords .. " extra/stuck sword(s) in inventory. Strictly depositing to Bank...")
         local AscenderFunc = ReplicatedStorage:WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remotefunction")
         local AscenderEvent = ReplicatedStorage:WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remoteevent")
         task.spawn(function() pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Bank") end) end)
@@ -954,7 +1018,7 @@ end
 local function ExecuteAscenderAction(actionDetails)
     if _G.HandlingAscender then return end
     _G.HandlingAscender = true
-    _G.CurrentState = "Managing Ascender"
+    _G.CurrentState = "Managing Ascender..."
 
     local originalArea = currentArea
     local PaperRemotes = ReplicatedStorage:WaitForChild("Paper"):WaitForChild("Remotes")
@@ -971,7 +1035,7 @@ local function ExecuteAscenderAction(actionDetails)
             if not currentSword then return end
             
             print("[AutoAscender] 🎯 Target reached for sword:", currentSword.Name)
-            print("[AutoAscender] Picking up from Ascender")
+            print("[AutoAscender] Picking up from Ascender...")
             
             task.spawn(function() pcall(function() AscenderFunc:InvokeServer("Pickup Ascender") end) end)
             
@@ -997,7 +1061,7 @@ local function ExecuteAscenderAction(actionDetails)
                     end
                 end
             else
-                print("[AutoAscender] Depositing to Bank")
+                print("[AutoAscender] Depositing to Bank...")
                 task.spawn(function() pcall(function() AscenderFunc:InvokeServer("Teleport In Base", "Bank") end) end)
                 task.wait(0.6)
                 AscenderEvent:FireServer("Drop Sword", currentSword.Name)
@@ -1274,7 +1338,7 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
 
     -- Handle lockouts and physical resets
     if BotState == "Disabled" then _G.CurrentState = "Idle"; return end
-    if BotState == "Dead" then _G.CurrentState = "Dead/Respawning"; return end
+    if BotState == "Dead" then _G.CurrentState = "Dead/Respawning..."; return end
     if BotState == "Sniping" or BotState == "Teleporting" or BotState == "Ascending" then return end
 
     -- Global Physics enforcement
@@ -1324,12 +1388,21 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
             
             if not StateData.LastTouch or tick() - StateData.LastTouch > 0.2 then
                 StateData.LastTouch = tick()
-                -- Rely entirely on CFrame native wiggling for touches.
+                pcall(function()
+                    if firetouchinterest then
+                        local partToTouch = droppedSword:IsA("BasePart") and droppedSword or droppedSword:FindFirstChildWhichIsA("BasePart", true)
+                        local limb = character:FindFirstChild("Left Leg") or character:FindFirstChild("LeftFoot") or character:FindFirstChild("HumanoidRootPart")
+                        if partToTouch and limb then
+                            firetouchinterest(limb, partToTouch, 0)
+                            firetouchinterest(limb, partToTouch, 1)
+                        end
+                    end
+                end)
             end
         end
 
     elseif BotState == "Equipping" then
-        _G.CurrentState = "Equipping Main Weapon"
+        _G.CurrentState = "Equipping Main Weapon..."
         if not StateData.EquipAttemptStart then StateData.EquipAttemptStart = tick() end
         if tick() - StateData.EquipAttemptStart > 5 then
             warn("[DEBUG] Failed to equip sword after 5s! Retrying without dropping protection.")
@@ -1365,12 +1438,12 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
         local now = tick()
         
         if now - lastTeleportEnd < SETTINGS.SPAWN_GRACE_PERIOD then
-            _G.CurrentState = "Waiting for Spawns"
+            _G.CurrentState = "Waiting for Spawns..."
             StateData.IdleStartTime = 0 
         elseif StateData.IdleStartTime == 0 then 
             StateData.IdleStartTime = now
         elseif now - StateData.IdleStartTime > SETTINGS.IDLE_BEFORE_HOP then
-            _G.CurrentState = "Hopping Areas"
+            _G.CurrentState = "Hopping Areas..."
             
             local actualArea = tonumber(currentArea)
             local pStats = ReplicatedStorage:FindFirstChild("Stats")
@@ -1398,7 +1471,7 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
             return 
         end
         
-        _G.CurrentState = "Area Clear / Hovering"
+        _G.CurrentState = "Area Clear / Hovering..."
         hrp.CFrame = CFrame.new(hrp.Position.X, SETTINGS.WAIT_ALTITUDE, hrp.Position.Z)
     end
 end))
@@ -1447,13 +1520,13 @@ task.spawn(function()
                     pcall(function()
                         if ws.OnClose then
                             ws.OnClose:Connect(function()
-                                print("⚠️ C2 Connection Lost! Reconnecting in 10s")
+                                print("⚠️ C2 Connection Lost! Reconnecting in 10s...")
                                 _G.C2_WS = nil
                             end)
                         end
                     end)
                 else
-                    warn("⚠️ WebSocket C2 Server unreachable. Retrying in 10s")
+                    warn("⚠️ WebSocket C2 Server unreachable. Retrying in 10s...")
                 end
             end
             
@@ -1811,7 +1884,7 @@ task.spawn(function()
             local lastFarmState = _G.on
             local lastSnipeState = _G.autoDropEnabled
             while task.wait(1) do
-                if not _G.LastC2SyncTime or tick() - _G.LastC2SyncTime >= 5 then
+                if not _G.LastC2SyncTime or tick() - _G.LastC2SyncTime >= 2 then
                     _G.LastC2SyncTime = tick()
                     
                     pcall(function()
