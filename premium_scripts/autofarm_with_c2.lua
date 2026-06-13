@@ -851,9 +851,9 @@ end
 
 -- Server Progression array for Bank
 local BankCapacityPerLevel = {
-    [1] = 6, [2] = 10, [3] = 12, [4] = 14, [5] = 16,
-    [6] = 18, [7] = 20, [8] = 22, [9] = 24, [10] = 26,
-    [11] = 28, [12] = 30, [13] = 32, [14] = 34, [15] = 36
+    6, 10, 12, 14, 16,
+    18, 20, 22, 24, 26,
+    28, 30, 32, 34, 36
 }
 
 local function GetMaxBankSlots()
