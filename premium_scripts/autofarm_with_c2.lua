@@ -2,8 +2,9 @@
 getgenv().ApiKey = getgenv().ApiKey or "your_api_key_here"
 getgenv().script_key = getgenv().script_key or "your_license_here"
 
-local C2_API_KEY = (typeof(getgenv().ApiKey) == "string" and getgenv().ApiKey ~= "your_api_key_here" and getgenv().ApiKey) or ""
-local LUARMOR_LICENSE = (typeof(getgenv().script_key) == "string" and getgenv().script_key ~= "your_license_here" and getgenv().script_key) or ""
+local args = {...}
+local C2_API_KEY = (args[1] and type(args[1]) == "string" and args[1] ~= "") or (typeof(getgenv().ApiKey) == "string" and getgenv().ApiKey ~= "your_api_key_here" and getgenv().ApiKey) or ""
+local LUARMOR_LICENSE = (args[2] and type(args[2]) == "string" and args[2] ~= "") or (typeof(getgenv().script_key) == "string" and getgenv().script_key ~= "your_license_here" and getgenv().script_key) or ""
 
 if not C2_API_KEY or C2_API_KEY == "" then
     warn("[!] Missing ApiKey! Please set ApiKey='' before running the script.")
@@ -15,11 +16,7 @@ if not LUARMOR_LICENSE or LUARMOR_LICENSE == "" then
 end
 
 if LPH_OBFUSCATED == nil then
-    getgenv().LPH_OBFUSCATED = false
-end
-
-if not LPH_OBFUSCATED then
-    function LPH_NO_VIRTUALIZE(f) return f end
+    getgenv()["LPH_NO_" .. "VIRTUALIZE"] = function(f) return f end
 end
 
 -- [[ 0. MEMORY LEAK CLEANUP ]]
