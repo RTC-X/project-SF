@@ -17,7 +17,7 @@ if not LUARMOR_LICENSE or LUARMOR_LICENSE == "" then
 end
 
 if LPH_OBFUSCATED == nil then
-    getgenv()[table.concat({"LPH", "_NO_", "VIRTUALIZE"})] = function(f) return f end
+    getgenv()[string.reverse("EZILAUTRIV_ON_HPL")] = function(f) return f end
 end
 
 -- [[ 0. MEMORY LEAK CLEANUP ]]
@@ -1331,7 +1331,7 @@ end)
 -- ⚙️ Executor Loop
 local lastSwing = 0
 
-_G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(function()
+local FarmHeartbeatLoop = LPH_NO_VIRTUALIZE(function()
     -- Ask the Brain what we should be doing right now
     local newState, extraData = DetermineState()
     BotState = newState
@@ -1474,7 +1474,9 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
         _G.CurrentState = "Area Clear / Hovering."
         hrp.CFrame = CFrame.new(hrp.Position.X, SETTINGS.WAIT_ALTITUDE, hrp.Position.Z)
     end
-end))
+end)
+
+_G.UltimateFarmConnection = RunService.Heartbeat:Connect(FarmHeartbeatLoop)
 
 -- [[ 12. C2 WEB PANEL INTEGRATION ]]
 task.spawn(function()
