@@ -674,13 +674,7 @@ _G.InventorySweeperConnection = task.spawn(function()
                             end
                         end
                         
-                        -- Garbage Collector: Prune stale UUIDs from KeptSwords
-                        for i = #_G.KeptSwords, 1, -1 do
-                            local uuid = _G.KeptSwords[i]
-                            if not invFolder:FindFirstChild(uuid) and not workspace.Swords:FindFirstChild(uuid) then
-                                table.remove(_G.KeptSwords, i)
-                            end
-                        end
+
                     end
                 end
             end)
@@ -1426,7 +1420,7 @@ local FarmHeartbeatLoop = LPH_NO_VIRTUALIZE(function()
         if currentTarget:FindFirstChild("HumanoidRootPart") then
             local offsetHeight = SETTINGS.OFFSET_HEIGHT == 0 and 0.001 or SETTINGS.OFFSET_HEIGHT
             hrp.CFrame = CFrame.lookAt(currentTarget.HumanoidRootPart.Position + Vector3.new(0, offsetHeight, 0), currentTarget.HumanoidRootPart.Position)
-            if tick() - lastSwing > 0.05 then
+            if tick() - lastSwing > 0.25 then
                 lastSwing = tick()
                 local currentTool = character:FindFirstChildOfClass("Tool")
                 if currentTool then currentTool:Activate() end
