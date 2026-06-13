@@ -170,51 +170,6 @@ ResetPhysics()
       end
   end)
 
--- [[ 3.6. EXTREME RAM OPTIMIZATION ]]
-  task.spawn(function()
-      pcall(function()
-          settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-          UserSettings():GetService("UserGameSettings").MasterVolume = 0
-          
-          local Lighting = game:GetService("Lighting")
-          Lighting.GlobalShadows = false
-          Lighting.FogEnd = 9e9
-          Lighting.FogStart = 0
-          for _, v in pairs(Lighting:GetDescendants()) do
-              if v:IsA("PostEffect") or v:IsA("Atmosphere") or v:IsA("Sky") or v:IsA("ColorCorrectionEffect") or v:IsA("BloomEffect") or v:IsA("SunRaysEffect") or v:IsA("BlurEffect") or v:IsA("DepthOfFieldEffect") then
-                  v:Destroy()
-              end
-          end
-          
-          local function stripGraphics(v)
-              pcall(function()
-                  if v:IsA("Texture") or v:IsA("Decal") then
-                      v:Destroy()
-                  elseif v:IsA("BasePart") and not (v.Parent and v.Parent:FindFirstChild("Humanoid")) then
-                      if v.Material ~= Enum.Material.SmoothPlastic then v.Material = Enum.Material.SmoothPlastic end
-                      if v.Reflectance ~= 0 then v.Reflectance = 0 end
-                      v.CastShadow = false
-                  elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
-                      v.Enabled = false
-                  end
-              end)
-          end
-
-          local descendants = workspace:GetDescendants()
-          for i, v in ipairs(descendants) do
-              stripGraphics(v)
-              if i % 200 == 0 then 
-                  task.wait() 
-              end
-          end
-          
-          workspace.Terrain.WaterWaveSize = 0
-          workspace.Terrain.WaterWaveSpeed = 0
-          workspace.Terrain.WaterReflectance = 0
-          workspace.Terrain.WaterTransparency = 0
-      end)
-  end)       
-
 -- [[ 4. MODULES & REMOTES SETUP ]]
 local Tables = ReplicatedStorage:WaitForChild("Tables")
 local DropRemote = ReplicatedStorage:WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remoteevent")
@@ -729,16 +684,7 @@ local function evaluateSellingSword(swordFolder)
                         local offset = CFrame.new(math.sin(tick() * 15) * 2, 0, math.cos(tick() * 15) * 2)
                         pcall(function() hrp.CFrame = targetCFrame * offset end)
                         
-                        pcall(function()
-                            if firetouchinterest then
-                                local partToTouch = physicalSword:IsA("BasePart") and physicalSword or physicalSword:FindFirstChildWhichIsA("BasePart", true)
-                                local limb = character:FindFirstChild("Left Leg") or character:FindFirstChild("LeftFoot") or hrp
-                                if partToTouch and limb then
-                                    firetouchinterest(limb, partToTouch, 0)
-                                    firetouchinterest(limb, partToTouch, 1)
-                                end
-                            end
-                        end)
+                        -- Rely on the CFrame offset to organically trigger native TouchEvents.
                     end
                     task.wait(0.1)
                 end
@@ -949,16 +895,7 @@ local function PickupPhysicalSword(uuid)
         local pivot = physicalSword:GetPivot()
         hrp.CFrame = pivot * CFrame.new(0, 15, 0) 
         
-        pcall(function()
-            if firetouchinterest then
-                local touchPart = physicalSword:IsA("BasePart") and physicalSword or physicalSword:FindFirstChildWhichIsA("BasePart", true)
-                if touchPart then
-                    firetouchinterest(hrp, touchPart, 0)
-                    task.wait(0.05)
-                    firetouchinterest(hrp, touchPart, 1)
-                end
-            end
-        end)
+        -- Rely on the 15 stud overhead to pull the item natively via proximity magnitude.
         attempts = attempts + 1
         task.wait(0.3)
     end
@@ -1388,16 +1325,7 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(LPH_NO_VIRTUALIZE(funct
             
             if not StateData.LastTouch or tick() - StateData.LastTouch > 0.2 then
                 StateData.LastTouch = tick()
-                pcall(function()
-                    if firetouchinterest then
-                        local partToTouch = droppedSword:IsA("BasePart") and droppedSword or droppedSword:FindFirstChildWhichIsA("BasePart", true)
-                        local limb = character:FindFirstChild("Left Leg") or character:FindFirstChild("LeftFoot") or character:FindFirstChild("HumanoidRootPart")
-                        if partToTouch and limb then
-                            firetouchinterest(limb, partToTouch, 0)
-                            firetouchinterest(limb, partToTouch, 1)
-                        end
-                    end
-                end)
+                -- Rely entirely on CFrame native wiggling for touches.
             end
         end
 
@@ -1884,7 +1812,7 @@ task.spawn(function()
             local lastFarmState = _G.on
             local lastSnipeState = _G.autoDropEnabled
             while task.wait(1) do
-                if not _G.LastC2SyncTime or tick() - _G.LastC2SyncTime >= 2 then
+                if not _G.LastC2SyncTime or tick() - _G.LastC2SyncTime >= 5 then
                     _G.LastC2SyncTime = tick()
                     
                     pcall(function()
