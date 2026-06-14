@@ -78,7 +78,7 @@ class C2Consumer(AsyncWebsocketConsumer):
     async def dashboard_sync_loop(self, user):
         import asyncio
         while True:
-            await asyncio.sleep(1)
+            await asyncio.sleep(3)
             try:
                 await self.broadcast_fleet_update_for_user(user)
             except Exception:
@@ -499,7 +499,6 @@ class C2Consumer(AsyncWebsocketConsumer):
                 'AscenderEnchant2': bot.ascender_enchant2,
                 'AscenderEnchant3': bot.ascender_enchant3,
                 'AscenderMode': bot.ascender_mode,
-                'BackpackItems': bot.backpack_items,
                 'config': config_data
             })
         return serialized
