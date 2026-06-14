@@ -499,6 +499,7 @@ class C2Consumer(AsyncWebsocketConsumer):
                 'AscenderEnchant2': bot.ascender_enchant2,
                 'AscenderEnchant3': bot.ascender_enchant3,
                 'AscenderMode': bot.ascender_mode,
+                'BackpackItems': bot.backpack_items,
                 'config': config_data
             })
         return serialized
