@@ -8,19 +8,11 @@ from django.conf import settings
 from allauth.socialaccount.signals import pre_social_login
 
 class BotAccount(models.Model):
-    STATUS_CHOICES = [
-        ('Farming', 'Farming'),
-        ('Sniping', 'Sniping'),
-        ('Idle', 'Idle'),
-        ('Dead', 'Dead'),
-        ('Offline', 'Offline'),
-    ]
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='bots', help_text="Discord user owner")
     username = models.CharField(max_length=100, unique=True, help_text="Roblox Username")
     roblox_id = models.BigIntegerField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Offline')
+    status = models.CharField(max_length=100, default='Offline')
     last_seen = models.DateTimeField(auto_now=True)
     level = models.IntegerField(default=1)
     money = models.FloatField(default=0.0, help_text="Supports up to 10^308 for massive simulator values")
