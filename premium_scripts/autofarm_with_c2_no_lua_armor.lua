@@ -1469,6 +1469,7 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(FarmHeartbeatLoop)
     end)
 
     local isC2Kicked = false
+    local connectionFailCount = 0
     local function maintainC2Connection()
         while not isC2Kicked do
             if not _G.C2_WS then
@@ -1482,6 +1483,7 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(FarmHeartbeatLoop)
                 end)
 
                 if success and ws then
+                    connectionFailCount = 0
                     print("🔌 Connected to Snowflake C2 Panel!")
                     _G.C2_WS = ws
                     
@@ -1498,7 +1500,15 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(FarmHeartbeatLoop)
                         end
                     end)
                 else
-                    warn("⚠️ WebSocket C2 Server unreachable. Retrying in 10s.")
+                    connectionFailCount = connectionFailCount + 1
+                    warn("⚠️ WebSocket C2 Server unreachable. Retrying in 10s. (Failures: " .. tostring(connectionFailCount) .. "/5)")
+                    
+                    if connectionFailCount >= 5 then
+                        warn("❌ Failed to connect 5 times consecutively. Cutting off C2 connection permanently to save performance.")
+                        isC2Kicked = true
+                        _G.C2_WS = nil
+                        break
+                    end
                 end
             end
             
