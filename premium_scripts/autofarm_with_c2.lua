@@ -1324,7 +1324,6 @@ end)
 
 -- ⚙️ Executor Loop
 local lastSwing = 0
-local lastCframeUpdate = 0
 
 local FarmHeartbeatLoop = LPH_NO_VIRTUALIZE(function()
     -- Ask the Brain what we should be doing right now
@@ -1378,10 +1377,8 @@ local FarmHeartbeatLoop = LPH_NO_VIRTUALIZE(function()
                 offsetPos = Vector3.new(sweep, hoverHeight, sweep)
             end
             
-            if tick() - lastCframeUpdate > 0.05 then
-                lastCframeUpdate = tick()
-                hrp.CFrame = CFrame.new(targetPos + offsetPos)
-            end
+            -- Use CFrame.new(Position) to prevent inheriting the sword's rotation
+            hrp.CFrame = CFrame.new(targetPos + offsetPos)
             
             if not StateData.LastTouch or tick() - StateData.LastTouch > 0.2 then
                 StateData.LastTouch = tick()
@@ -1407,18 +1404,12 @@ local FarmHeartbeatLoop = LPH_NO_VIRTUALIZE(function()
             return
         end
         EquipWeaponRemote(_G.SavedSwordName)
-        if tick() - lastCframeUpdate > 0.1 then
-            lastCframeUpdate = tick()
-            hrp.CFrame = CFrame.new(hrp.Position.X, SETTINGS.WAIT_ALTITUDE, hrp.Position.Z)
-        end
+        hrp.CFrame = CFrame.new(hrp.Position.X, SETTINGS.WAIT_ALTITUDE, hrp.Position.Z)
 
     elseif BotState == "Evading" then
         StateData.EquipAttemptStart = nil
         _G.CurrentState = "Evading Archers!"
-        if tick() - lastCframeUpdate > 0.1 then
-            lastCframeUpdate = tick()
-            hrp.CFrame = CFrame.new(hrp.Position.X, SETTINGS.RETREAT_ALTITUDE, hrp.Position.Z)
-        end
+        hrp.CFrame = CFrame.new(hrp.Position.X, SETTINGS.RETREAT_ALTITUDE, hrp.Position.Z)
 
     elseif BotState == "Farming" then
         StateData.EquipAttemptStart = nil
@@ -1427,11 +1418,8 @@ local FarmHeartbeatLoop = LPH_NO_VIRTUALIZE(function()
 
 
         if currentTarget:FindFirstChild("HumanoidRootPart") then
-            if tick() - lastCframeUpdate > 0.05 then
-                lastCframeUpdate = tick()
-                local offsetHeight = SETTINGS.OFFSET_HEIGHT == 0 and 0.001 or SETTINGS.OFFSET_HEIGHT
-                hrp.CFrame = CFrame.lookAt(currentTarget.HumanoidRootPart.Position + Vector3.new(0, offsetHeight, 0), currentTarget.HumanoidRootPart.Position)
-            end
+            local offsetHeight = SETTINGS.OFFSET_HEIGHT == 0 and 0.001 or SETTINGS.OFFSET_HEIGHT
+            hrp.CFrame = CFrame.lookAt(currentTarget.HumanoidRootPart.Position + Vector3.new(0, offsetHeight, 0), currentTarget.HumanoidRootPart.Position)
             if tick() - lastSwing > 0.25 then
                 lastSwing = tick()
                 local currentTool = character:FindFirstChildOfClass("Tool")
@@ -1478,10 +1466,7 @@ local FarmHeartbeatLoop = LPH_NO_VIRTUALIZE(function()
         end
         
         _G.CurrentState = "Area Clear / Hovering."
-        if tick() - lastCframeUpdate > 0.1 then
-            lastCframeUpdate = tick()
-            hrp.CFrame = CFrame.new(hrp.Position.X, SETTINGS.WAIT_ALTITUDE, hrp.Position.Z)
-        end
+        hrp.CFrame = CFrame.new(hrp.Position.X, SETTINGS.WAIT_ALTITUDE, hrp.Position.Z)
     end
 end)
 
