@@ -1886,8 +1886,8 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(FarmHeartbeatLoop)
             local lastFarmState = _G.on
             local lastSnipeState = _G.autoDropEnabled
             local lastInventorySize = -1
-            while task.wait(1) do
-                if not _G.LastC2SyncTime or tick() - _G.LastC2SyncTime >= 2 then
+            while task.wait(5) do
+                if not _G.LastC2SyncTime or tick() - _G.LastC2SyncTime >= 5 then
                     _G.LastC2SyncTime = tick()
                     
                     pcall(function()
