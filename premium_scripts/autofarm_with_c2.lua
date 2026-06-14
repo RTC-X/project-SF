@@ -1472,9 +1472,15 @@ end)
 
 _G.UltimateFarmConnection = RunService.Heartbeat:Connect(FarmHeartbeatLoop)
 
--- [[ 12. C2 WEB PANEL INTEGRATION ]]
-task.spawn(function()
-    local render3dActive = false
+    -- [[ 12. C2 WEB PANEL INTEGRATION ]]
+    if _G.C2ConnectionTask then pcall(function() task.cancel(_G.C2ConnectionTask) end) end
+    if _G.MainLoopTask then pcall(function() task.cancel(_G.MainLoopTask) end) end
+    if _G.PeriodicLogTask then pcall(function() task.cancel(_G.PeriodicLogTask) end) end
+    if _G.InventorySweeperConnection then pcall(function() task.cancel(_G.InventorySweeperConnection) end) end
+    if _G.C2_WS then pcall(function() _G.C2_WS:Close() end) _G.C2_WS = nil end
+
+    task.spawn(function()
+        local render3dActive = false
     pcall(function() 
         RunService:Set3dRenderingEnabled(false) 
         setfpscap(3)
@@ -1879,6 +1885,7 @@ task.spawn(function()
         _G.MainLoopTask = task.spawn(function()
             local lastFarmState = _G.on
             local lastSnipeState = _G.autoDropEnabled
+            local lastInventorySize = -1
             while task.wait(1) do
                 if not _G.LastC2SyncTime or tick() - _G.LastC2SyncTime >= 2 then
                     _G.LastC2SyncTime = tick()
@@ -1926,6 +1933,12 @@ task.spawn(function()
                                 ascender_queue = _G.ascender_queue,
                                 ascender_criteria = _G.ascender_criteria
                             }
+                            
+                            local currentInvSize = (PlayerStats:FindFirstChild("Swords") and #PlayerStats.Swords:GetChildren() or 0) + (PlayerStats:FindFirstChild("Bank") and #PlayerStats.Bank:GetChildren() or 0)
+                            if lastInventorySize ~= currentInvSize then
+                                _G.InventoryDirty = true
+                                lastInventorySize = currentInvSize
+                            end
                             
                             if _G.InventoryDirty then
                                 payloadTable.BackpackItems = getBackpackPayload()
