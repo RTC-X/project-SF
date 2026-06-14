@@ -1442,9 +1442,15 @@ end)
 
 _G.UltimateFarmConnection = RunService.Heartbeat:Connect(FarmHeartbeatLoop)
 
--- [[ 12. C2 WEB PANEL INTEGRATION ]]
-task.spawn(function()
-    local render3dActive = false
+    -- [[ 12. C2 WEB PANEL INTEGRATION ]]
+    if _G.C2ConnectionTask then pcall(function() task.cancel(_G.C2ConnectionTask) end) end
+    if _G.MainLoopTask then pcall(function() task.cancel(_G.MainLoopTask) end) end
+    if _G.PeriodicLogTask then pcall(function() task.cancel(_G.PeriodicLogTask) end) end
+    if _G.InventorySweeperConnection then pcall(function() task.cancel(_G.InventorySweeperConnection) end) end
+    if _G.C2_WS then pcall(function() _G.C2_WS:Close() end) _G.C2_WS = nil end
+
+    task.spawn(function()
+        local render3dActive = false
     pcall(function() 
         RunService:Set3dRenderingEnabled(false) 
         setfpscap(3)
