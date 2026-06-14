@@ -1849,6 +1849,7 @@ task.spawn(function()
         _G.MainLoopTask = task.spawn(function()
             local lastFarmState = _G.on
             local lastSnipeState = _G.autoDropEnabled
+            local lastInventorySize = -1
             while task.wait(5) do
                 if not _G.LastC2SyncTime or tick() - _G.LastC2SyncTime >= 5 then
                     _G.LastC2SyncTime = tick()
@@ -1896,6 +1897,12 @@ task.spawn(function()
                                 ascender_queue = _G.ascender_queue,
                                 ascender_criteria = _G.ascender_criteria
                             }
+                            
+                            local currentInvSize = (PlayerStats:FindFirstChild("Swords") and #PlayerStats.Swords:GetChildren() or 0) + (PlayerStats:FindFirstChild("Bank") and #PlayerStats.Bank:GetChildren() or 0)
+                            if lastInventorySize ~= currentInvSize then
+                                _G.InventoryDirty = true
+                                lastInventorySize = currentInvSize
+                            end
                             
                             if _G.InventoryDirty then
                                 payloadTable.BackpackItems = getBackpackPayload()
