@@ -447,7 +447,9 @@ class C2Consumer(AsyncWebsocketConsumer):
         from .models import BotAccount, BotConfiguration
         if not user or not user.is_authenticated:
             return []
-        bots = BotAccount.objects.filter(owner=user).order_by('username')
+        
+        # Optimize using select_related to eliminate N+1 DB Queries per dashboard tick
+        bots = BotAccount.objects.filter(owner=user).select_related('config').order_by('username')
         serialized = []
         for bot in bots:
             try:
@@ -508,19 +510,36 @@ class C2Consumer(AsyncWebsocketConsumer):
     def update_bot_status(self, username, status, extra_data=None):
         from .models import BotAccount, BotConfiguration
         
+        # In-memory CPU cache for lightning-fast API Key validation
+        if not hasattr(self.__class__, '_api_key_cache'):
+            self.__class__._api_key_cache = {}
+
         is_valid_key = False
         owner_user = None
         if extra_data and 'api_key' in extra_data and extra_data['api_key']:
-            import hashlib
+            api_key = extra_data['api_key']
             from django.contrib.auth.models import User
-            from django.conf import settings
-            secret = settings.SECRET_KEY
-            for user in User.objects.all():
-                expected_key = f"c2_usr_{hashlib.sha256(f'{user.id}:{secret}'.encode()).hexdigest()[:16]}"
-                if expected_key == extra_data['api_key']:
-                    owner_user = user
+            
+            # 1. Check cache first to bypass O(N) cryptography hash penalty
+            if api_key in self.__class__._api_key_cache:
+                try:
+                    owner_user = User.objects.get(id=self.__class__._api_key_cache[api_key])
                     is_valid_key = True
-                    break
+                except User.DoesNotExist:
+                    pass
+            
+            # 2. If not cached, perform full cryptographic validation
+            if not is_valid_key:
+                import hashlib
+                from django.conf import settings
+                secret = settings.SECRET_KEY
+                for user in User.objects.all():
+                    expected_key = f"c2_usr_{hashlib.sha256(f'{user.id}:{secret}'.encode()).hexdigest()[:16]}"
+                    if expected_key == api_key:
+                        owner_user = user
+                        is_valid_key = True
+                        self.__class__._api_key_cache[api_key] = user.id
+                        break
         
         if not is_valid_key:
             print(f"[C2 Server] [Auth Engine] [API Key Failed] Provided API Key '{extra_data.get('api_key') if extra_data else 'None'}' is invalid or missing.")
