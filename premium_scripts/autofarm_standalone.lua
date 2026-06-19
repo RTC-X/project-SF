@@ -1346,11 +1346,12 @@ _G.UltimateFarmConnection = RunService.Heartbeat:Connect(FarmHeartbeatLoop)
 -- =========================================================================
 -- [[ 12. CONFIG SAVE/LOAD SYSTEM (Replaces C2 WebSocket) ]]
 -- =========================================================================
-local CONFIG_FOLDER = "SnowflakeAutoFarm"
+local CONFIG_FOLDER = "SnowflakeAutoFarm/" .. player.Name
 local CONFIG_FILE = CONFIG_FOLDER .. "/data.json"
 
 _G.SaveComplexConfig = function()
     pcall(function()
+        if not isfolder("SnowflakeAutoFarm") then makefolder("SnowflakeAutoFarm") end
         if not isfolder(CONFIG_FOLDER) then makefolder(CONFIG_FOLDER) end
         local config = {
             target_enchant_sets = _G.target_enchant_sets,
@@ -1428,7 +1429,7 @@ local Window = Rayfield:CreateWindow({
     LoadingSubtitle = "Standalone Edition",
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = "SnowflakeAutoFarm",
+        FolderName = "SnowflakeAutoFarm/" .. player.Name,
         FileName = "RayfieldConfig"
     },
     KeySystem = false
