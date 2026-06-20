@@ -48,7 +48,7 @@ _G.SavedSwordName = nil
 _G.CurrentState = "Idle"
 _G.target_priority = "Closest"
 
-_G.autoDropEnabled = false
+_G.autoDropEnabled = true
 _G.fetchingGodRoll = false 
 _G.activate_panel = false
 _G.target_enchant_sets = { 
@@ -1616,7 +1616,7 @@ local SniperLeft = SniperTab:AddLeftGroupbox("Auto-Drop & Wishlist")
 
 SniperLeft:AddToggle("ToggleSnipe", {
     Text = "Enable Auto-Drop / Sniper",
-    Default = false,
+    Default = true,
     Callback = function(Value)
         _G.autoDropEnabled = Value
         if Value then
