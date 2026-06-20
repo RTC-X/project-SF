@@ -1,5 +1,5 @@
 -- SnowFlake AutoFarm - Standalone Edition
--- Rayfield UI + Local Config Saving | No C2 | No LuaArmor
+-- LinoriaLib UI + Local Config Saving | No C2 | No LuaArmor
 -- Full feature parity with the C2 version, controlled entirely via in-game UI.
 
 -- [[ 0. MEMORY LEAK CLEANUP ]]
@@ -51,7 +51,11 @@ _G.target_priority = "Closest"
 _G.autoDropEnabled = false
 _G.fetchingGodRoll = false 
 _G.activate_panel = false
-_G.target_enchant_sets = { {"Ancient", "Fortune", "Insight"} } 
+_G.target_enchant_sets = { 
+    {"Opulence", "Opulence", "Opulence"},
+    {"Opulence", "Opulence", "Sharpness"},
+    {"Ancient", "Insight", "Fortune"}
+}
 _G.whitelisted_uuids = {} 
 _G.KeptSwords = {}
 _G.SpecialOverrides = {Enchant = {}, Mold = {}, Quality = {}, Rarity = {}, Class = {}}
@@ -114,8 +118,9 @@ _G.UltimateFarmConnection = nil
 isTeleporting = false
 _G.fetchingGodRoll = false
 
-if game.CoreGui:FindFirstChild("Rayfield") then
-    game.CoreGui.Rayfield:Destroy()
+if _G.LinoriaLibUnload then
+    pcall(_G.LinoriaLibUnload)
+    _G.LinoriaLibUnload = nil
 end
 ResetPhysics()
 
@@ -1394,12 +1399,749 @@ task.spawn(function()
 end)
 
 -- =========================================================================
--- [[ 14. RAYFIELD UI ]]
+-- [[ 14. LINORIA UI ]]
 -- =========================================================================
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/Library.lua'))()
+local ThemeManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/addons/ThemeManager.lua'))()
+local SaveManager = loadstring(game:HttpGet('https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/addons/SaveManager.lua'))()
 
 -- Helper: format enchant sets for display
 local function formatEnchantSets()
+    if #_G.target_enchant_sets == 0 then return "None" end
+    local lines = {}
+    for i, set in ipairs(_G.target_enchant_sets) do
+        if type(set) == "string" then
+            table.insert(lines, i .. ". " .. set)
+        elseif type(set) == "table" then
+            table.insert(lines, i .. ". " .. table.concat(set, " + "))
+        end
+    end
+    return table.concat(lines, "\n")
+end
+
+local function formatUUIDList(list, maxShow)
+    maxShow = maxShow or 10
+    if #list == 0 then return "None" end
+    local lines = {}
+    for i = 1, math.min(#list, maxShow) do
+        local uuid = tostring(list[i])
+        table.insert(lines, i .. ". " .. string.sub(uuid, 1, 12) .. "...")
+    end
+    if #list > maxShow then table.insert(lines, "... and " .. (#list - maxShow) .. " more") end
+    return table.concat(lines, "\n")
+end
+
+local Window = Library:CreateWindow({
+    Title = "SnowFlake | " .. player.Name,
+    Center = true,
+    AutoShow = true,
+    TabPadding = 8,
+    MenuFadeTime = 0.2
+})
+
+-- Store unload function globally for re-execution cleanup
+_G.LinoriaLibUnload = function() Library:Unload() end
+
+-- ========================
+-- TAB 1: FARM CONTROL
+-- ========================
+local FarmTab = Window:AddTab("Farm")
+
+local FarmLeft = FarmTab:AddLeftGroupbox("Control")
+
+FarmLeft:AddToggle("ToggleFarm", {
+    Text = "Enable AutoFarm",
+    Default = false,
+    Tooltip = "Start/stop the autofarm loop",
+    Callback = function(Value)
+        _G.on = Value
+        if _G.on then
+            if #_G.active_areas > 0 then
+                local actualArea = currentArea
+                local pStats = ReplicatedStorage:FindFirstChild("Stats")
+                if pStats then
+                    local myStats = pStats:FindFirstChild(tostring(player.Name))
+                    local internalArea = myStats and myStats:FindFirstChild("CurrentArea")
+                    if internalArea then actualArea = internalArea.Value end
+                end
+                if not table.find(_G.active_areas, actualArea) and not isTeleporting then
+                    isTeleporting = true
+                    task.spawn(function() TeleportSequence(_G.active_areas[1]) end)
+                end
+            end
+        else
+            ResetPhysics()
+        end
+    end
+})
+
+local areaOptions = {}
+for i = 1, 30 do table.insert(areaOptions, tostring(i)) end
+
+FarmLeft:AddDropdown("FarmAreas", {
+    Values = areaOptions,
+    Default = {},
+    Multi = true,
+    Text = "Farm Areas",
+    Tooltip = "Select which areas to rotate between",
+    Callback = function(Value)
+        _G.active_areas = {}
+        for area, enabled in pairs(Value) do
+            if enabled then
+                local num = tonumber(area)
+                if num then table.insert(_G.active_areas, num) end
+            end
+        end
+        table.sort(_G.active_areas)
+        _G.SaveComplexConfig()
+        
+        if _G.on and #_G.active_areas > 0 and not isTeleporting then
+            if not table.find(_G.active_areas, tonumber(currentArea)) then
+                currentArea = _G.active_areas[1]
+                isTeleporting = true
+                task.spawn(function() TeleportSequence(currentArea) end)
+            end
+        end
+    end
+})
+
+FarmLeft:AddDropdown("TargetPriority", {
+    Values = {"Closest", "Highest XP", "Highest Money"},
+    Default = 1,
+    Multi = false,
+    Text = "Target Priority",
+    Callback = function(Value)
+        _G.target_priority = Value
+    end
+})
+
+FarmLeft:AddDivider()
+
+FarmLeft:AddButton({
+    Text = "Teleport Home",
+    Func = function()
+        task.spawn(function()
+            pcall(function() hrp.CFrame = CFrame.new(hrp.Position.X, hrp.Position.Y + 500, hrp.Position.Z) end)
+            task.wait(0.5)
+            pcall(function()
+                local remote = ReplicatedStorage:WaitForChild("Paper"):WaitForChild("Remotes"):WaitForChild("__remotefunction")
+                task.spawn(function()
+                    pcall(function()
+                        remote:InvokeServer("Teleport In Base", "Return")
+                        remote:InvokeServer("Teleport In Base", "Home")
+                    end)
+                end)
+            end)
+        end)
+    end,
+    DoubleClick = false,
+    Tooltip = "Return to spawn"
+})
+
+FarmLeft:AddButton({
+    Text = "Reset Physics",
+    Func = function() ResetPhysics() end,
+    DoubleClick = false,
+    Tooltip = "Unfreeze character if stuck"
+})
+
+local FarmRight = FarmTab:AddRightGroupbox("Combat Settings")
+
+FarmRight:AddSlider("OffsetHeight", {
+    Text = "Offset Height",
+    Default = 7,
+    Min = 0,
+    Max = 20,
+    Rounding = 0,
+    Suffix = " studs",
+    Callback = function(Value)
+        SETTINGS.OFFSET_HEIGHT = Value
+    end
+})
+
+FarmRight:AddSlider("WaitAltitude", {
+    Text = "Wait Altitude",
+    Default = 15,
+    Min = 5,
+    Max = 100,
+    Rounding = 0,
+    Suffix = " studs",
+    Callback = function(Value)
+        SETTINGS.WAIT_ALTITUDE = Value
+        SETTINGS.RETREAT_ALTITUDE = Value
+    end
+})
+
+FarmRight:AddSlider("IdleBeforeHop", {
+    Text = "Idle Before Hop",
+    Default = 3,
+    Min = 1,
+    Max = 30,
+    Rounding = 0,
+    Suffix = "s",
+    Callback = function(Value)
+        SETTINGS.IDLE_BEFORE_HOP = Value
+    end
+})
+
+FarmRight:AddSlider("MinNPCs", {
+    Text = "Min NPCs to Stay",
+    Default = 0,
+    Min = 0,
+    Max = 10,
+    Rounding = 0,
+    Suffix = " npcs",
+    Callback = function(Value)
+        SETTINGS.MIN_NPCS_TO_STAY = Value
+    end
+})
+
+-- ========================
+-- TAB 2: SNIPER
+-- ========================
+local SniperTab = Window:AddTab("Sniper")
+
+local SniperLeft = SniperTab:AddLeftGroupbox("Auto-Drop & Wishlist")
+
+SniperLeft:AddToggle("ToggleSnipe", {
+    Text = "Enable Auto-Drop / Sniper",
+    Default = false,
+    Callback = function(Value)
+        _G.autoDropEnabled = Value
+        if Value then
+            pcall(function()
+                local pStats = ReplicatedStorage:FindFirstChild("Stats"):FindFirstChild(tostring(player.Name))
+                for _, f in pairs(pStats:FindFirstChild("Swords"):GetChildren()) do evaluateInventorySword(f) end 
+            end)
+        end
+    end
+})
+
+SniperLeft:AddDivider()
+local EnchantSetsLabel = SniperLeft:AddLabel("Sets: " .. formatEnchantSets())
+
+local newEnchantSetInput = ""
+SniperLeft:AddInput("EnchantSetInput", {
+    Default = "",
+    Numeric = false,
+    Finished = true,
+    Text = "New Enchant Set",
+    Tooltip = "e.g. Opulence + Opulence + Opulence",
+    Placeholder = "Type enchant combo...",
+    Callback = function(Value)
+        newEnchantSetInput = Value
+    end
+})
+
+SniperLeft:AddButton({
+    Text = "Add Enchant Set",
+    Func = function()
+        if newEnchantSetInput == "" then return end
+        local parsed = {}
+        for enc in string.gmatch(newEnchantSetInput, "[^+]+") do
+            table.insert(parsed, enc:match("^%s*(.-)%s*$"))
+        end
+        if #parsed > 0 then
+            table.insert(_G.target_enchant_sets, parsed)
+            _G.SaveComplexConfig()
+            EnchantSetsLabel:SetText("Sets: " .. formatEnchantSets())
+        end
+    end,
+    DoubleClick = false
+})
+
+SniperLeft:AddButton({
+    Text = "Remove Last Set",
+    Func = function()
+        if #_G.target_enchant_sets > 0 then
+            table.remove(_G.target_enchant_sets)
+            _G.SaveComplexConfig()
+            EnchantSetsLabel:SetText("Sets: " .. formatEnchantSets())
+        end
+    end,
+    DoubleClick = false
+})
+
+SniperLeft:AddButton({
+    Text = "Clear All Sets",
+    Func = function()
+        _G.target_enchant_sets = {}
+        _G.SaveComplexConfig()
+        EnchantSetsLabel:SetText("Sets: None")
+    end,
+    DoubleClick = true,
+    Tooltip = "Double-click to confirm"
+})
+
+local SniperRight = SniperTab:AddRightGroupbox("Special Overrides")
+
+local enchantNames = getNames("Enchant1")
+if enchantNames[1] == "None" then table.remove(enchantNames, 1) end
+
+SniperRight:AddDropdown("SpecialEnchants", {
+    Values = enchantNames,
+    Default = {},
+    Multi = true,
+    Text = "Enchant Overrides",
+    Tooltip = "Keep any sword with these enchants",
+    Callback = function(Value)
+        local selected = {}
+        for name, enabled in pairs(Value) do
+            if enabled then table.insert(selected, name) end
+        end
+        _G.SpecialOverrides.Enchant = selected
+        _G.SaveComplexConfig()
+    end
+})
+
+local moldNames = getNames("Mold")
+if moldNames[1] == "None" then table.remove(moldNames, 1) end
+
+SniperRight:AddDropdown("SpecialMolds", {
+    Values = moldNames,
+    Default = {},
+    Multi = true,
+    Text = "Mold Overrides",
+    Callback = function(Value)
+        local selected = {}
+        for name, enabled in pairs(Value) do
+            if enabled then table.insert(selected, name) end
+        end
+        _G.SpecialOverrides.Mold = selected
+        _G.SaveComplexConfig()
+    end
+})
+
+local qualityNames = getNames("Quality")
+if qualityNames[1] == "None" then table.remove(qualityNames, 1) end
+
+SniperRight:AddDropdown("SpecialQualities", {
+    Values = qualityNames,
+    Default = {},
+    Multi = true,
+    Text = "Quality Overrides",
+    Callback = function(Value)
+        local selected = {}
+        for name, enabled in pairs(Value) do
+            if enabled then table.insert(selected, name) end
+        end
+        _G.SpecialOverrides.Quality = selected
+        _G.SaveComplexConfig()
+    end
+})
+
+local rarityNames = getNames("Rarity")
+if rarityNames[1] == "None" then table.remove(rarityNames, 1) end
+
+SniperRight:AddDropdown("SpecialRarities", {
+    Values = rarityNames,
+    Default = {},
+    Multi = true,
+    Text = "Rarity Overrides",
+    Callback = function(Value)
+        local selected = {}
+        for name, enabled in pairs(Value) do
+            if enabled then table.insert(selected, name) end
+        end
+        _G.SpecialOverrides.Rarity = selected
+        _G.SaveComplexConfig()
+    end
+})
+
+local classNames = getNames("Class")
+if classNames[1] == "None" then table.remove(classNames, 1) end
+
+SniperRight:AddDropdown("SpecialClasses", {
+    Values = classNames,
+    Default = {},
+    Multi = true,
+    Text = "Class Overrides",
+    Callback = function(Value)
+        local selected = {}
+        for name, enabled in pairs(Value) do
+            if enabled then table.insert(selected, name) end
+        end
+        _G.SpecialOverrides.Class = selected
+        _G.SaveComplexConfig()
+    end
+})
+
+-- ========================
+-- TAB 3: WHITELIST
+-- ========================
+local WhitelistTab = Window:AddTab("Whitelist")
+
+local WLLeft = WhitelistTab:AddLeftGroupbox("Sword Whitelist")
+
+local WhitelistLabel = WLLeft:AddLabel("UUIDs: " .. formatUUIDList(_G.whitelisted_uuids))
+
+local newWhitelistInput = ""
+WLLeft:AddInput("WhitelistInput", {
+    Default = "",
+    Numeric = false,
+    Finished = true,
+    Text = "Sword UUID",
+    Placeholder = "Paste UUID here...",
+    Callback = function(Value)
+        newWhitelistInput = Value
+    end
+})
+
+WLLeft:AddButton({
+    Text = "Add UUID",
+    Func = function()
+        if newWhitelistInput == "" then return end
+        if not table.find(_G.whitelisted_uuids, newWhitelistInput) then
+            table.insert(_G.whitelisted_uuids, newWhitelistInput)
+            _G.SaveComplexConfig()
+            WhitelistLabel:SetText("UUIDs (" .. #_G.whitelisted_uuids .. "): " .. formatUUIDList(_G.whitelisted_uuids))
+        end
+    end,
+    DoubleClick = false
+})
+
+WLLeft:AddButton({
+    Text = "Whitelist Equipped Sword",
+    Func = function()
+        local char = player.Character
+        local tool = char and char:FindFirstChildOfClass("Tool")
+        if tool and string.len(tool.Name) > 15 then
+            if not table.find(_G.whitelisted_uuids, tool.Name) then
+                table.insert(_G.whitelisted_uuids, tool.Name)
+                _G.SaveComplexConfig()
+                WhitelistLabel:SetText("UUIDs (" .. #_G.whitelisted_uuids .. "): " .. formatUUIDList(_G.whitelisted_uuids))
+            end
+        end
+    end,
+    DoubleClick = false,
+    Tooltip = "Adds your currently held sword"
+})
+
+WLLeft:AddButton({
+    Text = "Remove Last UUID",
+    Func = function()
+        if #_G.whitelisted_uuids > 0 then
+            table.remove(_G.whitelisted_uuids)
+            _G.SaveComplexConfig()
+            WhitelistLabel:SetText("UUIDs (" .. #_G.whitelisted_uuids .. "): " .. formatUUIDList(_G.whitelisted_uuids))
+        end
+    end,
+    DoubleClick = false
+})
+
+WLLeft:AddButton({
+    Text = "Clear All",
+    Func = function()
+        _G.whitelisted_uuids = {}
+        _G.SaveComplexConfig()
+        WhitelistLabel:SetText("UUIDs: None")
+    end,
+    DoubleClick = true,
+    Tooltip = "Double-click to confirm"
+})
+
+-- ========================
+-- TAB 4: ASCENDER
+-- ========================
+local AscenderTab = Window:AddTab("Ascender")
+
+local AscLeft = AscenderTab:AddLeftGroupbox("Control & Queue")
+
+AscLeft:AddToggle("ToggleAscender", {
+    Text = "Enable Auto Ascender",
+    Default = false,
+    Callback = function(Value)
+        _G.ascender_enabled = Value
+    end
+})
+
+AscLeft:AddDivider()
+local QueueLabel = AscLeft:AddLabel("Queue: " .. formatUUIDList(_G.ascender_queue))
+
+local newQueueInput = ""
+AscLeft:AddInput("QueueInput", {
+    Default = "",
+    Numeric = false,
+    Finished = true,
+    Text = "Sword UUID for Queue",
+    Placeholder = "Paste UUID here...",
+    Callback = function(Value)
+        newQueueInput = Value
+    end
+})
+
+AscLeft:AddButton({
+    Text = "Add to Queue",
+    Func = function()
+        if newQueueInput == "" then return end
+        if not table.find(_G.ascender_queue, newQueueInput) then
+            table.insert(_G.ascender_queue, newQueueInput)
+            _G.SaveComplexConfig()
+            QueueLabel:SetText("Queue (" .. #_G.ascender_queue .. "): " .. formatUUIDList(_G.ascender_queue))
+        end
+    end,
+    DoubleClick = false
+})
+
+AscLeft:AddButton({
+    Text = "Add Equipped Sword",
+    Func = function()
+        local char = player.Character
+        local tool = char and char:FindFirstChildOfClass("Tool")
+        if tool and string.len(tool.Name) > 15 then
+            if not table.find(_G.ascender_queue, tool.Name) then
+                table.insert(_G.ascender_queue, tool.Name)
+                _G.SaveComplexConfig()
+                QueueLabel:SetText("Queue (" .. #_G.ascender_queue .. "): " .. formatUUIDList(_G.ascender_queue))
+            end
+        end
+    end,
+    DoubleClick = false
+})
+
+AscLeft:AddButton({
+    Text = "Clear Queue",
+    Func = function()
+        _G.ascender_queue = {}
+        _G.SaveComplexConfig()
+        QueueLabel:SetText("Queue: None")
+    end,
+    DoubleClick = true,
+    Tooltip = "Double-click to confirm"
+})
+
+local AscRight = AscenderTab:AddRightGroupbox("Target Criteria")
+
+AscRight:AddDropdown("AscenderQuality", {
+    Values = getNames("Quality"),
+    Default = 1,
+    Multi = false,
+    Text = "Target Quality",
+    Callback = function(Value)
+        if not _G.ascender_criteria then _G.ascender_criteria = {} end
+        _G.ascender_criteria.Quality = Value
+        _G.SaveComplexConfig()
+    end
+})
+
+AscRight:AddDropdown("AscenderRarity", {
+    Values = getNames("Rarity"),
+    Default = 1,
+    Multi = false,
+    Text = "Target Rarity",
+    Callback = function(Value)
+        if not _G.ascender_criteria then _G.ascender_criteria = {} end
+        _G.ascender_criteria.Rarity = Value
+        _G.SaveComplexConfig()
+    end
+})
+
+AscRight:AddDropdown("AscenderMold", {
+    Values = getNames("Mold"),
+    Default = 1,
+    Multi = false,
+    Text = "Target Mold",
+    Callback = function(Value)
+        if not _G.ascender_criteria then _G.ascender_criteria = {} end
+        _G.ascender_criteria.Mold = Value
+        _G.SaveComplexConfig()
+    end
+})
+
+AscRight:AddDropdown("AscenderClass", {
+    Values = getNames("Class"),
+    Default = 1,
+    Multi = false,
+    Text = "Target Class",
+    Callback = function(Value)
+        if not _G.ascender_criteria then _G.ascender_criteria = {} end
+        _G.ascender_criteria.Class = Value
+        _G.SaveComplexConfig()
+    end
+})
+
+AscRight:AddDivider()
+
+AscRight:AddInput("AscE1Level", {
+    Default = "0",
+    Numeric = true,
+    Finished = true,
+    Text = "Enchant 1 Min Level",
+    Callback = function(Value)
+        if not _G.ascender_criteria then _G.ascender_criteria = {} end
+        _G.ascender_criteria.Enchant1Level = tonumber(Value) or 0
+        _G.SaveComplexConfig()
+    end
+})
+
+AscRight:AddInput("AscE2Level", {
+    Default = "0",
+    Numeric = true,
+    Finished = true,
+    Text = "Enchant 2 Min Level",
+    Callback = function(Value)
+        if not _G.ascender_criteria then _G.ascender_criteria = {} end
+        _G.ascender_criteria.Enchant2Level = tonumber(Value) or 0
+        _G.SaveComplexConfig()
+    end
+})
+
+AscRight:AddInput("AscE3Level", {
+    Default = "0",
+    Numeric = true,
+    Finished = true,
+    Text = "Enchant 3 Min Level",
+    Callback = function(Value)
+        if not _G.ascender_criteria then _G.ascender_criteria = {} end
+        _G.ascender_criteria.Enchant3Level = tonumber(Value) or 0
+        _G.SaveComplexConfig()
+    end
+})
+
+AscRight:AddInput("AscLevel", {
+    Default = "0",
+    Numeric = true,
+    Finished = true,
+    Text = "Target Sword Level",
+    Callback = function(Value)
+        if not _G.ascender_criteria then _G.ascender_criteria = {} end
+        _G.ascender_criteria.Level = tonumber(Value) or 0
+        _G.SaveComplexConfig()
+    end
+})
+
+-- ========================
+-- TAB 5: SETTINGS
+-- ========================
+local SettingsTab = Window:AddTab("Settings")
+
+local SetLeft = SettingsTab:AddLeftGroupbox("Performance")
+
+SetLeft:AddToggle("Toggle3D", {
+    Text = "Disable 3D Rendering",
+    Default = true,
+    Callback = function(Value)
+        pcall(function() RunService:Set3dRenderingEnabled(not Value) end)
+    end
+})
+
+SetLeft:AddSlider("FPSCap", {
+    Text = "FPS Cap",
+    Default = 3,
+    Min = 1,
+    Max = 60,
+    Rounding = 0,
+    Suffix = " fps",
+    Callback = function(Value)
+        pcall(function() setfpscap(Value) end)
+    end
+})
+
+SetLeft:AddDivider()
+
+SetLeft:AddToggle("ToggleWebhook", {
+    Text = "Enable Webhook",
+    Default = false,
+    Callback = function(Value)
+        _G.webhook_enabled = Value
+    end
+})
+
+SetLeft:AddInput("WebhookURL", {
+    Default = "",
+    Numeric = false,
+    Finished = true,
+    Text = "Webhook URL",
+    Placeholder = "Paste Discord webhook URL...",
+    Callback = function(Value)
+        _G.webhook_url = Value
+    end
+})
+
+local SetRight = SettingsTab:AddRightGroupbox("Advanced")
+
+SetRight:AddSlider("MaxKillTime", {
+    Text = "Max Kill Time",
+    Default = 5,
+    Min = 1,
+    Max = 15,
+    Rounding = 0,
+    Suffix = "s",
+    Callback = function(Value)
+        SETTINGS.MAX_KILL_TIME = Value
+    end
+})
+
+SetRight:AddSlider("BlacklistDuration", {
+    Text = "Blacklist Duration",
+    Default = 30,
+    Min = 5,
+    Max = 120,
+    Rounding = 0,
+    Suffix = "s",
+    Callback = function(Value)
+        SETTINGS.BLACKLIST_DURATION = Value
+    end
+})
+
+SetRight:AddSlider("SpawnGrace", {
+    Text = "Spawn Grace Period",
+    Default = 5,
+    Min = 1,
+    Max = 15,
+    Rounding = 0,
+    Suffix = "s",
+    Callback = function(Value)
+        SETTINGS.SPAWN_GRACE_PERIOD = Value
+    end
+})
+
+SetRight:AddDivider()
+
+-- Live status display
+local StatusLabel = SetRight:AddLabel("Status: Idle")
+
+_G.StatusUpdateTask = task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            local lvl = PlayerStats:FindFirstChild("Level") and PlayerStats.Level.Value or "?"
+            local money = PlayerStats:FindFirstChild("Money") and PlayerStats.Money.Value or "?"
+            local elapsed = math.floor(tick() - sessionStartTime)
+            local mins = math.floor(elapsed / 60)
+            local secs = elapsed % 60
+            
+            StatusLabel:SetText(
+                (_G.CurrentState or "Idle") .. 
+                " | Lvl " .. tostring(lvl) .. 
+                " | $" .. tostring(money) .. 
+                " | " .. mins .. "m " .. secs .. "s"
+            )
+        end)
+    end
+end)
+
+-- ========================
+-- TAB 6: CONFIG (SaveManager + ThemeManager)
+-- ========================
+local ConfigTab = Window:AddTab("Config")
+
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetFolder("SnowflakeAutoFarm/" .. player.Name)
+SaveManager:BuildConfigSection(ConfigTab)
+
+ThemeManager:SetLibrary(Library)
+ThemeManager:SetFolder("SnowflakeAutoFarm")
+ThemeManager:ApplyToTab(ConfigTab)
+
+-- Auto-load the default config if it exists
+SaveManager:LoadAutoloadConfig()
+
+print("✅ SnowFlake AutoFarm (Standalone) loaded successfully!")
+print("📁 Config saves to: SnowflakeAutoFarm/" .. player.Name .. "/")
+
+
+
     if #_G.target_enchant_sets == 0 then return "None" end
     local lines = {}
     for i, set in ipairs(_G.target_enchant_sets) do
