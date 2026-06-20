@@ -1452,6 +1452,7 @@ local Window = Library:CreateWindow({
 
 -- Store unload function globally for re-execution cleanup
 _G.LinoriaLibUnload = function() Library:Unload() end
+Library.Transparency = 0.5
 
 -- ========================
 -- TAB 1: FARM CONTROL
